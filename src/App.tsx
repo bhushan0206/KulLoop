@@ -1,0 +1,476 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from 'react';
+import { 
+  Family, 
+  FamilyOccasion, 
+  Member, 
+  Person, 
+  PilotIntakeFormState,
+  LineageMember 
+} from './types';
+import { 
+  INITIAL_FAMILY, 
+  INITIAL_MEMBERS, 
+  INITIAL_PEOPLE, 
+  INITIAL_OCCASIONS 
+} from './data/mockData';
+import { INITIAL_LINEAGE_MEMBERS } from './data/mockLineageData';
+import { 
+  UserProfile, 
+  fetchUserProfile, 
+  saveUserProfile 
+} from './services/firebase';
+import { Header } from './components/Header';
+import { FamilyDashboard } from './components/FamilyDashboard';
+import { OccasionList } from './components/OccasionList';
+import { WhatsAppSimulator } from './components/WhatsAppSimulator';
+import { MembersManager } from './components/MembersManager';
+import { VisualFamilyTree } from './components/VisualFamilyTree';
+import { AnnualCalendarView } from './components/AnnualCalendarView';
+import { CalmPricingView } from './components/CalmPricingView';
+import { AddOccasionModal } from './components/AddOccasionModal';
+import { PriestReadyNoteModal } from './components/PriestReadyNoteModal';
+import { PilotIntakeModal } from './components/PilotIntakeModal';
+import { UserProfileModal } from './components/UserProfileModal';
+import { GeminiChatbot } from './components/GeminiChatbot';
+import { Check, ShieldCheck, Sparkles, User, Users } from 'lucide-react';
+
+const DEFAULT_USER_PROFILE: UserProfile = {
+  uid: 'user_bhushan_01',
+  username: 'bhushan_pune',
+  displayName: 'Bhushan Joshi',
+  email: 'bhushangavhale86@gmail.com',
+  photoURL: '/src/assets/images/kulloop_avatar_elder_1793303629841.jpg',
+  bio: 'Family ritual configurator. Preserving our ancestral Jejuri Khandoba traditions and shraddha tithis for the entire family.',
+  interests: ['Ancestral Rites (श्राद्ध)', 'Panchang & Astronomy', 'Family Heritage', 'Marathi Traditions'],
+  homeLocation: 'Pune, Maharashtra',
+  tradition: 'Amanta (Maharashtra)',
+  createdAt: new Date().toISOString(),
+};
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState<'overview' | 'occasions' | 'whatsapp' | 'members' | 'tree' | 'calendar' | 'pricing'>('overview');
+  
+  // App data state
+  const [family, setFamily] = useState<Family>(INITIAL_FAMILY);
+  const [occasions, setOccasions] = useState<FamilyOccasion[]>(INITIAL_OCCASIONS);
+  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
+  const [people, setPeople] = useState<Person[]>(INITIAL_PEOPLE);
+  const [lineageMembers, setLineageMembers] = useState<LineageMember[]>(INITIAL_LINEAGE_MEMBERS);
+
+  // User Profile state
+  const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_USER_PROFILE);
+
+  // Modals & previews
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+  const [chatbotInitialPrompt, setChatbotInitialPrompt] = useState<string>('');
+  const [priestModalOccasion, setPriestModalOccasion] = useState<FamilyOccasion | null>(null);
+  const [activeWhatsAppOccasion, setActiveWhatsAppOccasion] = useState<FamilyOccasion | undefined>(undefined);
+
+  // Toast feedback
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Attempt to load existing user profile
+    fetchUserProfile(DEFAULT_USER_PROFILE.uid).then((p) => {
+      if (p) {
+        setCurrentUser(p);
+      } else {
+        saveUserProfile(DEFAULT_USER_PROFILE);
+      }
+    });
+  }, []);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleAddOccasion = (newOcc: FamilyOccasion) => {
+    setOccasions((prev) => [newOcc, ...prev]);
+    showToast(`Added "${newOcc.title}" to the family record`);
+  };
+
+  const handleToggleConfirm = (id: string) => {
+    setOccasions((prev) =>
+      prev.map((occ) => {
+        if (occ.id === id) {
+          const nextState = !occ.isConfirmed;
+          showToast(nextState ? 'Occasion confirmed with validation source' : 'Occasion marked unconfirmed');
+          return {
+            ...occ,
+            isConfirmed: nextState,
+            occurrence2027: {
+              ...occ.occurrence2027,
+              isVerified: nextState,
+            },
+          };
+        }
+        return occ;
+      })
+    );
+  };
+
+  const handleTogglePerformed = (id: string, notes?: string, performedBy?: string) => {
+    setOccasions((prev) =>
+      prev.map((occ) => {
+        if (occ.id === id) {
+          const nextState = !occ.isPerformed;
+          showToast(
+            nextState
+              ? `Marked "${occ.title}" as performed`
+              : `Unmarked "${occ.title}"`
+          );
+          return {
+            ...occ,
+            isPerformed: nextState,
+            performedAt: nextState
+              ? new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : undefined,
+            performedBy: nextState ? (performedBy || currentUser.displayName) : undefined,
+            performedNotes: nextState ? notes : undefined,
+          };
+        }
+        return occ;
+      })
+    );
+  };
+
+  const handleAddMemoryPhoto = (
+    occasionId: string,
+    photo: { id: string; url: string; caption?: string; year?: number; uploadedAt: string }
+  ) => {
+    setOccasions((prev) =>
+      prev.map((occ) => {
+        if (occ.id === occasionId) {
+          const existing = occ.memoryPhotos || [];
+          showToast('Celebration photo added to memory slot');
+          return {
+            ...occ,
+            memoryPhotos: [...existing, photo],
+          };
+        }
+        return occ;
+      })
+    );
+  };
+
+  const handleDeleteMemoryPhoto = (occasionId: string, photoId: string) => {
+    setOccasions((prev) =>
+      prev.map((occ) => {
+        if (occ.id === occasionId) {
+          showToast('Photo removed from memory slot');
+          return {
+            ...occ,
+            memoryPhotos: (occ.memoryPhotos || []).filter((p) => p.id !== photoId),
+          };
+        }
+        return occ;
+      })
+    );
+  };
+
+  const handleDeleteOccasion = (id: string) => {
+    const target = occasions.find((o) => o.id === id);
+    if (confirm(`Remove "${target?.title}" from the family record?`)) {
+      setOccasions((prev) => prev.filter((o) => o.id !== id));
+      showToast('Occasion removed');
+    }
+  };
+
+  const handleAddMember = (member: Member) => {
+    setMembers((prev) => [...prev, member]);
+    showToast(`Added ${member.name} to the family loop`);
+  };
+
+  const handleUpdateMember = (member: Member) => {
+    setMembers((prev) => prev.map((m) => (m.id === member.id ? member : m)));
+    showToast(`Updated preferences for ${member.name}`);
+  };
+
+  const handleDeleteMember = (id: string) => {
+    const target = members.find((m) => m.id === id);
+    if (confirm(`Remove ${target?.name} from WhatsApp reminders?`)) {
+      setMembers((prev) => prev.filter((m) => m.id !== id));
+      showToast('Member removed from loop');
+    }
+  };
+
+  const handlePreviewWhatsApp = (occ: FamilyOccasion) => {
+    setActiveWhatsAppOccasion(occ);
+    setActiveTab('whatsapp');
+  };
+
+  const handleGeneratePriestNote = (occ: FamilyOccasion) => {
+    setPriestModalOccasion(occ);
+  };
+
+  const handlePilotIntakeSuccess = (data: PilotIntakeFormState) => {
+    setFamily((prev) => ({
+      ...prev,
+      name: data.familyName,
+      homeLocation: data.homeLocation,
+      convention: data.convention === 'Purnimanta' ? 'Purnimanta' : 'Amanta',
+      configuratorName: data.fullName,
+      configuratorPhone: data.whatsappNumber,
+      traditionNotes: data.traditionNotes,
+    }));
+    showToast(`Pilot intake received for ${data.familyName}! Dates queued for validation.`);
+  };
+
+  const handleOpenAssistantWithTopic = (prompt: string) => {
+    setChatbotInitialPrompt(prompt);
+    setIsChatbotOpen(true);
+  };
+
+  const handleUpdateLineageMember = (updated: LineageMember) => {
+    setLineageMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
+    showToast(`Updated ritual responsibilities for ${updated.name}`);
+  };
+
+  return (
+    <div className="min-h-screen bg-stone-50 text-stone-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900">
+      {/* Top Bar Header */}
+      <Header
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onOpenAddModal={() => setIsAddModalOpen(true)}
+        onOpenIntakeModal={() => setIsIntakeModalOpen(true)}
+        onOpenProfileModal={() => setIsProfileModalOpen(true)}
+        onOpenChatbot={() => {
+          setChatbotInitialPrompt('');
+          setIsChatbotOpen(true);
+        }}
+        currentUser={currentUser}
+      />
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 text-amber-300 text-xs px-4 py-2.5 rounded-xl shadow-xl border border-stone-800 flex items-center gap-2 animate-fade-in">
+          <Check className="w-4 h-4 text-emerald-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Main Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* User Profile & Community Banner Strip */}
+        <div className="bg-white rounded-2xl border border-stone-200/90 p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="relative w-12 h-12 rounded-full bg-amber-100 border border-amber-300 overflow-hidden flex items-center justify-center shrink-0">
+              {currentUser.photoURL ? (
+                <img src={currentUser.photoURL} alt={currentUser.displayName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="font-bold text-amber-900">{currentUser.displayName.charAt(0)}</span>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-stone-900 text-sm">{currentUser.displayName}</span>
+                <span className="text-xs text-stone-400 font-mono">@{currentUser.username}</span>
+                <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Configurator
+                </span>
+              </div>
+              <div className="text-xs text-stone-500 mt-0.5 flex flex-wrap items-center gap-1.5">
+                <span>Passions:</span>
+                {currentUser.interests?.slice(0, 3).map((tag) => (
+                  <span key={tag} className="text-[11px] text-amber-900 bg-amber-50 px-2 py-0.2 rounded border border-amber-200/80">
+                    {tag}
+                  </span>
+                ))}
+                {(currentUser.interests?.length || 0) > 3 && (
+                  <span className="text-[10px] text-stone-400">+{currentUser.interests.length - 3} more</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              className="px-3.5 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <User className="w-3.5 h-3.5 text-stone-500" />
+              <span>Edit Profile & Passions</span>
+            </button>
+            <button
+              onClick={() => {
+                setChatbotInitialPrompt('');
+                setIsChatbotOpen(true);
+              }}
+              className="px-3.5 py-1.5 text-xs font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Ask Heritage AI</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Views */}
+        {activeTab === 'overview' && (
+          <FamilyDashboard
+            family={family}
+            occasions={occasions}
+            members={members}
+            onSelectOccasion={(occ) => handlePreviewWhatsApp(occ)}
+            onPreviewWhatsApp={handlePreviewWhatsApp}
+            onGeneratePriestNote={handleGeneratePriestNote}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+            onOpenAddModal={() => setIsAddModalOpen(true)}
+            onTogglePerformed={handleTogglePerformed}
+            onAddMemoryPhoto={handleAddMemoryPhoto}
+            onDeleteMemoryPhoto={handleDeleteMemoryPhoto}
+          />
+        )}
+
+        {activeTab === 'occasions' && (
+          <OccasionList
+            occasions={occasions}
+            onOpenAddModal={() => setIsAddModalOpen(true)}
+            onPreviewWhatsApp={handlePreviewWhatsApp}
+            onGeneratePriestNote={handleGeneratePriestNote}
+            onToggleConfirm={handleToggleConfirm}
+            onDeleteOccasion={handleDeleteOccasion}
+          />
+        )}
+
+        {activeTab === 'whatsapp' && (
+          <WhatsAppSimulator
+            family={family}
+            occasions={occasions}
+            members={members}
+            initialOccasion={activeWhatsAppOccasion}
+            onGeneratePriestNote={handleGeneratePriestNote}
+          />
+        )}
+
+        {activeTab === 'members' && (
+          <MembersManager
+            members={members}
+            family={family}
+            onAddMember={handleAddMember}
+            onUpdateMember={handleUpdateMember}
+            onDeleteMember={handleDeleteMember}
+            onNavigateToTree={() => setActiveTab('tree')}
+          />
+        )}
+
+        {activeTab === 'tree' && (
+          <VisualFamilyTree
+            family={family}
+            lineageMembers={lineageMembers}
+            onUpdateLineageMember={handleUpdateLineageMember}
+            onNavigateToOccasion={(occId) => {
+              setActiveTab('occasions');
+            }}
+            onPreviewWhatsApp={(memberName, duty) => {
+              showToast(`WhatsApp duty digest queued for ${memberName}`);
+              setActiveTab('whatsapp');
+            }}
+          />
+        )}
+
+        {activeTab === 'calendar' && (
+          <AnnualCalendarView
+            occasions={occasions}
+            family={family}
+            onPreviewWhatsApp={handlePreviewWhatsApp}
+            onGeneratePriestNote={handleGeneratePriestNote}
+          />
+        )}
+
+        {activeTab === 'pricing' && (
+          <CalmPricingView
+            onOpenIntakeModal={() => setIsIntakeModalOpen(true)}
+          />
+        )}
+      </main>
+
+      {/* User Profile & Community Connections Modal */}
+      <UserProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        currentUser={currentUser}
+        onUpdateCurrentUser={(updated) => {
+          setCurrentUser(updated);
+          showToast('Profile updated successfully');
+        }}
+        onOpenAssistantWithTopic={handleOpenAssistantWithTopic}
+      />
+
+      {/* Gemini Heritage Chatbot */}
+      <GeminiChatbot
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+        currentUser={currentUser}
+        initialPrompt={chatbotInitialPrompt}
+      />
+
+      {/* Add Occasion Modal */}
+      <AddOccasionModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddOccasion={handleAddOccasion}
+        family={family}
+      />
+
+      {/* Priest Ready Note Modal */}
+      <PriestReadyNoteModal
+        isOpen={!!priestModalOccasion}
+        onClose={() => setPriestModalOccasion(null)}
+        occasion={priestModalOccasion}
+        family={family}
+      />
+
+      {/* Pilot Intake Modal */}
+      <PilotIntakeModal
+        isOpen={isIntakeModalOpen}
+        onClose={() => setIsIntakeModalOpen(false)}
+        onSubmitSuccess={handlePilotIntakeSuccess}
+      />
+
+      {/* Calm Footer */}
+      <footer className="bg-stone-900 text-stone-400 text-xs border-t border-stone-800 py-10 no-print">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-base font-bold text-amber-300 font-serif-display">KulLoop</span>
+              <span className="text-stone-500">·</span>
+              <span className="text-stone-300">Family Tithi Loop</span>
+              <span className="text-stone-500">·</span>
+              <span>In partnership with <a href="https://www.mydharohar.org/" target="_blank" rel="noreferrer" className="text-amber-300/80 hover:text-amber-200 underline">MyDharohar</a></span>
+            </div>
+
+            <div className="flex items-center gap-6 text-stone-400">
+              <button onClick={() => setActiveTab('overview')} className="hover:text-stone-200 cursor-pointer">Home</button>
+              <button onClick={() => setActiveTab('occasions')} className="hover:text-stone-200 cursor-pointer">Occasions</button>
+              <button onClick={() => setActiveTab('whatsapp')} className="hover:text-stone-200 cursor-pointer">WhatsApp</button>
+              <button onClick={() => setIsProfileModalOpen(true)} className="hover:text-amber-300 cursor-pointer">Profile & Community</button>
+              <button onClick={() => setIsChatbotOpen(true)} className="hover:text-amber-300 cursor-pointer">Heritage AI</button>
+              <button onClick={() => setActiveTab('pricing')} className="hover:text-stone-200 cursor-pointer">Pilot (₹299)</button>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-stone-800 text-[11px] text-stone-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div>
+              Preserving Indian family ritual life with calm, privacy, and mathematical correctness. No fear-based astrology.
+            </div>
+            <div className="flex items-center gap-1 text-stone-400">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Family Heritage Record · Private & Always Exportable</span>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

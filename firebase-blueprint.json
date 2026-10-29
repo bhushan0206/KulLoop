@@ -1,0 +1,49 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with username, bio, avatar, and cultural passions/interests.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "username": { "type": "string", "minLength": 3, "maxLength": 30 },
+        "displayName": { "type": "string", "maxLength": 60 },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "bio": { "type": "string", "maxLength": 280 },
+        "interests": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "homeLocation": { "type": "string" },
+        "tradition": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "username", "displayName"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Multi-turn conversation history with the KulLoop Gemini Heritage Assistant.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "model"] },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "userId", "role", "text", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Public and personal profile data of a KulLoop user."
+    },
+    "/users/{userId}/chat_history/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "User conversation messages with KulLoop AI assistant."
+    }
+  }
+}

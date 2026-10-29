@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'username', 'displayName']) &&
+             data.uid == request.auth.uid &&
+             data.username is string && data.username.size() >= 3 && data.username.size() <= 30 &&
+             data.displayName is string && data.displayName.size() <= 60;
+    }
+
+    match /users/{userId} {
+      // Any signed in user can view profiles to connect over shared interests
+      allow read: if isSignedIn();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow delete: if isOwner(userId);
+
+      match /chat_history/{messageId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "KulLoop — Family Tithi Loop",
+  "description": "Tithi-aware family occasions loop. Shraddhas, birthdays, and rituals entered once, converted correctly for your home tradition, and reminded on WhatsApp in Marathi, Hindi & English.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
