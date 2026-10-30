@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FamilyOccasion, OccasionType } from '../types';
+import React, { useState, useMemo } from 'react';
+import { FamilyOccasion, OccasionType, Member, Person } from '../types';
 import { 
   Search, 
   Filter, 
@@ -12,11 +12,17 @@ import {
   Plus, 
   ExternalLink,
   ShieldAlert,
-  Info
+  Info,
+  X,
+  User,
+  Tag,
+  History
 } from 'lucide-react';
 
 interface OccasionListProps {
   occasions: FamilyOccasion[];
+  members?: Member[];
+  people?: Person[];
   onOpenAddModal: () => void;
   onPreviewWhatsApp: (occ: FamilyOccasion) => void;
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
@@ -24,8 +30,22 @@ interface OccasionListProps {
   onDeleteOccasion: (id: string) => void;
 }
 
+// Map ritual types to synonyms and translations for smart search
+const RITUAL_SYNONYMS: Record<OccasionType, string[]> = {
+  shraddha: ['shraddha', 'shradh', 'shraaddha', 'श्राद्ध', 'pitru', 'ancestor', 'tithi shraddha', 'tarpan', 'pinda'],
+  mahalaya: ['mahalaya', 'pitru paksha', 'pitrupaksha', 'महालय', 'पितृपक्ष', 'shraddha', 'sarvapitri'],
+  birthday: ['birthday', 'tithi birthday', 'janmadin', 'वाढदिवस', 'जन्मदिवस', 'varshaganth', 'tithi', 'bday'],
+  anniversary: ['anniversary', 'wedding', 'स्मृती', 'सालगिरी', 'वर्धापनदिन'],
+  vrat_kuldevta: ['vrat', 'vrata', 'kuldevta', 'kuldevata', 'व्रत', 'कुलदैवत', 'fast', 'upas', 'upvas', 'khandoba', 'sankashti', 'ekadashi'],
+  festival: ['festival', 'utsav', 'parva', 'सण', 'उत्सव', 'त्योहार', 'diwali', 'ganesh', 'ganpati', 'padwa'],
+  milestone: ['milestone', 'sanskar', 'munj', 'thread ceremony', 'मुंज', 'संस्कार', 'ceremony'],
+  custom: ['custom', 'family tradition', 'पारंपरिक', 'अन्य'],
+};
+
 export const OccasionList: React.FC<OccasionListProps> = ({
   occasions,
+  members = [],
+  people = [],
   onOpenAddModal,
   onPreviewWhatsApp,
   onGeneratePriestNote,
@@ -35,18 +55,87 @@ export const OccasionList: React.FC<OccasionListProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | OccasionType>('all');
 
-  const filteredOccasions = occasions.filter((occ) => {
-    const matchesSearch = 
-      occ.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (occ.personNameDisplay && occ.personNameDisplay.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (occ.tithiFields?.lunarMonth && occ.tithiFields.lunarMonth.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (occ.tithiFields?.tithi && occ.tithiFields.tithi.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Filter occasions based on title, ritual type, and associated family member
+  const filteredOccasions = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
 
-    const matchesType = typeFilter === 'all' || occ.occasionType === typeFilter;
-    return matchesSearch && matchesType;
-  });
+    return occasions.filter((occ) => {
+      // 1. Type Filter (tabs)
+      const matchesTypeFilter = typeFilter === 'all' || occ.occasionType === typeFilter;
+      if (!matchesTypeFilter) return false;
+
+      // 2. Search query check
+      if (!term) return true;
+
+      // Match A: Title
+      const matchesTitle = occ.title.toLowerCase().includes(term);
+
+      // Match B: Ritual Type (direct code, human label, and synonyms)
+      const directType = occ.occasionType.toLowerCase();
+      const spacedType = occ.occasionType.replace('_', ' ').toLowerCase();
+      const recurrenceType = occ.recurrenceType.toLowerCase();
+      const synonyms = RITUAL_SYNONYMS[occ.occasionType] || [];
+      const matchesRitualType = 
+        directType.includes(term) ||
+        spacedType.includes(term) ||
+        recurrenceType.includes(term) ||
+        synonyms.some((s) => s.includes(term));
+
+      // Match C: Associated Family Member
+      const matchesPersonName = !!(occ.personNameDisplay && occ.personNameDisplay.toLowerCase().includes(term));
+      const matchesRelationship = !!(occ.relationshipDisplay && occ.relationshipDisplay.toLowerCase().includes(term));
+      const matchesPerformedBy = !!(occ.performedBy && occ.performedBy.toLowerCase().includes(term));
+
+      // Check linked Person records (ancestors or living relatives)
+      const matchesLinkedPeople = occ.personIds.some((pId) => {
+        const foundPerson = people.find((p) => p.id === pId);
+        if (!foundPerson) return false;
+        return (
+          foundPerson.name.toLowerCase().includes(term) ||
+          foundPerson.relationship.toLowerCase().includes(term) ||
+          (foundPerson.gotra && foundPerson.gotra.toLowerCase().includes(term))
+        );
+      });
+
+      // Check associated Members
+      const matchesLinkedMember = members.some((m) => {
+        if (!occ.personNameDisplay) return false;
+        return (
+          occ.personNameDisplay.toLowerCase().includes(m.name.toLowerCase()) ||
+          m.name.toLowerCase().includes(term) && occ.title.toLowerCase().includes(m.name.split(' ')[0].toLowerCase())
+        );
+      });
+
+      const matchesFamilyMember = 
+        matchesPersonName || 
+        matchesRelationship || 
+        matchesPerformedBy || 
+        matchesLinkedPeople || 
+        matchesLinkedMember;
+
+      // Match D: Additional context (tithi names or notes)
+      const matchesTithi = !!(
+        (occ.tithiFields?.lunarMonth && occ.tithiFields.lunarMonth.toLowerCase().includes(term)) ||
+        (occ.tithiFields?.tithi && occ.tithiFields.tithi.toLowerCase().includes(term)) ||
+        (occ.tithiFields?.lunarMonthDevanagari && occ.tithiFields.lunarMonthDevanagari.includes(term)) ||
+        (occ.tithiFields?.tithiDevanagari && occ.tithiFields.tithiDevanagari.includes(term)) ||
+        (occ.practiceNotes && occ.practiceNotes.toLowerCase().includes(term))
+      );
+
+      return matchesTitle || matchesRitualType || matchesFamilyMember || matchesTithi;
+    });
+  }, [occasions, searchTerm, typeFilter, people, members]);
 
   const unconfirmedCount = occasions.filter((o) => !o.isConfirmed).length;
+
+  // Quick suggestions for easy one-click search testing
+  const quickSearchSuggestions = [
+    { label: 'Shraddha Rites', term: 'shraddha' },
+    { label: 'Aaji (Grandmother)', term: 'aaji' },
+    { label: 'Vrat & Kuldevta', term: 'kuldevta' },
+    { label: 'Birthdays', term: 'birthday' },
+    { label: 'Vasant Joshi', term: 'vasant' },
+  ];
 
   return (
     <div className="space-y-6">
@@ -63,7 +152,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
 
         <button
           onClick={onOpenAddModal}
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap self-start sm:self-auto shadow-sm"
+          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap self-start sm:self-auto shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Occasion</span>
@@ -83,83 +172,157 @@ export const OccasionList: React.FC<OccasionListProps> = ({
         </div>
       )}
 
-      {/* Filters & Search Toolbar */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-stone-200">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by ancestor, person, tithi (e.g. Magha, Saptami)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 text-xs bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-stone-800"
-          />
+      {/* Search Bar & Filters Section */}
+      <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-2xs space-y-3">
+        {/* Main Search Bar */}
+        <div className="relative">
+          <label htmlFor="occasion-search" className="sr-only">
+            Search family occasions by title, ritual type, or family member
+          </label>
+          <div className="relative flex items-center">
+            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              id="occasion-search"
+              type="text"
+              placeholder="Search occasions by title, ritual type (e.g. Shraddha, Birthday, Vrat), or family member (e.g. Aaji, Vasant)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-10 py-2.5 text-xs bg-stone-50 hover:bg-stone-50/80 focus:bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 text-stone-800 transition-all placeholder:text-stone-400"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-stone-400 hover:text-stone-700 rounded-md transition-colors cursor-pointer"
+                title="Clear search"
+                aria-label="Clear search input"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
-          <button
-            onClick={() => setTypeFilter('all')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-              typeFilter === 'all'
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            All ({occasions.length})
-          </button>
-          <button
-            onClick={() => setTypeFilter('shraddha')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-              typeFilter === 'shraddha'
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            Shraddhas
-          </button>
-          <button
-            onClick={() => setTypeFilter('birthday')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-              typeFilter === 'birthday'
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            Birthdays
-          </button>
-          <button
-            onClick={() => setTypeFilter('vrat_kuldevta')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-              typeFilter === 'vrat_kuldevta'
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            Vrats & Kuldevta
-          </button>
-          <button
-            onClick={() => setTypeFilter('festival')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-              typeFilter === 'festival'
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            Festivals
-          </button>
-          <button
-            onClick={() => setTypeFilter('milestone')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-              typeFilter === 'milestone'
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-600 hover:bg-stone-100'
-            }`}
-          >
-            Milestones
-          </button>
+        {/* Quick Search Chips & Filter Bar */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1 border-t border-stone-100">
+          {/* Quick Suggestions */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+            <span className="text-[11px] text-stone-400 font-medium shrink-0 flex items-center gap-1">
+              <span>Filter by:</span>
+            </span>
+            {quickSearchSuggestions.map((item) => {
+              const isActive = searchTerm.toLowerCase() === item.term.toLowerCase();
+              return (
+                <button
+                  key={item.term}
+                  type="button"
+                  onClick={() => setSearchTerm(isActive ? '' : item.term)}
+                  className={`px-2.5 py-1 text-[11px] rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
+                    isActive 
+                      ? 'bg-amber-400 text-stone-950 font-semibold shadow-2xs' 
+                      : 'bg-stone-100 hover:bg-stone-200/80 text-stone-600'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Type Filter Tabs */}
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 shrink-0">
+            <button
+              onClick={() => setTypeFilter('all')}
+              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                typeFilter === 'all'
+                  ? 'bg-stone-900 text-white'
+                  : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              All ({occasions.length})
+            </button>
+            <button
+              onClick={() => setTypeFilter('shraddha')}
+              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                typeFilter === 'shraddha'
+                  ? 'bg-stone-900 text-white'
+                  : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              Shraddhas
+            </button>
+            <button
+              onClick={() => setTypeFilter('birthday')}
+              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                typeFilter === 'birthday'
+                  ? 'bg-stone-900 text-white'
+                  : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              Birthdays
+            </button>
+            <button
+              onClick={() => setTypeFilter('vrat_kuldevta')}
+              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                typeFilter === 'vrat_kuldevta'
+                  ? 'bg-stone-900 text-white'
+                  : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              Vrats & Kuldevta
+            </button>
+            <button
+              onClick={() => setTypeFilter('festival')}
+              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                typeFilter === 'festival'
+                  ? 'bg-stone-900 text-white'
+                  : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              Festivals
+            </button>
+            <button
+              onClick={() => setTypeFilter('milestone')}
+              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+                typeFilter === 'milestone'
+                  ? 'bg-stone-900 text-white'
+                  : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              Milestones
+            </button>
+          </div>
         </div>
+
+        {/* Search Results Summary (when search is active) */}
+        {(searchTerm || typeFilter !== 'all') && (
+          <div className="flex items-center justify-between text-[11px] text-stone-500 pt-2 border-t border-stone-100">
+            <div className="flex items-center gap-1.5">
+              <span>Showing</span>
+              <span className="font-semibold text-stone-900 font-mono tabular-nums">{filteredOccasions.length}</span>
+              <span>of</span>
+              <span className="font-semibold text-stone-900 font-mono tabular-nums">{occasions.length}</span>
+              <span>occasions</span>
+              {searchTerm && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>Filtered by: <strong className="text-stone-800">"{searchTerm}"</strong></span>
+                </>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSearchTerm('');
+                setTypeFilter('all');
+              }}
+              className="text-amber-700 hover:text-amber-900 font-medium cursor-pointer transition-colors"
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Occasions List */}
@@ -167,17 +330,31 @@ export const OccasionList: React.FC<OccasionListProps> = ({
         {filteredOccasions.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl border border-stone-200 p-8 space-y-3">
             <Calendar className="w-10 h-10 text-stone-300 mx-auto" />
-            <h4 className="text-base font-semibold text-stone-700">No occasions found</h4>
-            <p className="text-xs text-stone-500 max-w-sm mx-auto">
-              No dates match your search or filter. Try a different term or add a new family occasion.
+            <h4 className="text-base font-semibold text-stone-700">No matching occasions found</h4>
+            <p className="text-xs text-stone-500 max-w-md mx-auto">
+              {searchTerm 
+                ? `No occasions match "${searchTerm}". We searched across occasion titles, ritual types (shraddha, vrat, birthday, etc.), and associated family members.`
+                : 'No occasions match the selected filter category.'}
             </p>
-            <button
-              onClick={onOpenAddModal}
-              className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Occasion</span>
-            </button>
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm('');
+                  setTypeFilter('all');
+                }}
+                className="px-3.5 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
+              >
+                Clear Search & Filters
+              </button>
+              <button
+                onClick={onOpenAddModal}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Occasion</span>
+              </button>
+            </div>
           </div>
         ) : (
           filteredOccasions.map((occ) => {
@@ -224,10 +401,24 @@ export const OccasionList: React.FC<OccasionListProps> = ({
                     <h3 className="text-base font-bold text-stone-900 leading-snug">
                       {occ.title}
                     </h3>
-                    {occ.personNameDisplay && (
-                      <p className="text-xs text-stone-600 font-medium">
-                        Person: {occ.personNameDisplay} {occ.relationshipDisplay && `(${occ.relationshipDisplay})`}
+                    {occ.personNameDisplay ? (
+                      <p className="text-xs text-stone-600 font-medium flex items-center gap-1.5 mt-0.5">
+                        <User className="w-3.5 h-3.5 text-amber-700/70 shrink-0" />
+                        <span>Associated Member: <strong className="text-stone-800">{occ.personNameDisplay}</strong> {occ.relationshipDisplay && <span className="text-stone-500 font-normal">({occ.relationshipDisplay})</span>}</span>
                       </p>
+                    ) : (
+                      <p className="text-xs text-stone-400 italic mt-0.5">
+                        Family-wide Observance
+                      </p>
+                    )}
+
+                    {(occ.establishedYear || occ.gregorianFields?.originalYear) && (
+                      <div className="inline-flex items-center gap-1.5 mt-1 text-[11px] font-medium text-amber-900 bg-amber-50 border border-amber-200/70 px-2 py-0.5 rounded">
+                        <History className="w-3 h-3 text-amber-700" />
+                        <span>
+                          {2026 - (occ.establishedYear || occ.gregorianFields!.originalYear!)} Years Observed ({2027 - (occ.establishedYear || occ.gregorianFields!.originalYear!)}th in 2027) · Est. {occ.establishedYear || occ.gregorianFields!.originalYear}
+                        </span>
+                      </div>
                     )}
                   </div>
 

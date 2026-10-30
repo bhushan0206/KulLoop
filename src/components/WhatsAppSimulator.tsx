@@ -11,8 +11,10 @@ import {
   Share2, 
   Info,
   Calendar,
-  MessageSquare
+  MessageSquare,
+  ExternalLink
 } from 'lucide-react';
+import { openWhatsAppDirect } from '../utils/whatsapp';
 
 interface WhatsAppSimulatorProps {
   family: Family;
@@ -298,23 +300,35 @@ export const WhatsAppSimulator: React.FC<WhatsAppSimulatorProps> = ({
             </div>
           </div>
 
-          <div className="pt-2 border-t border-stone-200 flex flex-wrap gap-2">
+          <div className="pt-2 border-t border-stone-200 flex flex-col gap-2">
             <button
-              onClick={handleCopyMessage}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
+              onClick={() => openWhatsAppDirect(activeMember.phone, getRenderedMessage())}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-xl transition-all shadow-sm cursor-pointer"
+              title={`Launch WhatsApp directly with prefilled message to ${activeMember.name} (${activeMember.phone})`}
             >
-              {copiedToast ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedToast ? 'Copied to Clipboard!' : 'Copy WhatsApp Text'}</span>
+              <MessageSquare className="w-4 h-4 fill-current text-white" />
+              <span>Send on WhatsApp ({activeMember.name.split(' ')[0]})</span>
+              <ExternalLink className="w-3.5 h-3.5 opacity-80" />
             </button>
 
-            {activeOccasion && (activeOccasion.occasionType === 'shraddha' || activeOccasion.occasionType === 'mahalaya') && (
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => onGeneratePriestNote(activeOccasion)}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors cursor-pointer"
+                onClick={handleCopyMessage}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
               >
-                <span>Priest Note (गुरुजींसाठी नोंद)</span>
+                {copiedToast ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedToast ? 'Copied!' : 'Copy Text'}</span>
               </button>
-            )}
+
+              {activeOccasion && (activeOccasion.occasionType === 'shraddha' || activeOccasion.occasionType === 'mahalaya') && (
+                <button
+                  onClick={() => onGeneratePriestNote(activeOccasion)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors cursor-pointer"
+                >
+                  <span>Priest Note (गुरुजींसाठी नोंद)</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Guidelines info */}

@@ -59,6 +59,7 @@ export const AddOccasionModal: React.FC<AddOccasionModalProps> = ({
   const [isConfirmed, setIsConfirmed] = useState(true);
   const [confirmedSource, setConfirmedSource] = useState('Aaji (Grandmother) & Printed Almanan');
   const [practiceNotes, setPracticeNotes] = useState('');
+  const [establishedYear, setEstablishedYear] = useState('');
 
   if (!isOpen) return null;
 
@@ -125,6 +126,7 @@ export const AddOccasionModal: React.FC<AddOccasionModalProps> = ({
         originalYear: new Date(gregDate).getFullYear(),
       } : undefined,
       festivalKey: occasionType === 'festival' ? selectedFestivalKey : undefined,
+      establishedYear: establishedYear ? parseInt(establishedYear, 10) : (recurrenceType === 'gregorian' ? new Date(gregDate).getFullYear() : undefined),
       mahalayaOverride: occasionType === 'shraddha' ? mahalayaPractice : undefined,
       isConfirmed: isConfirmed && knowsTithi === 'yes',
       confirmedSource: confirmedSource || (isConfirmed ? 'Family Elder' : 'Unconfirmed'),
@@ -514,6 +516,22 @@ export const AddOccasionModal: React.FC<AddOccasionModalProps> = ({
                 value={practiceNotes}
                 onChange={(e) => setPracticeNotes(e.target.value)}
                 placeholder="e.g. Prepared at home before noon; cow grass offering; puran poli"
+                className="w-full px-3 py-1.5 text-xs bg-white border border-stone-300 rounded-lg"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-stone-700 flex items-center justify-between">
+                <span>First Established / Recorded Year (optional):</span>
+                <span className="text-[10px] text-amber-700 font-semibold">Heritage Milestone</span>
+              </label>
+              <input
+                type="number"
+                min="1900"
+                max="2030"
+                value={establishedYear}
+                onChange={(e) => setEstablishedYear(e.target.value)}
+                placeholder="e.g. 1988 (to compute continuous years of tradition)"
                 className="w-full px-3 py-1.5 text-xs bg-white border border-stone-300 rounded-lg"
               />
             </div>

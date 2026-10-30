@@ -118,6 +118,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Zone 3: AI Assistant, Profile & Primary Action */}
           <div className="flex items-center gap-2.5 shrink-0">
+
             {/* Gemini AI Assistant Button */}
             <button
               onClick={onOpenChatbot}

@@ -29,12 +29,34 @@ export interface Family {
   consultedEntity: 'Family priest' | 'An elder' | 'Printed almanac' | 'Online panchang';
 }
 
+export type ReminderChannel = 'whatsapp' | 'email' | 'push';
+
+export type RitualReminderCategory = 
+  | 'shraddha' 
+  | 'birthday' 
+  | 'vrat_kuldevta' 
+  | 'festival' 
+  | 'milestone';
+
+export interface CategoryReminderConfig {
+  whatsapp: boolean;
+  email: boolean;
+  push: boolean;
+}
+
+export interface MemberReminderPreferences {
+  emailAddress?: string;
+  pushEnabled?: boolean;
+  categories: Record<RitualReminderCategory, CategoryReminderConfig>;
+}
+
 export interface Member {
   id: string;
   familyId: string;
   name: string;
   relationship: string; // "Aaji (Grandmother)", "Sister", "Son", etc.
   phone: string;
+  email?: string;
   language: LanguageCode;
   country: string;
   city: string;
@@ -45,6 +67,7 @@ export interface Member {
   digestPreference: 'individual' | 'weekly_digest' | 'monthly_digest';
   frequencyCapPerWeek: number; // e.g., 2
   status: 'active' | 'paused' | 'opted_out';
+  reminderPreferences?: MemberReminderPreferences;
 }
 
 export interface Person {
@@ -111,6 +134,8 @@ export interface FamilyOccasion {
   contentNote: ContentNote;
   priority: 'high' | 'normal' | 'digest';
   myDharoharGuideUrl?: string;
+  establishedYear?: number; // Year ritual / anniversary was first established or recorded (e.g., 1988)
+  heritageNotes?: string; // Story of when and how the sankalpa or tradition began
   isPerformed?: boolean;
   performedAt?: string;
   performedBy?: string;

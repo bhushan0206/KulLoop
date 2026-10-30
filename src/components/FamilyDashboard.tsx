@@ -1,23 +1,23 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { Family, FamilyOccasion, Member } from '../types';
 import { 
   Compass, 
   MapPin, 
   BookOpen, 
   CheckCircle, 
-  Bell, 
-  ShieldCheck, 
   ArrowRight, 
-  Clock, 
   Smartphone, 
   FileText, 
-  Sparkles,
-  Users,
-  GitBranch
+  Users, 
+  GitBranch,
+  History,
+  ShieldCheck
 } from 'lucide-react';
 
+import { ProgressRing } from './ProgressRing';
 import { MonthlyRitualTracker } from './MonthlyRitualTracker';
 import { NextRitualCountdown } from './NextRitualCountdown';
+import { HeritageMilestoneTracker } from './HeritageMilestoneTracker';
 
 interface FamilyDashboardProps {
   family: Family;
@@ -46,9 +46,33 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
   onAddMemoryPhoto,
   onDeleteMemoryPhoto,
 }) => {
-  // Sort upcoming occasions
-  const upcomingOccasions = [...occasions].slice(0, 3);
-  const confirmedCount = occasions.filter((o) => o.isConfirmed).length;
+  const [dashboardFilter, setDashboardFilter] = useState<'all' | 'shraddha' | 'birthday_anniversary'>('all');
+  
+  // Calculate monthly stats
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const monthOccasions = occasions.filter(occ => {
+      const date = new Date(occ.occurrence2027.gregorianDateStr);
+      return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  });
+
+  const confirmedCount = monthOccasions.filter((o) => o.isConfirmed).length;
+  const totalCount = monthOccasions.length;
+  const progress = totalCount > 0 ? (confirmedCount / totalCount) * 100 : 0;
+
+  // Filter upcoming occasions for dashboard display
+  const upcomingOccasions = useMemo(() => {
+    return occasions
+      .filter(occ => {
+        if (dashboardFilter === 'all') return true;
+        if (dashboardFilter === 'shraddha') return occ.occasionType === 'shraddha' || occ.occasionType === 'mahalaya';
+        if (dashboardFilter === 'birthday_anniversary') return occ.occasionType === 'birthday' || occ.occasionType === 'anniversary';
+        return true;
+      })
+      .slice(0, 3);
+  }, [occasions, dashboardFilter]);
 
   return (
     <div className="space-y-10 pb-16">
@@ -101,17 +125,16 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           </div>
 
           {/* Hero Visual */}
-          <div className="lg:col-span-5 relative min-h-[260px] lg:min-h-full bg-stone-950">
-            <img
-              src="/src/assets/images/kulloop_hero_family_1793303629503.jpg"
-              alt="Three generations of family with traditional calendar and mobile reminder"
-              referrerPolicy="no-referrer"
-              className="w-full h-full object-cover object-center"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-transparent to-transparent pointer-events-none" />
-            <div className="absolute bottom-4 left-4 right-4 text-xs text-stone-300 bg-stone-900/80 backdrop-blur-md px-3 py-2 rounded-lg border border-stone-700/60">
-              <span className="font-semibold text-amber-300">The Joshi Family Record</span>: Pune sunrise convention · 4 active members · 3 languages
-            </div>
+          <div className="lg:col-span-5 relative min-h-[260px] lg:min-h-full bg-stone-950 flex flex-col justify-center items-center gap-4">
+             {/* Stats Card */}
+             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 flex items-center gap-6 shadow-xl">
+                 <ProgressRing radius={40} stroke={6} progress={progress} />
+                 <div className="space-y-1">
+                     <div className="text-sm font-bold text-white">Monthly Confirmation Rate</div>
+                     <div className="text-xs text-stone-300">{confirmedCount} of {totalCount} occasions confirmed</div>
+                 </div>
+             </div>
+             <div className="text-xs text-stone-400">Joshi Family Tithi Record</div>
           </div>
         </div>
       </div>
@@ -224,6 +247,14 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
         onDeleteMemoryPhoto={onDeleteMemoryPhoto}
       />
 
+      {/* Heritage Milestone Tracker: Total Years Since Ritual/Anniversary Established */}
+      <HeritageMilestoneTracker
+        occasions={occasions}
+        family={family}
+        onSelectOccasion={onSelectOccasion}
+        onPreviewWhatsApp={onPreviewWhatsApp}
+      />
+
       {/* Visual Family Tree & Lineage Showcase Card */}
       <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-stone-900 rounded-2xl p-6 sm:p-7 text-white border border-stone-800 shadow-md relative overflow-hidden">
         <div className="absolute top-0 right-0 w-80 h-full bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -274,9 +305,28 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           </button>
         </div>
 
+        {/* Filter Bar */}
+        <div className="flex items-center gap-2 p-1 bg-white border border-stone-200 rounded-lg shadow-sm inline-flex">
+          {(['all', 'shraddha', 'birthday_anniversary'] as const).map(filter => (
+            <button
+              key={filter}
+              onClick={() => setDashboardFilter(filter)}
+              className={`px-4 py-1.5 text-xs font-medium rounded-md capitalize transition-colors cursor-pointer ${
+                dashboardFilter === filter 
+                  ? 'bg-amber-400 text-stone-900 shadow-2xs' 
+                  : 'text-stone-600 hover:bg-stone-100'
+              }`}
+            >
+              {filter.replace('_', ' & ')}
+            </button>
+          ))}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {upcomingOccasions.map((occ) => {
             const isShraddha = occ.occasionType === 'shraddha' || occ.occasionType === 'mahalaya';
+            const estYear = occ.establishedYear || occ.gregorianFields?.originalYear;
+            const yearsSinceEstablished = estYear ? 2027 - estYear : null;
             return (
               <div
                 key={occ.id}
@@ -303,6 +353,18 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
                       </p>
                     )}
                   </div>
+
+                  {/* Heritage Milestone Badge on Card */}
+                  {estYear && yearsSinceEstablished && (
+                    <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-900 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-md">
+                      <History className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                      <span className="tabular-nums font-semibold">
+                        {yearsSinceEstablished}th Year of Tradition
+                      </span>
+                      <span className="text-stone-400 font-normal">·</span>
+                      <span className="text-stone-500 font-normal">Est. {estYear}</span>
+                    </div>
+                  )}
 
                   <div className="p-3 bg-stone-50 rounded-lg text-xs space-y-1 border border-stone-100">
                     <div className="flex items-center justify-between text-stone-800 font-semibold">

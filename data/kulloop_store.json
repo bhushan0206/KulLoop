@@ -1,0 +1,1377 @@
+{
+  "meta": {
+    "driver": "file-json-persistent-engine",
+    "version": 1,
+    "createdAt": "2026-10-29T21:47:53.625Z",
+    "lastSavedAt": "2026-10-29T21:48:15.467Z",
+    "persistenceFile": "/app/applet/data/kulloop_store.json",
+    "recordsCount": {
+      "occasions": 9,
+      "members": 4,
+      "people": 3,
+      "lineageMembers": 9,
+      "users": 5
+    }
+  },
+  "family": {
+    "id": "fam_joshi_01",
+    "name": "The Joshi Family (जोशी परिवार)",
+    "homeLocation": "Pune, Maharashtra (पुणे)",
+    "secondLocation": "Toronto, Canada",
+    "region": "Maharashtra",
+    "convention": "Amanta",
+    "validationSource": "Datar Panchang (Amanta) — reviewed with Pt. Shrikant Joshi",
+    "plan": "pilot_founding",
+    "payer": "configurator",
+    "configuratorName": "Bhushan Joshi",
+    "configuratorPhone": "+91 98220 12345",
+    "traditionNotes": "Kuldevta: Khandoba (Jejuri). Follows Amanta calendar for shraddhas tied to local sunrise in Pune. Mahalaya shraddha kept on ancestor tithi.",
+    "consultedEntity": "An elder"
+  },
+  "occasions": [
+    {
+      "id": "occ_shraddha_vasant",
+      "familyId": "fam_joshi_01",
+      "title": "Shraddha: Late Vasant Joshi (Ajoba)",
+      "occasionType": "shraddha",
+      "recurrenceType": "tithi",
+      "personIds": [
+        "per_vasant"
+      ],
+      "personNameDisplay": "Late Vasant Joshi (कै. वसंत जोशी)",
+      "relationshipDisplay": "Grandfather (आजोबा)",
+      "tithiFields": {
+        "paksha": "Krishna",
+        "lunarMonth": "Magha",
+        "tithi": "Saptami",
+        "pakshaDevanagari": "कृष्ण पक्ष (वद्य)",
+        "lunarMonthDevanagari": "माघ",
+        "tithiDevanagari": "सप्तमी"
+      },
+      "gregorianFields": {
+        "day": 14,
+        "month": 2,
+        "originalYear": 1988
+      },
+      "establishedYear": 1988,
+      "heritageNotes": "Inaugurated following Ajoba’s departure in Magha 1988; unbroken annual tithi observance faithfully kept across three generations.",
+      "mahalayaOverride": "same_tithi",
+      "isConfirmed": true,
+      "confirmedSource": "Confirmed by Aaji & Pt. Shrikant Joshi (Datar Panchang p. 42)",
+      "practiceNotes": "Annual death-anniversary tithi. Performed at home before noon. Cow grass (Gau-grasa) and charity given to local vedic pathashala.",
+      "priority": "high",
+      "occurrence2027": {
+        "year": 2027,
+        "gregorianDateStr": "2027-02-28",
+        "formattedDisplay": "28 February 2027",
+        "weekday": "Sunday",
+        "sunriseTime": "06:54 AM IST (Pune)",
+        "tithiSpan": "Magha Krishna Saptami begins 04:12 AM, ends 03:22 PM",
+        "isVerified": true,
+        "validationSourceUsed": "Datar Panchang 2026-27 (Amanta)",
+        "edgeCaseNote": "Standard observance; verified against sunrise rule in Pune."
+      },
+      "contentNote": {
+        "mr": {
+          "title": "कै. वसंत जोशी (आजोबा) यांची पुण्यतिथी / श्राद्ध तिथी स्मरण",
+          "body": "येत्या रविवारी, २८ फेब्रुवारी २०२७ रोजी कै. वसंत जोशी यांची श्राद्ध तिथी (माघ कृष्ण सप्तमी) आहे. हे स्मरण पुणे सूर्योदयानुरूप निश्चित केले आहे.",
+          "prepList": [
+            "काळे तीळ, दर्भ, सातूचे पीठ आणि कापूर आदल्या दिवशी तयार ठेवा.",
+            "ब्राह्मण भोजनाची अथवा शिध्याची वेळ सकाळी ११:३० ते १२:३० दरम्यान अनुकूल आहे.",
+            "गायीसाठी गोग्रास व पानाचा नैवेद्य राखून ठेवावा."
+          ]
+        },
+        "hi": {
+          "title": "पूज्य दादाजी (कै. वसंत जोशी) का वार्षिक श्राद्ध स्मरण",
+          "body": "आगामी रविवार, २८ फरवरी २०२७ को पूज्य दादाजी कै. वसंत जोशी की श्राद्ध तिथि (माघ कृष्ण सप्तमी) है। यह तिथि पुणे के स्थानीय सूर्योदय अनुसार नियत की गई है।",
+          "prepList": [
+            "काले तिल, कुश (दर्भ), जौ का आटा और कपूर पहले से एकत्र कर लें।",
+            "ब्राह्मण भोजन व तर्पण का समय दोपहर ११:३० से १२:३० बजे सबसे उपयुक्त है।",
+            "गाय और कौवे के लिए प्रथम ग्रास अलग निकालें।"
+          ]
+        },
+        "en": {
+          "title": "Annual Shraddha Tithi: Late Vasant Joshi (Grandfather)",
+          "body": "Coming up on Sunday, 28 February 2027 is the Shraddha Tithi for Grandfather Vasant Joshi (Magha Krishna Saptami), observed as per Pune home sunrise.",
+          "prepList": [
+            "Keep black sesame seeds, darbha grass, barley flour, and camphor ready.",
+            "Ritual & meal timings are observed between 11:30 AM and 12:30 PM.",
+            "Reserve the traditional offering (gau-grasa) for cows and charity."
+          ]
+        }
+      },
+      "myDharoharGuideUrl": "https://www.mydharohar.org/guides/shraddha-vidhi-essentials",
+      "isPerformed": false
+    },
+    {
+      "id": "occ_aaji_bday_tithi",
+      "familyId": "fam_joshi_01",
+      "title": "Aaji's Birthday (Tithi-Based)",
+      "occasionType": "birthday",
+      "recurrenceType": "tithi",
+      "personIds": [
+        "per_aaji"
+      ],
+      "personNameDisplay": "Malati Joshi (Aaji)",
+      "relationshipDisplay": "Grandmother (आजी)",
+      "tithiFields": {
+        "paksha": "Shukla",
+        "lunarMonth": "Shravana",
+        "tithi": "Panchami",
+        "pakshaDevanagari": "शुक्ल पक्ष",
+        "lunarMonthDevanagari": "श्रावण",
+        "tithiDevanagari": "पंचमी (नागपंचमी)"
+      },
+      "establishedYear": 1948,
+      "heritageNotes": "First recorded in family Janma Patrika on Nagpanchami 1948; traditional aarti and elders’ blessings celebrated each year.",
+      "isConfirmed": true,
+      "confirmedSource": "Aaji’s Janma Patrika / Family record",
+      "practiceNotes": "Aaji turns 79. Celebrated by tithi on Nagpanchami day. Grandchildren seek blessings; sweet puran poli or payasam is prepared.",
+      "priority": "high",
+      "occurrence2027": {
+        "year": 2027,
+        "gregorianDateStr": "2027-08-07",
+        "formattedDisplay": "7 August 2027",
+        "weekday": "Saturday",
+        "sunriseTime": "06:12 AM IST (Pune)",
+        "tithiSpan": "Shravana Shukla Panchami lasts till 11:45 PM",
+        "isVerified": true,
+        "validationSourceUsed": "Datar Panchang 2027-28"
+      },
+      "contentNote": {
+        "mr": {
+          "title": "आजींचा तिथीनुसार वाढदिवस (श्रावण शुक्ल पंचमी)",
+          "body": "येत्या शनिवारी, ७ ऑगस्ट २०२७ रोजी आजींचा तिथीनुसार वाढदिवस आहे. आपण सर्व मिळून त्यांना शुभेच्छा देऊया व आशीर्वाद घेऊया!",
+          "wish": "आदरणीय आजी, वाढदिवसाच्या हार्दिक शुभेच्छा! आपल्याला उत्तम आरोग्य, दीर्घायुष्य आणि मनःशांती लाभो हीच ईश्वरचरणी प्रार्थना. - आपला जोशी परिवार."
+        },
+        "hi": {
+          "title": "दादीजी का तिथी अनुसार जन्मदिन (श्रावण शुक्ल पंचमी)",
+          "body": "शनिवार, ७ अगस्त २०२७ को दादीजी का तिथी अनुसार जन्मदिन है। पूरे परिवार की ओर से उन्हें नमन और शुभकामनाएं।",
+          "wish": "पूज्य दादीजी, जन्मदिन की अनंत शुभकामनाएं! ईश्वर से आपके उत्तम स्वास्थ्य, दीर्घायु और सुख-शांति की प्रार्थना है।"
+        },
+        "en": {
+          "title": "Aaji's Tithi Birthday (Shravana Shukla Panchami)",
+          "body": "Coming Saturday, 7 August 2027 is Aaji's birthday as per the traditional tithi (Nagpanchami). Forward your warm wishes and call her for blessings!",
+          "wish": "Dearest Aaji, wishing you a joyous and blessed birthday! May God grace you with vibrant health, peace, and long life. With all our love."
+        }
+      }
+    },
+    {
+      "id": "occ_aniket_bday_date",
+      "familyId": "fam_joshi_01",
+      "title": "Aniket's Birthday (Calendar Date)",
+      "occasionType": "birthday",
+      "recurrenceType": "gregorian",
+      "personIds": [
+        "per_aniket"
+      ],
+      "personNameDisplay": "Aniket Joshi",
+      "relationshipDisplay": "Grandson / Son",
+      "gregorianFields": {
+        "day": 14,
+        "month": 10,
+        "originalYear": 2012
+      },
+      "establishedYear": 2012,
+      "heritageNotes": "First recorded upon Aniket’s birth on 14 October 2012 in Pune; celebrated each year with family blessings.",
+      "isConfirmed": true,
+      "confirmedSource": "Birth Certificate",
+      "practiceNotes": "Kept by Gregorian date (14 October). Turning 15 in 2027.",
+      "priority": "normal",
+      "occurrence2027": {
+        "year": 2027,
+        "gregorianDateStr": "2027-10-14",
+        "formattedDisplay": "14 October 2027",
+        "weekday": "Thursday",
+        "sunriseTime": "06:28 AM IST",
+        "tithiSpan": "Ashwin Shukla Trayodashi",
+        "isVerified": true,
+        "validationSourceUsed": "Civil Calendar"
+      },
+      "contentNote": {
+        "mr": {
+          "title": "अनिकेतचा वाढदिवस (१४ ऑक्टोबर)",
+          "body": "१४ ऑक्टोबर रोजी अनिकेत १५ वर्षांचा होत आहे! अनिकेतला कौतुक आणि खूप खूप शुभेच्छा.",
+          "wish": "प्रिय अनिकेत, वाढदिवसाच्या अनेक उत्तम शुभेच्छा! तुझ्या अभ्यासात आणि सर्व छंदात तुला उत्तम यश लाभो."
+        },
+        "hi": {
+          "title": "अनिकेत का जन्मदिन (१४ अक्टूबर)",
+          "body": "१४ अक्टूबर को अनिकेत का जन्मदिन है! अनिकेत को स्नेह और हार्दिक शुभकामनाएं।",
+          "wish": "प्रिय अनिकेत, जन्मदिन की ढ़ेरों बधाई! तुम जीवन में खूब तरक्की करो और स्वस्थ रहो।"
+        },
+        "en": {
+          "title": "Aniket's Birthday (14 October)",
+          "body": "Aniket turns 15 on Thursday, 14 October! Don't forget to send him your wishes.",
+          "wish": "Happy Birthday Aniket! Wishing you a wonderful year ahead filled with learning, laughter, and high scores!"
+        }
+      }
+    },
+    {
+      "id": "occ_ganesh_chaturthi",
+      "familyId": "fam_joshi_01",
+      "title": "Ganesh Chaturthi (Family Deity Arrival)",
+      "occasionType": "festival",
+      "recurrenceType": "festival_rule",
+      "personIds": [],
+      "festivalKey": "ganesh_chaturthi",
+      "establishedYear": 1974,
+      "heritageNotes": "Ancestral Ganpati sthapana tradition instituted at the family Wada in Sadashiv Peth, Pune in 1974.",
+      "isConfirmed": true,
+      "confirmedSource": "Datar Panchang (Reviewed)",
+      "practiceNotes": "Family installs Ganpati Bappa for 5 days. Ancestral traditions maintained from Pune Wada.",
+      "priority": "normal",
+      "occurrence2027": {
+        "year": 2027,
+        "gregorianDateStr": "2027-09-04",
+        "formattedDisplay": "4 September 2027",
+        "weekday": "Saturday",
+        "sunriseTime": "06:18 AM IST",
+        "tithiSpan": "Bhadrapada Shukla Chaturthi (Madhyahna Muhurat 11:15 AM - 01:42 PM)",
+        "isVerified": true,
+        "validationSourceUsed": "Datar Panchang (Amanta)"
+      },
+      "contentNote": {
+        "mr": {
+          "title": "श्री गणेश चतुर्थी (बाप्पांचे आगमन)",
+          "body": "शनिवार, ४ सप्टेंबर २०२७ रोजी श्री गणेश चतुर्थी आहे. घरात ५ दिवसांच्या बाप्पांचे स्वागत होईल. मध्यान्ह प्रतिष्ठापना मुहूर्त ११:१५ ते दुपारी ०१:४२.",
+          "prepList": [
+            "पाट, रांगोळी, दुर्वा, जास्वंदाची फुले आणि मोदकाची तयारी आदल्या दिवशी करा.",
+            "घरातील पूजेचे साहित्य व सुट्टे नाणी वेळेत तयार ठेवा."
+          ]
+        },
+        "hi": {
+          "title": "श्री गणेश चतुर्थी महोत्सव",
+          "body": "शनिवार, ४ सितंबर २०२७ को श्री गणेश चतुर्थी है। दोपहर प्रतिष्ठापना मुहूर्त पूर्वाह्न ११:१५ से दोपहर ०१:४२ तक है।",
+          "prepList": [
+            "दूर्वा, लाल गुड़हल फूल, मोदक प्रसाद की सामग्री तैयार रखें।",
+            "पूजन स्थल को स्वच्छ कर रंगोली बनाएं।"
+          ]
+        },
+        "en": {
+          "title": "Ganesh Chaturthi (Family Observance)",
+          "body": "Saturday, 4 September 2027 is Ganesh Chaturthi. The Joshi family hosts Bappa for 5 days. Auspicious sthapana window: 11:15 AM - 01:42 PM.",
+          "prepList": [
+            "Procure fresh durva grass, red hibiscus flowers, modak ingredients.",
+            "Prepare the wooden altar (paat) and rangoli on Friday evening."
+          ]
+        }
+      },
+      "myDharoharGuideUrl": "https://www.mydharohar.org/guides/ganpati-puja-preparation"
+    },
+    {
+      "id": "occ_sankashti_angarki",
+      "familyId": "fam_joshi_01",
+      "title": "Angarki Sankashti Chaturthi (Special Vrat)",
+      "occasionType": "vrat_kuldevta",
+      "recurrenceType": "tithi",
+      "personIds": [],
+      "tithiFields": {
+        "paksha": "Krishna",
+        "lunarMonth": "Phalguna",
+        "tithi": "Chaturthi",
+        "pakshaDevanagari": "कृष्ण पक्ष (वद्य)",
+        "lunarMonthDevanagari": "फाल्गुन",
+        "tithiDevanagari": "चतुर्थी (अंगारकी योग)"
+      },
+      "establishedYear": 1991,
+      "heritageNotes": "Special family sankalpa taken during Angarki yoga in 1991 for family wellbeing and uninterrupted prosperity.",
+      "isConfirmed": true,
+      "confirmedSource": "Validation Source Check: Falls on Tuesday (Bhauma-vara)",
+      "practiceNotes": "Aaji and Bhushan keep full day upvas. Fast breaks only after Chandrodaya (Moonrise) puja.",
+      "priority": "normal",
+      "occurrence2027": {
+        "year": 2027,
+        "gregorianDateStr": "2027-03-27",
+        "formattedDisplay": "27 March 2027",
+        "weekday": "Saturday",
+        "sunriseTime": "06:33 AM IST",
+        "tithiSpan": "Phalguna Krishna Chaturthi (Moonrise at 09:18 PM)",
+        "isVerified": true,
+        "validationSourceUsed": "Datar Panchang"
+      },
+      "contentNote": {
+        "mr": {
+          "title": "संकष्टी चतुर्थी उपवास व चंद्रोदय",
+          "body": "२७ मार्च २०२७ रोजी संकष्टी चतुर्थी आहे. उपवास करणाऱ्यांसाठी पुणे येथील चंद्रोदय वेळ रात्री ९ वाजून १८ मिनिटे आहे.",
+          "prepList": [
+            "चंद्राला अर्घ्य देण्यासाठी दुर्वा व पाणी तयार ठेवावे.",
+            "मोदक किंवा उपवासाची खीर तयार ठेवा."
+          ]
+        },
+        "hi": {
+          "title": "संकष्टी चतुर्थी व्रत व चंद्रोदय समय",
+          "body": "२७ मार्च २०२७ को संकष्टी चतुर्थी व्रत है। पुणे में चंद्रोदय का समय रात्रि ०९:१८ बजे रहेगा।",
+          "prepList": [
+            "चंद्र दर्शन हेतु कच्चा दूध, जल व रोली तैयार रखें।"
+          ]
+        },
+        "en": {
+          "title": "Sankashti Chaturthi Vrat & Moonrise",
+          "body": "Saturday, 27 March 2027 is Sankashti Chaturthi. For those observing the fast, moonrise in Pune is at 09:18 PM.",
+          "prepList": [
+            "Keep arghya offering ready for the moon after 09:18 PM."
+          ]
+        }
+      }
+    },
+    {
+      "id": "occ_milestone_grihapravesh",
+      "familyId": "fam_joshi_01",
+      "title": "Pune House Griha Pravesh (Anniversary)",
+      "occasionType": "milestone",
+      "recurrenceType": "gregorian",
+      "personIds": [],
+      "gregorianFields": {
+        "day": 22,
+        "month": 11,
+        "originalYear": 1998
+      },
+      "establishedYear": 1998,
+      "heritageNotes": "Griha Pravesh ceremony celebrated by Late Vasant & Malati Joshi upon building the family home in 1998.",
+      "isConfirmed": true,
+      "confirmedSource": "Family House Deeds & Memory",
+      "practiceNotes": "Milestone memory: In 1998, Aaji and Late Ajoba completed the house in Pune. 29 years of blessings in 2027.",
+      "priority": "digest",
+      "occurrence2027": {
+        "year": 2027,
+        "gregorianDateStr": "2027-11-22",
+        "formattedDisplay": "22 November 2027",
+        "weekday": "Monday",
+        "sunriseTime": "06:40 AM IST",
+        "tithiSpan": "Margashirsha Shukla Pratipada",
+        "isVerified": true,
+        "validationSourceUsed": "Family Milestone Registry"
+      },
+      "contentNote": {
+        "mr": {
+          "title": "आपल्या कुटुंबाची आठवण: पुणे घराचा गृहप्रवेश (१९९८)",
+          "body": "२२ नोव्हेंबर १९९८ रोजी आजोबा आणि आजी यांनी पुणे घराचा गृहप्रवेश केला होता. आज या घराला २९ वर्षे पूर्ण झाली आहेत. घरच्या सर्वांना खूप प्रेम!"
+        },
+        "hi": {
+          "title": "पारिवारिक संस्मरण: पुणे गृह प्रवेश (१९९८)",
+          "body": "२२ नवंबर १९९८ को दादाजी और दादीजी ने पुणे निवास का गृहप्रवेश किया था। घर के २९ वर्ष पूरे होने पर सभी को मंगलकामनाएं।"
+        },
+        "en": {
+          "title": "Today in Our Family: Pune House Griha Pravesh (1998)",
+          "body": "On 22 November 1998, Aaji and Late Ajoba held the housewarming (Griha Pravesh) for the family home in Pune. Celebrating 29 wonderful years of family memories."
+        }
+      }
+    },
+    {
+      "id": "occ_rama_ekadashi_2026",
+      "familyId": "fam_joshi_01",
+      "title": "Rama Ekadashi Vrat (रमा एकादशी)",
+      "occasionType": "vrat_kuldevta",
+      "recurrenceType": "tithi",
+      "personIds": [],
+      "tithiFields": {
+        "paksha": "Krishna",
+        "lunarMonth": "Ashwin",
+        "tithi": "Ekadashi",
+        "pakshaDevanagari": "कृष्ण पक्ष (वद्य)",
+        "lunarMonthDevanagari": "अश्विन",
+        "tithiDevanagari": "एकादशी (रमा एकादशी)"
+      },
+      "isConfirmed": true,
+      "confirmedSource": "Datar Panchang 2026-27",
+      "establishedYear": 1980,
+      "heritageNotes": "Ekadashi vrata niyama observed continuously since 1980 by Aaji and family elders.",
+      "practiceNotes": "Aaji observed full-day upvas. Fruits and sabudana khichdi prepared at home.",
+      "priority": "normal",
+      "isPerformed": true,
+      "performedAt": "26 Oct 2026, 11:30 AM",
+      "performedBy": "Malati Joshi (Aaji) & Bhushan",
+      "performedNotes": "Vishnu Sahasranama chanted in the morning. Tulsi puja completed.",
+      "memoryPhotos": [
+        {
+          "id": "photo_rama_1",
+          "url": "/src/assets/images/kulloop_avatar_elder_1793303629841.jpg",
+          "caption": "Aaji offering fresh tulsi leaves and water during morning puja",
+          "year": 2026,
+          "uploadedAt": "26 Oct 2026"
+        }
+      ],
+      "occurrence2027": {
+        "year": 2026,
+        "gregorianDateStr": "2026-10-26",
+        "formattedDisplay": "26 October 2026",
+        "weekday": "Monday",
+        "sunriseTime": "06:29 AM IST (Pune)",
+        "tithiSpan": "Ashwin Krishna Ekadashi ends 01:14 PM",
+        "isVerified": true,
+        "validationSourceUsed": "Datar Panchang (Amanta)"
+      },
+      "contentNote": {
+        "mr": {
+          "title": "रमा एकादशी उपवास व विष्णू पूजा",
+          "body": "२६ ऑक्टोबर २०२६ रोजी रमा एकादशी आहे. विष्णू पूजा व तुळशीजवळ दिवा लावणे."
+        },
+        "hi": {
+          "title": "रमा एकादशी व्रत",
+          "body": "२६ अक्टूबर २०२६ को रमा एकादशी व्रत है।"
+        },
+        "en": {
+          "title": "Rama Ekadashi Vrat",
+          "body": "Monday, 26 October 2026 is Rama Ekadashi observance."
+        }
+      }
+    },
+    {
+      "id": "occ_dhantrayodashi_2026",
+      "familyId": "fam_joshi_01",
+      "title": "Dhanatrayodashi (धनत्रयोदशी व यमदीपदान)",
+      "occasionType": "festival",
+      "recurrenceType": "tithi",
+      "personIds": [],
+      "tithiFields": {
+        "paksha": "Krishna",
+        "lunarMonth": "Ashwin",
+        "tithi": "Trayodashi",
+        "pakshaDevanagari": "कृष्ण पक्ष",
+        "lunarMonthDevanagari": "अश्विन",
+        "tithiDevanagari": "त्रयोदशी"
+      },
+      "isConfirmed": true,
+      "confirmedSource": "Datar Panchang",
+      "establishedYear": 1968,
+      "heritageNotes": "Ancestral Yamadeep daan tradition practiced uninterrupted since 1968 with 13 lamps facing South.",
+      "practiceNotes": "Dhanvantari puja and twilight Yamadeep lighting towards south direction.",
+      "priority": "high",
+      "isPerformed": true,
+      "performedAt": "29 Oct 2026, 06:45 PM",
+      "performedBy": "The Joshi Family",
+      "performedNotes": "Lighting of 13 oil diyas at entrance and coriander seed naivedya offered.",
+      "memoryPhotos": [
+        {
+          "id": "photo_dhan_1",
+          "url": "/src/assets/images/kulloop_almanac_art_1793303629720.jpg",
+          "caption": "Traditional brass deep and marigold offerings placed at the entrance for Yamadeep daan",
+          "year": 2026,
+          "uploadedAt": "29 Oct 2026"
+        },
+        {
+          "id": "photo_dhan_2",
+          "url": "/src/assets/images/kulloop_hero_family_1793303629503.jpg",
+          "caption": "Family gathering in the veranda for evening deep pujan",
+          "year": 2026,
+          "uploadedAt": "29 Oct 2026"
+        }
+      ],
+      "occurrence2027": {
+        "year": 2026,
+        "gregorianDateStr": "2026-10-29",
+        "formattedDisplay": "29 October 2026",
+        "weekday": "Thursday",
+        "sunriseTime": "06:31 AM IST",
+        "tithiSpan": "Ashwin Krishna Trayodashi Pradosh Kaal 05:52 PM - 08:24 PM",
+        "isVerified": true,
+        "validationSourceUsed": "Datar Panchang"
+      },
+      "contentNote": {
+        "mr": {
+          "title": "धनत्रयोदशी व यमदीपदान",
+          "body": "२९ ऑक्टोबर रोजी प्रदोष काळात दक्षिण दिशेला दिवा प्रज्वलित करावा."
+        },
+        "hi": {
+          "title": "धनतेरस व यम दीपदान",
+          "body": "२९ अक्टूबर को प्रदोष काल में दीपदान करें।"
+        },
+        "en": {
+          "title": "Dhanatrayodashi & Yamadeep Daan",
+          "body": "Thursday, 29 October 2026 during evening Pradosh window."
+        }
+      }
+    },
+    {
+      "id": "occ_diwali_lakshmi_2026",
+      "familyId": "fam_joshi_01",
+      "title": "Diwali Lakshmi Puja (दिवाळी / लक्ष्मीपूजन)",
+      "occasionType": "festival",
+      "recurrenceType": "tithi",
+      "personIds": [],
+      "tithiFields": {
+        "paksha": "Krishna",
+        "lunarMonth": "Ashwin",
+        "tithi": "Amavasya",
+        "pakshaDevanagari": "कृष्ण पक्ष",
+        "lunarMonthDevanagari": "अश्विन",
+        "tithiDevanagari": "अमावास्या"
+      },
+      "isConfirmed": true,
+      "confirmedSource": "Datar Panchang",
+      "establishedYear": 1972,
+      "heritageNotes": "Traditional ledger chopda and Lakshmi-Kuber archana handed down since 1972.",
+      "practiceNotes": "Chopda pujan and home Lakshmi-Kuber archana in the evening.",
+      "priority": "high",
+      "isPerformed": false,
+      "occurrence2027": {
+        "year": 2026,
+        "gregorianDateStr": "2026-10-31",
+        "formattedDisplay": "31 October 2026",
+        "weekday": "Saturday",
+        "sunriseTime": "06:32 AM IST",
+        "tithiSpan": "Ashwin Amavasya Muhurat: 06:15 PM - 08:18 PM",
+        "isVerified": true,
+        "validationSourceUsed": "Datar Panchang"
+      },
+      "contentNote": {
+        "mr": {
+          "title": "श्री महालक्ष्मी पूजन मुहूर्त",
+          "body": "३१ ऑक्टोबर २०२६ रोजी संध्याकाळी ०६:१५ ते ०८:१८ दरम्यान लक्ष्मीपूजन शुभ मुहूर्त आहे.",
+          "prepList": [
+            "कमळाचे फूल, बत्तासे, लाह्या, दुर्वा आणि पंचामृत तयार ठेवा."
+          ]
+        },
+        "hi": {
+          "title": "श्री लक्ष्मी पूजन",
+          "body": "३१ अक्टूबर २०२६ को सायं ०६:१५ से ०८:१८ तक शुभ मुहूर्त है।"
+        },
+        "en": {
+          "title": "Diwali Lakshmi Puja",
+          "body": "Saturday, 31 October 2026. Auspicious Pradosh window: 06:15 PM - 08:18 PM."
+        }
+      }
+    }
+  ],
+  "members": [
+    {
+      "id": "mem_aaji",
+      "familyId": "fam_joshi_01",
+      "name": "Malati Joshi (Aaji / Grandmother)",
+      "relationship": "Mother / Grandmother (Elder)",
+      "phone": "+91 98221 44556",
+      "email": "malati.joshi@example.com",
+      "language": "mr",
+      "country": "India",
+      "city": "Pune",
+      "timeZone": "Asia/Kolkata",
+      "optIns": "all",
+      "leadTime": "7+2",
+      "receiveDayOfNote": true,
+      "digestPreference": "individual",
+      "frequencyCapPerWeek": 2,
+      "status": "active",
+      "reminderPreferences": {
+        "emailAddress": "malati.joshi@example.com",
+        "pushEnabled": false,
+        "categories": {
+          "shraddha": {
+            "whatsapp": true,
+            "email": false,
+            "push": false
+          },
+          "birthday": {
+            "whatsapp": true,
+            "email": false,
+            "push": false
+          },
+          "vrat_kuldevta": {
+            "whatsapp": true,
+            "email": false,
+            "push": false
+          },
+          "festival": {
+            "whatsapp": true,
+            "email": false,
+            "push": false
+          },
+          "milestone": {
+            "whatsapp": true,
+            "email": false,
+            "push": false
+          }
+        }
+      }
+    },
+    {
+      "id": "mem_sunita",
+      "familyId": "fam_joshi_01",
+      "name": "Sunita Joshi",
+      "relationship": "Daughter (Abroad in Canada)",
+      "phone": "+1 416 555 0192",
+      "email": "sunita.j@example.ca",
+      "language": "en",
+      "country": "Canada",
+      "city": "Toronto",
+      "timeZone": "America/Toronto",
+      "optIns": "all",
+      "leadTime": "7+2",
+      "receiveDayOfNote": true,
+      "digestPreference": "weekly_digest",
+      "frequencyCapPerWeek": 2,
+      "status": "active",
+      "reminderPreferences": {
+        "emailAddress": "sunita.j@example.ca",
+        "pushEnabled": true,
+        "categories": {
+          "shraddha": {
+            "whatsapp": true,
+            "email": true,
+            "push": true
+          },
+          "birthday": {
+            "whatsapp": true,
+            "email": true,
+            "push": true
+          },
+          "vrat_kuldevta": {
+            "whatsapp": true,
+            "email": false,
+            "push": true
+          },
+          "festival": {
+            "whatsapp": true,
+            "email": true,
+            "push": false
+          },
+          "milestone": {
+            "whatsapp": true,
+            "email": true,
+            "push": true
+          }
+        }
+      }
+    },
+    {
+      "id": "mem_rajesh",
+      "familyId": "fam_joshi_01",
+      "name": "Rajesh Joshi",
+      "relationship": "Brother / Son in Delhi",
+      "phone": "+91 98110 99887",
+      "email": "rajesh.joshi@example.in",
+      "language": "hi",
+      "country": "India",
+      "city": "New Delhi",
+      "timeZone": "Asia/Kolkata",
+      "optIns": "all",
+      "leadTime": "7+2",
+      "receiveDayOfNote": true,
+      "digestPreference": "individual",
+      "frequencyCapPerWeek": 3,
+      "status": "active",
+      "reminderPreferences": {
+        "emailAddress": "rajesh.joshi@example.in",
+        "pushEnabled": true,
+        "categories": {
+          "shraddha": {
+            "whatsapp": true,
+            "email": true,
+            "push": true
+          },
+          "birthday": {
+            "whatsapp": true,
+            "email": false,
+            "push": true
+          },
+          "vrat_kuldevta": {
+            "whatsapp": false,
+            "email": false,
+            "push": false
+          },
+          "festival": {
+            "whatsapp": true,
+            "email": false,
+            "push": false
+          },
+          "milestone": {
+            "whatsapp": true,
+            "email": true,
+            "push": true
+          }
+        }
+      }
+    },
+    {
+      "id": "mem_bhushan",
+      "familyId": "fam_joshi_01",
+      "name": "Bhushan Joshi (Configurator)",
+      "relationship": "Son / Configurator",
+      "phone": "+91 98220 12345",
+      "email": "bhushangavhale86@gmail.com",
+      "language": "mr",
+      "country": "India",
+      "city": "Pune",
+      "timeZone": "Asia/Kolkata",
+      "optIns": "all",
+      "leadTime": "7+2",
+      "receiveDayOfNote": true,
+      "digestPreference": "individual",
+      "frequencyCapPerWeek": 4,
+      "status": "active",
+      "reminderPreferences": {
+        "emailAddress": "bhushangavhale86@gmail.com",
+        "pushEnabled": true,
+        "categories": {
+          "shraddha": {
+            "whatsapp": true,
+            "email": true,
+            "push": true
+          },
+          "birthday": {
+            "whatsapp": true,
+            "email": true,
+            "push": true
+          },
+          "vrat_kuldevta": {
+            "whatsapp": true,
+            "email": false,
+            "push": true
+          },
+          "festival": {
+            "whatsapp": true,
+            "email": true,
+            "push": true
+          },
+          "milestone": {
+            "whatsapp": true,
+            "email": true,
+            "push": true
+          }
+        }
+      }
+    }
+  ],
+  "people": [
+    {
+      "id": "per_vasant",
+      "familyId": "fam_joshi_01",
+      "name": "Late Vasant Joshi (Ajoba / Grandfather)",
+      "relationship": "Paternal Grandfather",
+      "isAncestor": true,
+      "gregorianDateOfPassing": "1988-02-14",
+      "confirmedBy": "Malati Joshi (Aaji)",
+      "gotra": "Kashyapa (काश्यप)"
+    },
+    {
+      "id": "per_aaji",
+      "familyId": "fam_joshi_01",
+      "name": "Malati Joshi (Aaji)",
+      "relationship": "Grandmother",
+      "isAncestor": false,
+      "confirmedBy": "Self",
+      "gotra": "Kashyapa"
+    },
+    {
+      "id": "per_aniket",
+      "familyId": "fam_joshi_01",
+      "name": "Aniket Joshi",
+      "relationship": "Grandson / Son",
+      "isAncestor": false,
+      "confirmedBy": "Parents"
+    }
+  ],
+  "lineageMembers": [
+    {
+      "id": "lin_vasant",
+      "familyId": "fam_joshi_01",
+      "name": "Late Vasant Joshi",
+      "nameDevanagari": "कै. वसंत जोशी (आजोबा)",
+      "relationship": "Paternal Grandfather (Patriarch Ancestor)",
+      "relationshipDevanagari": "कै. आजोबा (कुलपुरुष)",
+      "generation": 1,
+      "generationLabel": "Generation I · Ancestors & Patriarchs (प्रथम पिढी)",
+      "isAncestor": true,
+      "gregorianDateOfPassing": "1988-02-14",
+      "tithiOfPassing": "Magha Krishna Saptami (माघ वद्य सप्तमी)",
+      "gotra": "Kashyapa (काश्यप)",
+      "kuldevta": "Khandoba of Jejuri (जेजुरीचा खंडोबा)",
+      "gender": "male",
+      "spouseId": "lin_aaji",
+      "spouseName": "Malati Joshi (Aaji)",
+      "childrenIds": [
+        "lin_bhushan",
+        "lin_sunita",
+        "lin_rajesh"
+      ],
+      "location": "Pune (Ancestral House)",
+      "primaryRole": "Patriarch Ancestor (स्वर्गीय कुलपुरुष)",
+      "primaryRoleDevanagari": "स्वर्गीय कुलपुरुष",
+      "bio": "Founding elder of the contemporary Joshi lineage. The annual shraddha tithi is strictly observed on Magha Krishna Saptami in Pune as per local sunrise convention.",
+      "responsibilities": [
+        {
+          "id": "resp_v1",
+          "occasionId": "occ_shraddha_vasant",
+          "occasionTitle": "Late Vasant Joshi Annual Shraddha Tithi",
+          "role": "Honoree & Elder Blessing (पूज्य आशीर्वाद)",
+          "tithiOrDate": "Magha Krishna Saptami (28 Feb 2027)",
+          "dutySummary": "Ancestral soul honored with annual Vedic pindadana and tarpana.",
+          "checklist": [
+            "Sacred offerings dedicated in his memory",
+            "Tarpana with black sesame seeds and Kush darbha grass",
+            "Sidha dakshina & gau-grasa delivered to local Vedic Pathashala"
+          ],
+          "status": "pending",
+          "notes": "Observed at midday (11:30 AM - 12:30 PM) at the ancestral residence in Pune."
+        },
+        {
+          "id": "resp_v2",
+          "occasionId": "occ_mahalaya",
+          "occasionTitle": "Mahalaya Pitrupaksha Tarpana",
+          "role": "Honoree & Elder Blessing (पूज्य आशीर्वाद)",
+          "tithiOrDate": "Bhadrapada Krishna Saptami",
+          "dutySummary": "Remembered during the sacred ancestor fortnight with sacred water offerings.",
+          "checklist": [
+            "Joint family sankalpa invokes his name and gotra (Kashyapa)",
+            "Annadanam distributed to the needy in Pune"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "lin_aaji",
+      "familyId": "fam_joshi_01",
+      "name": "Malati Joshi",
+      "nameDevanagari": "मालती जोशी (आजी)",
+      "relationship": "Paternal Grandmother (Matriarch Elder)",
+      "relationshipDevanagari": "आजी (कुलमाता)",
+      "generation": 1,
+      "generationLabel": "Generation I · Elders & Ancestors (प्रथम पिढी)",
+      "isAncestor": false,
+      "gotra": "Kashyapa (काश्यप)",
+      "kuldevta": "Khandoba of Jejuri (जेजुरीचा खंडोबा)",
+      "gender": "female",
+      "spouseId": "lin_vasant",
+      "spouseName": "Late Vasant Joshi",
+      "childrenIds": [
+        "lin_bhushan",
+        "lin_sunita",
+        "lin_rajesh"
+      ],
+      "location": "Pune, Maharashtra",
+      "avatarUrl": "/src/assets/images/kulloop_avatar_elder_1793303629841.jpg",
+      "phone": "+91 98221 44556",
+      "language": "mr",
+      "primaryRole": "Family Matriarch & Oral Tithi Guardian (कुलमाता व स्मृती रक्षक)",
+      "primaryRoleDevanagari": "कुलमाता व परंपरा रक्षक",
+      "bio": "Elder matriarch (age 78) holding the oral memory of ancestral dates, vows, and traditional recipes. Received heartfelt family reverence on her birthday tithi (Phalguna Shukla Dwadashi).",
+      "responsibilities": [
+        {
+          "id": "resp_a1",
+          "occasionId": "occ_aaji_bday_tithi",
+          "occasionTitle": "Aaji's Tithi Birthday (Phalguna Shukla Dwadashi)",
+          "role": "Honoree & Elder Blessing (पूज्य आशीर्वाद)",
+          "tithiOrDate": "Phalguna Shukla Dwadashi (20 Mar 2027)",
+          "dutySummary": "Family gathers to perform auspicious aukshan and receive her blessings.",
+          "checklist": [
+            "Aukshan (ओवाळणी) by children and grandchildren",
+            "Bless the entire family with health and unbroken lineage harmony",
+            "Traditional family lunch with puran poli prasad"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "resp_a2",
+          "occasionId": "occ_lakshmi",
+          "occasionTitle": "Diwali Lakshmi Puja",
+          "role": "Co-Host / Sankalpa (संकल्प व पूजा)",
+          "tithiOrDate": "Ashwin Krishna Amavasya (31 Oct 2026)",
+          "dutySummary": "Guides the Sanskrit Lakshmi stotra recitation and traditional thali arrangement.",
+          "checklist": [
+            "Inspect the silver coins, coriander seeds, and batasha offerings",
+            "Lead the chanting of Shri Sukta with family members",
+            "Place the first consecrated sweet before Khandoba altar"
+          ],
+          "status": "in_progress"
+        },
+        {
+          "id": "resp_a3",
+          "occasionId": "occ_shraddha_vasant",
+          "occasionTitle": "Late Vasant Joshi Shraddha Tithi",
+          "role": "Co-Host / Sankalpa (संकल्प व पूजा)",
+          "tithiOrDate": "Magha Krishna Saptami (28 Feb 2027)",
+          "dutySummary": "Verifies the ancestral tithi tradition and guides satvik kitchen preparation.",
+          "checklist": [
+            "Confirm date match with Datar Panchang pages",
+            "Supervise ancestral dish preparation without onion/garlic",
+            "Ensure cow grass (gau-grasa) is set aside prior to human meal"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "lin_bhushan",
+      "familyId": "fam_joshi_01",
+      "name": "Bhushan Joshi",
+      "nameDevanagari": "भूषण जोशी (ज्येष्ठ पुत्र)",
+      "relationship": "Elder Son / Karta / Configurator",
+      "relationshipDevanagari": "ज्येष्ठ पुत्र व कुटुंब यजमान",
+      "generation": 2,
+      "generationLabel": "Generation II · Householders (द्वितीय पिढी)",
+      "isAncestor": false,
+      "gotra": "Kashyapa (काश्यप)",
+      "kuldevta": "Khandoba of Jejuri (जेजुरीचा खंडोबा)",
+      "gender": "male",
+      "parentIds": [
+        "lin_vasant",
+        "lin_aaji"
+      ],
+      "spouseId": "lin_radhika",
+      "spouseName": "Radhika Joshi",
+      "childrenIds": [
+        "lin_aniket"
+      ],
+      "location": "Pune, Maharashtra (Reference Location)",
+      "avatarUrl": "/src/assets/images/kulloop_hero_family_1793303629503.jpg",
+      "phone": "+91 98220 12345",
+      "language": "mr",
+      "primaryRole": "Chief Karta & Ritual Configurator (मुख्य कर्ता व यजमान)",
+      "primaryRoleDevanagari": "मुख्य कर्ता व यजमान",
+      "bio": "Primary ritual host residing at the ancestral house in Pune. Responsible for sunrise tithi calculations, priest coordination, and maintaining KulLoop family records.",
+      "responsibilities": [
+        {
+          "id": "resp_b1",
+          "occasionId": "occ_shraddha_vasant",
+          "occasionTitle": "Late Vasant Joshi Shraddha Tithi",
+          "role": "Chief Karta (मुख्य कर्ता)",
+          "tithiOrDate": "Magha Krishna Saptami (28 Feb 2027)",
+          "dutySummary": "Chief performer of Vedic tarpana and Brahmana samaradhana.",
+          "checklist": [
+            "Observe fast and wear ceremonial dhoti before 11:00 AM",
+            "Coordinate with Pt. Shrikant Joshi for midday home arrival",
+            "Perform ancestral tarpanam with Kush grass, black sesame, and water",
+            "Hand over dakshina and sidha samagri respectfully"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "resp_b2",
+          "occasionId": "occ_lakshmi",
+          "occasionTitle": "Diwali Lakshmi Puja",
+          "role": "Chief Karta (मुख्य कर्ता)",
+          "tithiOrDate": "Ashwin Krishna Amavasya (31 Oct 2026)",
+          "dutySummary": "Leads the family Lakshmi-Kubera aarti and account book consecration.",
+          "checklist": [
+            "Prepare Chopda / digital ledger for auspicious ink mark",
+            "Perform joint sankalpa with spouse Radhika at 06:15 PM Pradosh Kaal",
+            "Lead aarti with conch sound and camphor flame",
+            "Distribute prasad to all family members and staff"
+          ],
+          "status": "in_progress"
+        },
+        {
+          "id": "resp_b3",
+          "occasionId": "occ_sankashti",
+          "occasionTitle": "Monthly Sankashti Chaturthi Vrat",
+          "role": "Co-Host / Sankalpa (संकल्प व पूजा)",
+          "tithiOrDate": "Monthly Krishna Chaturthi",
+          "dutySummary": "Calculates Pune moonrise and conducts Ganapati puja.",
+          "checklist": [
+            "Verify exact moonrise minute in Pune",
+            "Offer 21 fresh durva blades and modak naivedya",
+            "Break day-long fast after Chandradarshana and arghya offering"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "lin_radhika",
+      "familyId": "fam_joshi_01",
+      "name": "Radhika Joshi",
+      "nameDevanagari": "राधिका जोशी (गृहस्वामिनी)",
+      "relationship": "Daughter-in-Law / Homemaker",
+      "relationshipDevanagari": "सून / गृहस्वामिनी",
+      "generation": 2,
+      "generationLabel": "Generation II · Householders (द्वितीय पिढी)",
+      "isAncestor": false,
+      "gotra": "Kashyapa (काश्यप)",
+      "kuldevta": "Khandoba of Jejuri (जेजुरीचा खंडोबा)",
+      "gender": "female",
+      "spouseId": "lin_bhushan",
+      "spouseName": "Bhushan Joshi",
+      "childrenIds": [
+        "lin_aniket"
+      ],
+      "location": "Pune, Maharashtra",
+      "phone": "+91 98220 54321",
+      "language": "mr",
+      "primaryRole": "Puja Coordinator & Naivedya Custodian (नैवेद्य व पाकसंस्कार)",
+      "primaryRoleDevanagari": "गृहस्वामिनी व नैवेद्य व्यवस्था",
+      "bio": "Oversees the ritual kitchen, auspicious threshold rangolis, and pristine samagri preparation for every festival and shraddha observance.",
+      "responsibilities": [
+        {
+          "id": "resp_r1",
+          "occasionId": "occ_lakshmi",
+          "occasionTitle": "Diwali Lakshmi Puja",
+          "role": "Naivedya & Prasad (नैवेद्य व पाकसंस्कार)",
+          "tithiOrDate": "Ashwin Krishna Amavasya (31 Oct 2026)",
+          "dutySummary": "Prepares traditional coriander-jaggery prasad and sacred floor designs.",
+          "checklist": [
+            "Draw auspicious lotus and footprint rangolis at entrance",
+            "Prepare dhane-gul (coriander seeds & jaggery) and panchamrita",
+            "Arrange 21 pure cow ghee earthen lamps across the house"
+          ],
+          "status": "in_progress"
+        },
+        {
+          "id": "resp_r2",
+          "occasionId": "occ_shraddha_vasant",
+          "occasionTitle": "Late Vasant Joshi Shraddha Tithi",
+          "role": "Naivedya & Prasad (नैवेद्य व पाकसंस्कार)",
+          "tithiOrDate": "Magha Krishna Saptami (28 Feb 2027)",
+          "dutySummary": "Prepares satvik ancestor meal and portions for cow and crow offerings.",
+          "checklist": [
+            "Cook pure satvik meal strictly before 11:30 AM",
+            "Prepare separate leaf plates for Pitru Naivedya and Gau-grasa",
+            "Keep brass water vessels filled and polished for ritual use"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "lin_sunita",
+      "familyId": "fam_joshi_01",
+      "name": "Sunita Joshi-Patil",
+      "nameDevanagari": "सुनीता जोशी-पाटील (कन्या)",
+      "relationship": "Daughter (Diaspora Sister in Canada)",
+      "relationshipDevanagari": "कन्या (कॅनडा - विदेश दुवा)",
+      "generation": 2,
+      "generationLabel": "Generation II · Householders (द्वितीय पिढी)",
+      "isAncestor": false,
+      "gotra": "Kashyapa (काश्यप)",
+      "kuldevta": "Khandoba of Jejuri (जेजुरीचा खंडोबा)",
+      "gender": "female",
+      "parentIds": [
+        "lin_vasant",
+        "lin_aaji"
+      ],
+      "childrenIds": [
+        "lin_maya"
+      ],
+      "location": "Toronto, Ontario, Canada",
+      "isDiaspora": true,
+      "phone": "+1 416 555 0192",
+      "language": "en",
+      "primaryRole": "Diaspora Cultural Bridge (विदेश कुटुंब दुवा)",
+      "primaryRoleDevanagari": "विदेश कुटुंब दुवा",
+      "bio": "Residing in Canada, bridging ancestral tithis across 9.5-hour time zone difference. Ensures next-generation diaspora youth Maya stays connected to her roots.",
+      "responsibilities": [
+        {
+          "id": "resp_s1",
+          "occasionId": "occ_bhaubeej",
+          "occasionTitle": "Bhau-beej / Bhai Dooj Overseas Observance",
+          "role": "Diaspora Link (विदेश समन्वय)",
+          "tithiOrDate": "Kartik Shukla Dwitiya (02 Nov 2026)",
+          "dutySummary": "Connects via live video to perform virtual aukshan for brothers in India.",
+          "checklist": [
+            "Schedule cross-timezone video call (morning Toronto, evening India)",
+            "Prepare decorative aarti thali with daughter Maya",
+            "Send auspicious shagun transfer to younger cousins"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "resp_s2",
+          "occasionId": "occ_shraddha_vasant",
+          "occasionTitle": "Grandfather Vasant Joshi Shraddha Tithi",
+          "role": "Diaspora Link (विदेश समन्वय)",
+          "tithiOrDate": "Magha Krishna Saptami (28 Feb 2027)",
+          "dutySummary": "Sponsors charitable giving and maintains quiet contemplation abroad.",
+          "checklist": [
+            "Sponsor local food bank or tree planting in grandfather’s memory",
+            "Read Chapter 15 of Shrimad Bhagavad Gita during Pune ritual hour",
+            "Share stories of grandfather with daughter Maya"
+          ],
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "lin_rajesh",
+      "familyId": "fam_joshi_01",
+      "name": "Rajesh Joshi",
+      "nameDevanagari": "राजेश जोशी (अनुज)",
+      "relationship": "Younger Son / Brother in New Delhi",
+      "relationshipDevanagari": "लहान भाऊ / पुत्र (नवी दिल्ली)",
+      "generation": 2,
+      "generationLabel": "Generation II · Householders (द्वितीय पिढी)",
+      "isAncestor": false,
+      "gotra": "Kashyapa (काश्यप)",
+      "kuldevta": "Khandoba of Jejuri (जेजुरीचा खंडोबा)",
+      "gender": "male",
+      "parentIds": [
+        "lin_vasant",
+        "lin_aaji"
+      ],
+      "childrenIds": [
+        "lin_aarav"
+      ],
+      "location": "New Delhi, India",
+      "phone": "+91 98110 99887",
+      "language": "hi",
+      "primaryRole": "Northern Kula Representative & Co-Karta (उत्तर भारत प्रतिनिधी)",
+      "primaryRoleDevanagari": "सह-कर्ता व तीर्थ समन्वय",
+      "bio": "Oversees Northern pilgrimage connections, procuring sacred Ganga water for family rites and participating in joint Pitrupaksha rituals.",
+      "responsibilities": [
+        {
+          "id": "resp_rj1",
+          "occasionId": "occ_mahalaya",
+          "occasionTitle": "Sarvapitri Mahalaya Pitrupaksha Rites",
+          "role": "Priest Liaison (गुरुजी व पाठशाळा समन्वय)",
+          "tithiOrDate": "Bhadrapada Krishna Amavasya",
+          "dutySummary": "Arranges sanctified Ganga jal from Haridwar and participates in simultaneous tarpana.",
+          "checklist": [
+            "Procure pure Ganga water canisters for Pune household",
+            "Observe strict morning fast and recite Pitru Sukta",
+            "Offer evening deepa dana on the banks of Yamuna in Delhi"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "resp_rj2",
+          "occasionId": "occ_lakshmi",
+          "occasionTitle": "Diwali Lakshmi Puja",
+          "role": "Co-Host / Sankalpa (संकल्प व पूजा)",
+          "tithiOrDate": "Ashwin Krishna Amavasya (31 Oct 2026)",
+          "dutySummary": "Performs Lakshmi puja in Delhi aligned with family muhurat.",
+          "checklist": [
+            "Light threshold lamps in Delhi home",
+            "Join family group video call for joint aarti chant"
+          ],
+          "status": "in_progress"
+        }
+      ]
+    },
+    {
+      "id": "lin_aniket",
+      "familyId": "fam_joshi_01",
+      "name": "Aniket Joshi",
+      "nameDevanagari": "अनिकेत जोशी (चिरंजीव)",
+      "relationship": "Grandson / Son / Heritage Youth",
+      "relationshipDevanagari": "नातू / चिरंजीव (युवा वारसदार)",
+      "generation": 3,
+      "generationLabel": "Generation III · Next Generation (तृतीय पिढी)",
+      "isAncestor": false,
+      "gotra": "Kashyapa (काश्यप)",
+      "kuldevta": "Khandoba of Jejuri (जेजुरीचा खंडोबा)",
+      "gender": "male",
+      "parentIds": [
+        "lin_bhushan",
+        "lin_radhika"
+      ],
+      "location": "Pune, Maharashtra",
+      "phone": "+91 98229 88776",
+      "language": "mr",
+      "primaryRole": "Apprentice Karta & Memory Archivist (युवा वारसदार व स्मृती संकलक)",
+      "primaryRoleDevanagari": "युवा वारसदार व सहाय्यक",
+      "bio": "College student learning the intricacies of traditional tithis and rituals from Aaji and Bhushan. Captures photos and curates the KulLoop Memory Slot.",
+      "responsibilities": [
+        {
+          "id": "resp_an1",
+          "occasionId": "occ_shraddha_vasant",
+          "occasionTitle": "Late Vasant Joshi Shraddha Tithi",
+          "role": "Apprentice & Youth (सहाय्यक संस्कार)",
+          "tithiOrDate": "Magha Krishna Saptami (28 Feb 2027)",
+          "dutySummary": "Assists father during tarpanam and procures traditional samagri.",
+          "checklist": [
+            "Visit Tulshibaug market on prior evening for darbha grass and black sesame",
+            "Assist in pouring sacred water during ritual tarpanam",
+            "Capture archival photo of the family gathering for KulLoop Memory Slot"
+          ],
+          "status": "pending"
+        },
+        {
+          "id": "resp_an2",
+          "occasionId": "occ_lakshmi",
+          "occasionTitle": "Diwali Lakshmi Puja",
+          "role": "Samagri & Preparations (साहित्य व व्यवस्था)",
+          "tithiOrDate": "Ashwin Krishna Amavasya (31 Oct 2026)",
+          "dutySummary": "Prepares puja space, audio stotras, and photography.",
+          "checklist": [
+            "Place marigold garlands and mango leaves at the doorframe",
+            "Set up the audio recording for family Lakshmi Aarti",
+            "Distribute prasad sweets to elders and neighbors"
+          ],
+          "status": "in_progress"
+        }
+      ]
+    },
+    {
+      "id": "lin_maya",
+      "familyId": "fam_joshi_01",
+      "name": "Maya Patil",
+      "nameDevanagari": "माया पाटील (नात)",
+      "relationship": "Granddaughter in Canada",
+      "relationshipDevanagari": "नात (कॅनडा युवा प्रतिनिधी)",
+      "generation": 3,
+      "generationLabel": "Generation III · Next Generation (तृतीय पिढी)",
+      "isAncestor": false,
+      "gotra": "Kashyapa (काश्यप)",
+      "gender": "female",
+      "parentIds": [
+        "lin_sunita"
+      ],
+      "location": "Toronto, Ontario, Canada",
+      "isDiaspora": true,
+      "language": "en",
+      "primaryRole": "Next-Gen Diaspora Youth (विदेश युवा प्रतिनिधी)",
+      "primaryRoleDevanagari": "विदेश युवा प्रतिनिधी",
+      "bio": "High school student learning her mother’s ancestral Marathi customs, Devanagari script, and celebrating Diwali with handmade clay lamps.",
+      "responsibilities": [
+        {
+          "id": "resp_m1",
+          "occasionId": "occ_lakshmi",
+          "occasionTitle": "Diwali Celebration Overseas",
+          "role": "Apprentice & Youth (सहाय्यक संस्कार)",
+          "tithiOrDate": "Ashwin Krishna Amavasya (31 Oct 2026)",
+          "dutySummary": "Paints diyas and joins the family global video blessing.",
+          "checklist": [
+            "Paint and arrange clay diyas at home in Toronto",
+            "Recite Gayatri Mantra and join family video call with Aaji"
+          ],
+          "status": "in_progress"
+        }
+      ]
+    },
+    {
+      "id": "lin_aarav",
+      "familyId": "fam_joshi_01",
+      "name": "Aarav Joshi",
+      "nameDevanagari": "आरव जोशी (पुतण्या)",
+      "relationship": "Grandson / Nephew in New Delhi",
+      "relationshipDevanagari": "नातू / पुतण्या (नवी दिल्ली)",
+      "generation": 3,
+      "generationLabel": "Generation III · Next Generation (तृतीय पिढी)",
+      "isAncestor": false,
+      "gotra": "Kashyapa (काश्यप)",
+      "gender": "male",
+      "parentIds": [
+        "lin_rajesh"
+      ],
+      "location": "New Delhi, India",
+      "language": "hi",
+      "primaryRole": "Junior Participant (कनिष्ठ प्रतिनिधी)",
+      "primaryRoleDevanagari": "कनिष्ठ प्रतिनिधी",
+      "bio": "Enthusiastic school student learning family traditions and festive chants alongside his father Rajesh in Delhi.",
+      "responsibilities": [
+        {
+          "id": "resp_ar1",
+          "occasionId": "occ_lakshmi",
+          "occasionTitle": "Diwali Festival Lightings",
+          "role": "Apprentice & Youth (सहाय्यक संस्कार)",
+          "tithiOrDate": "Ashwin Krishna Amavasya (31 Oct 2026)",
+          "dutySummary": "Helps light diyas and connects with Pune cousins.",
+          "checklist": [
+            "Help father light entrance lamps and festive sparklers",
+            "Exchange festival greetings with Pune family via video link"
+          ],
+          "status": "in_progress"
+        }
+      ]
+    }
+  ],
+  "users": {
+    "user_bhushan_01": {
+      "uid": "user_bhushan_01",
+      "username": "bhushan_pune",
+      "displayName": "Bhushan Joshi",
+      "email": "bhushangavhale86@gmail.com",
+      "photoURL": "/src/assets/images/kulloop_avatar_elder_1793303629841.jpg",
+      "bio": "Family ritual configurator. Preserving our ancestral Jejuri Khandoba traditions and shraddha tithis for the entire family.",
+      "interests": [
+        "Ancestral Rites (श्राद्ध)",
+        "Panchang & Astronomy",
+        "Family Heritage",
+        "Marathi Traditions"
+      ],
+      "homeLocation": "Pune, Maharashtra",
+      "tradition": "Amanta (Maharashtra)",
+      "createdAt": "2026-10-29T21:47:53.624Z"
+    },
+    "comm_meera_01": {
+      "uid": "comm_meera_01",
+      "username": "meera_pune",
+      "displayName": "Meera Kulkarni",
+      "email": "meera.k@example.com",
+      "photoURL": "/src/assets/images/kulloop_avatar_elder_1793303629841.jpg",
+      "bio": "Preserving our family’s Rigvedic traditions, Ganpati sthapana rituals, and Aaji’s heirloom recipes in Pune.",
+      "interests": [
+        "Family Heritage",
+        "Ancestral Rites (श्राद्ध)",
+        "Marathi Traditions",
+        "Panchang & Astronomy"
+      ],
+      "homeLocation": "Pune, Maharashtra",
+      "tradition": "Amanta (Chitpavan)",
+      "createdAt": "2026-10-29T21:47:53.625Z"
+    },
+    "comm_arun_02": {
+      "uid": "comm_arun_02",
+      "username": "arun_diaspora",
+      "displayName": "Arun Deshpande",
+      "email": "arun.d@example.com",
+      "photoURL": "",
+      "bio": "Living in Toronto, coordinating Pitru Paksha and tithi observances for parents back home in Nagpur.",
+      "interests": [
+        "Diaspora Connections",
+        "Ancestral Rites (श्राद्ध)",
+        "Genealogy & Gotra",
+        "Vrat & Fasting"
+      ],
+      "homeLocation": "Nagpur / Toronto",
+      "tradition": "Amanta (Deshastha)",
+      "createdAt": "2026-10-29T21:47:53.625Z"
+    },
+    "comm_shrikant_03": {
+      "uid": "comm_shrikant_03",
+      "username": "pt_shrikant",
+      "displayName": "Pt. Shrikant Joshi",
+      "email": "shrikant.j@example.com",
+      "photoURL": "",
+      "bio": "Vedic scholar and panchang consultant. Passionate about correct tithi calculations and helping families understand rituals.",
+      "interests": [
+        "Panchang & Astronomy",
+        "Ancestral Rites (श्राद्ध)",
+        "Temple Architecture",
+        "Devotional Music"
+      ],
+      "homeLocation": "Varanasi / Pune",
+      "tradition": "Vedic Panchang Reviewer",
+      "createdAt": "2026-10-29T21:47:53.625Z"
+    },
+    "comm_priya_04": {
+      "uid": "comm_priya_04",
+      "username": "priya_heritage",
+      "displayName": "Priya Sharma",
+      "email": "priya.s@example.com",
+      "photoURL": "",
+      "bio": "Documenting our family history and Gotra roots across generations. Love learning about solar vs lunar celebrations.",
+      "interests": [
+        "Genealogy & Gotra",
+        "Family Heritage",
+        "Devotional Music",
+        "Festivals & Vrats"
+      ],
+      "homeLocation": "Jaipur, Rajasthan",
+      "tradition": "Purnimanta",
+      "createdAt": "2026-10-29T21:47:53.625Z"
+    }
+  },
+  "auditLogs": [
+    {
+      "id": "log_1793310495467_4xf0",
+      "action": "TOGGLE_PERFORMED_OCCASION",
+      "entityType": "OCCASION",
+      "entityId": "occ_shraddha_vasant",
+      "timestamp": "2026-10-29T21:48:15.467Z"
+    },
+    {
+      "id": "log_1793310488193_5oaj",
+      "action": "TOGGLE_PERFORMED_OCCASION",
+      "entityType": "OCCASION",
+      "entityId": "occ_shraddha_vasant",
+      "timestamp": "2026-10-29T21:48:08.193Z"
+    },
+    {
+      "id": "log_init_1793310473625",
+      "action": "DATABASE_INITIALIZED",
+      "entityType": "SYSTEM",
+      "entityId": "kulloop_store",
+      "timestamp": "2026-10-29T21:47:53.625Z",
+      "details": "Initial database created from Joshi family seed records with file persistence"
+    }
+  ]
+}

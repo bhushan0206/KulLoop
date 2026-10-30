@@ -1,8 +1,3 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useEffect } from 'react';
 import { 
   Family, 
@@ -19,11 +14,31 @@ import {
   INITIAL_OCCASIONS 
 } from './data/mockData';
 import { INITIAL_LINEAGE_MEMBERS } from './data/mockLineageData';
+import { onAuthStateChanged } from 'firebase/auth';
 import { 
   UserProfile, 
   fetchUserProfile, 
-  saveUserProfile 
+  saveUserProfile,
+  auth,
+  signInWithGoogle,
+  signOutGoogle,
+  GUEST_USER_PROFILE
 } from './services/firebase';
+import { 
+  fetchInitialDatabase, 
+  apiUpdateFamily, 
+  apiCreateOccasion, 
+  apiUpdateOccasion, 
+  apiDeleteOccasion, 
+  apiToggleConfirm, 
+  apiTogglePerformed, 
+  apiAddMemoryPhoto, 
+  apiDeleteMemoryPhoto, 
+  apiCreateMember, 
+  apiUpdateMember, 
+  apiDeleteMember, 
+  apiUpdateLineageMember 
+} from './services/api';
 import { Header } from './components/Header';
 import { FamilyDashboard } from './components/FamilyDashboard';
 import { OccasionList } from './components/OccasionList';
@@ -50,6 +65,7 @@ const DEFAULT_USER_PROFILE: UserProfile = {
   homeLocation: 'Pune, Maharashtra',
   tradition: 'Amanta (Maharashtra)',
   createdAt: new Date().toISOString(),
+  language: 'mr',
 };
 
 export default function App() {
@@ -77,15 +93,56 @@ export default function App() {
   // Toast feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Load persistent database on mount
+  const loadDatabaseData = async () => {
+    try {
+      const bundle = await fetchInitialDatabase();
+      if (bundle) {
+        if (bundle.family) setFamily(bundle.family);
+        if (bundle.occasions && bundle.occasions.length > 0) setOccasions(bundle.occasions);
+        if (bundle.members && bundle.members.length > 0) setMembers(bundle.members);
+        if (bundle.people && bundle.people.length > 0) setPeople(bundle.people);
+        if (bundle.lineageMembers && bundle.lineageMembers.length > 0) setLineageMembers(bundle.lineageMembers);
+        if (bundle.currentUser) setCurrentUser(bundle.currentUser);
+      }
+    } catch (err) {
+      console.warn('Backend file load error, using initial defaults:', err);
+    }
+  };
+
   useEffect(() => {
-    // Attempt to load existing user profile
-    fetchUserProfile(DEFAULT_USER_PROFILE.uid).then((p) => {
-      if (p) {
-        setCurrentUser(p);
+    loadDatabaseData();
+
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      if (fbUser) {
+        const p = await fetchUserProfile(fbUser.uid);
+        if (p) {
+          setCurrentUser(p);
+        } else {
+          const newP: UserProfile = {
+            uid: fbUser.uid,
+            username: fbUser.email 
+              ? fbUser.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') 
+              : `user_${fbUser.uid.slice(0, 6)}`,
+            displayName: fbUser.displayName || 'KulLoop Member',
+            email: fbUser.email || '',
+            photoURL: fbUser.photoURL || '',
+            bio: 'Family ritual configurator preserving our ancestral traditions.',
+            interests: ['Ancestral Rites (श्राद्ध)', 'Panchang & Astronomy', 'Family Heritage', 'Marathi Traditions'],
+            homeLocation: 'Pune, Maharashtra',
+            tradition: 'Amanta (Maharashtra)',
+            createdAt: new Date().toISOString(),
+            language: 'mr',
+          };
+          await saveUserProfile(newP);
+          setCurrentUser(newP);
+        }
       } else {
-        saveUserProfile(DEFAULT_USER_PROFILE);
+        setCurrentUser(GUEST_USER_PROFILE);
       }
     });
+
+    return () => unsubscribe();
   }, []);
 
   const showToast = (msg: string) => {
@@ -93,17 +150,18 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleAddOccasion = (newOcc: FamilyOccasion) => {
+  const handleAddOccasion = async (newOcc: FamilyOccasion) => {
     setOccasions((prev) => [newOcc, ...prev]);
-    showToast(`Added "${newOcc.title}" to the family record`);
+    showToast(`Added "${newOcc.title}" (saved to server disk)`);
+    await apiCreateOccasion(newOcc);
   };
 
-  const handleToggleConfirm = (id: string) => {
+  const handleToggleConfirm = async (id: string) => {
     setOccasions((prev) =>
       prev.map((occ) => {
         if (occ.id === id) {
           const nextState = !occ.isConfirmed;
-          showToast(nextState ? 'Occasion confirmed with validation source' : 'Occasion marked unconfirmed');
+          showToast(nextState ? 'Occasion confirmed (saved to disk)' : 'Occasion marked unconfirmed (saved to disk)');
           return {
             ...occ,
             isConfirmed: nextState,
@@ -116,17 +174,18 @@ export default function App() {
         return occ;
       })
     );
+    await apiToggleConfirm(id);
   };
 
-  const handleTogglePerformed = (id: string, notes?: string, performedBy?: string) => {
+  const handleTogglePerformed = async (id: string, notes?: string, performedBy?: string) => {
     setOccasions((prev) =>
       prev.map((occ) => {
         if (occ.id === id) {
           const nextState = !occ.isPerformed;
           showToast(
             nextState
-              ? `Marked "${occ.title}" as performed`
-              : `Unmarked "${occ.title}"`
+              ? `Marked "${occ.title}" as performed (saved to disk)`
+              : `Unmarked "${occ.title}" (saved to disk)`
           );
           return {
             ...occ,
@@ -141,9 +200,10 @@ export default function App() {
         return occ;
       })
     );
+    await apiTogglePerformed(id, notes, performedBy || currentUser.displayName);
   };
 
-  const handleAddMemoryPhoto = (
+  const handleAddMemoryPhoto = async (
     occasionId: string,
     photo: { id: string; url: string; caption?: string; year?: number; uploadedAt: string }
   ) => {
@@ -151,7 +211,7 @@ export default function App() {
       prev.map((occ) => {
         if (occ.id === occasionId) {
           const existing = occ.memoryPhotos || [];
-          showToast('Celebration photo added to memory slot');
+          showToast('Celebration photo added to memory slot (saved to disk)');
           return {
             ...occ,
             memoryPhotos: [...existing, photo],
@@ -160,13 +220,14 @@ export default function App() {
         return occ;
       })
     );
+    await apiAddMemoryPhoto(occasionId, photo);
   };
 
-  const handleDeleteMemoryPhoto = (occasionId: string, photoId: string) => {
+  const handleDeleteMemoryPhoto = async (occasionId: string, photoId: string) => {
     setOccasions((prev) =>
       prev.map((occ) => {
         if (occ.id === occasionId) {
-          showToast('Photo removed from memory slot');
+          showToast('Photo removed from memory slot (saved to disk)');
           return {
             ...occ,
             memoryPhotos: (occ.memoryPhotos || []).filter((p) => p.id !== photoId),
@@ -175,31 +236,36 @@ export default function App() {
         return occ;
       })
     );
+    await apiDeleteMemoryPhoto(occasionId, photoId);
   };
 
-  const handleDeleteOccasion = (id: string) => {
+  const handleDeleteOccasion = async (id: string) => {
     const target = occasions.find((o) => o.id === id);
     if (confirm(`Remove "${target?.title}" from the family record?`)) {
       setOccasions((prev) => prev.filter((o) => o.id !== id));
-      showToast('Occasion removed');
+      showToast('Occasion removed (saved to disk)');
+      await apiDeleteOccasion(id);
     }
   };
 
-  const handleAddMember = (member: Member) => {
+  const handleAddMember = async (member: Member) => {
     setMembers((prev) => [...prev, member]);
-    showToast(`Added ${member.name} to the family loop`);
+    showToast(`Added ${member.name} to the family loop (saved to disk)`);
+    await apiCreateMember(member);
   };
 
-  const handleUpdateMember = (member: Member) => {
+  const handleUpdateMember = async (member: Member) => {
     setMembers((prev) => prev.map((m) => (m.id === member.id ? member : m)));
-    showToast(`Updated preferences for ${member.name}`);
+    showToast(`Updated preferences for ${member.name} (saved to disk)`);
+    await apiUpdateMember(member);
   };
 
-  const handleDeleteMember = (id: string) => {
+  const handleDeleteMember = async (id: string) => {
     const target = members.find((m) => m.id === id);
     if (confirm(`Remove ${target?.name} from WhatsApp reminders?`)) {
       setMembers((prev) => prev.filter((m) => m.id !== id));
-      showToast('Member removed from loop');
+      showToast('Member removed from loop (saved to disk)');
+      await apiDeleteMember(id);
     }
   };
 
@@ -212,17 +278,19 @@ export default function App() {
     setPriestModalOccasion(occ);
   };
 
-  const handlePilotIntakeSuccess = (data: PilotIntakeFormState) => {
-    setFamily((prev) => ({
-      ...prev,
+  const handlePilotIntakeSuccess = async (data: PilotIntakeFormState) => {
+    const updatedFam: Family = {
+      ...family,
       name: data.familyName,
       homeLocation: data.homeLocation,
       convention: data.convention === 'Purnimanta' ? 'Purnimanta' : 'Amanta',
       configuratorName: data.fullName,
       configuratorPhone: data.whatsappNumber,
       traditionNotes: data.traditionNotes,
-    }));
-    showToast(`Pilot intake received for ${data.familyName}! Dates queued for validation.`);
+    };
+    setFamily(updatedFam);
+    showToast(`Pilot intake received for ${data.familyName}! Saved to disk.`);
+    await apiUpdateFamily(updatedFam);
   };
 
   const handleOpenAssistantWithTopic = (prompt: string) => {
@@ -230,9 +298,10 @@ export default function App() {
     setIsChatbotOpen(true);
   };
 
-  const handleUpdateLineageMember = (updated: LineageMember) => {
+  const handleUpdateLineageMember = async (updated: LineageMember) => {
     setLineageMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
-    showToast(`Updated ritual responsibilities for ${updated.name}`);
+    showToast(`Updated ritual responsibilities for ${updated.name} (saved to disk)`);
+    await apiUpdateLineageMember(updated);
   };
 
   return (
@@ -294,7 +363,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
             <button
               onClick={() => setIsProfileModalOpen(true)}
               className="px-3.5 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
@@ -335,6 +404,8 @@ export default function App() {
         {activeTab === 'occasions' && (
           <OccasionList
             occasions={occasions}
+            members={members}
+            people={people}
             onOpenAddModal={() => setIsAddModalOpen(true)}
             onPreviewWhatsApp={handlePreviewWhatsApp}
             onGeneratePriestNote={handleGeneratePriestNote}

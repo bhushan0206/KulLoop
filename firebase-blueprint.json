@@ -22,18 +22,89 @@
       },
       "required": ["uid", "username", "displayName"]
     },
-    "ChatMessage": {
-      "title": "ChatMessage",
-      "description": "Multi-turn conversation history with the KulLoop Gemini Heritage Assistant.",
+    "Family": {
+      "title": "Family",
+      "description": "Family lineage root settings and tradition config.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "role": { "type": "string", "enum": ["user", "model"] },
-        "text": { "type": "string" },
-        "timestamp": { "type": "string" }
+        "name": { "type": "string" },
+        "homeLocation": { "type": "string" },
+        "convention": { "type": "string" },
+        "configuratorName": { "type": "string" },
+        "configuratorPhone": { "type": "string" },
+        "traditionNotes": { "type": "string" }
       },
-      "required": ["id", "userId", "role", "text", "timestamp"]
+      "required": ["id", "name"]
+    },
+    "FamilyOccasion": {
+      "title": "FamilyOccasion",
+      "description": "Tithi-based ritual, shraddha, or festival occasion record.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "type": { "type": "string" },
+        "tithiDescription": { "type": "string" },
+        "month": { "type": "string" },
+        "paksha": { "type": "string" },
+        "tithiName": { "type": "string" },
+        "honoree": { "type": "string" },
+        "leadPersonId": { "type": "string" },
+        "secondaryPersonIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "isConfirmed": { "type": "boolean" },
+        "isPerformed": { "type": "boolean" },
+        "performedAt": { "type": "string" },
+        "performedBy": { "type": "string" },
+        "performedNotes": { "type": "string" },
+        "establishedYear": { "type": "number" },
+        "establishedLocation": { "type": "string" },
+        "originNotes": { "type": "string" }
+      },
+      "required": ["id", "title", "type"]
+    },
+    "Member": {
+      "title": "Member",
+      "description": "Family loop member receiving WhatsApp reminders.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "relation": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "notificationLanguage": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["id", "name", "whatsappNumber"]
+    },
+    "LineageMember": {
+      "title": "LineageMember",
+      "description": "Family tree member with ancestor linkages and assigned ritual responsibilities.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "relationToRoot": { "type": "string" },
+        "generation": { "type": "number" },
+        "isDeceased": { "type": "boolean" },
+        "parentIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "spouses": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "assignedOccasionIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "primaryDuty": { "type": "string" }
+      },
+      "required": ["id", "name"]
     }
   },
   "firestore": {
@@ -41,9 +112,21 @@
       "schema": "UserProfile",
       "description": "Public and personal profile data of a KulLoop user."
     },
-    "/users/{userId}/chat_history/{messageId}": {
-      "schema": "ChatMessage",
-      "description": "User conversation messages with KulLoop AI assistant."
+    "/families/{familyId}": {
+      "schema": "Family",
+      "description": "Family tradition configuration document."
+    },
+    "/occasions/{occasionId}": {
+      "schema": "FamilyOccasion",
+      "description": "Ritual occasion and tithi record."
+    },
+    "/members/{memberId}": {
+      "schema": "Member",
+      "description": "Family loop WhatsApp member contact record."
+    },
+    "/lineage/{lineageId}": {
+      "schema": "LineageMember",
+      "description": "Lineage tree member and ritual duty assignment."
     }
   }
 }
