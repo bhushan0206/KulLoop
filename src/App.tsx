@@ -52,6 +52,7 @@ import { PriestReadyNoteModal } from './components/PriestReadyNoteModal';
 import { PilotIntakeModal } from './components/PilotIntakeModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { GeminiChatbot } from './components/GeminiChatbot';
+import { ShareFamilyModal } from './components/ShareFamilyModal';
 import { Check, ShieldCheck, Sparkles, User, Users } from 'lucide-react';
 
 const DEFAULT_USER_PROFILE: UserProfile = {
@@ -85,6 +86,7 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [chatbotInitialPrompt, setChatbotInitialPrompt] = useState<string>('');
   const [priestModalOccasion, setPriestModalOccasion] = useState<FamilyOccasion | null>(null);
@@ -239,6 +241,19 @@ export default function App() {
     await apiDeleteMemoryPhoto(occasionId, photoId);
   };
 
+  const handleUpdateOccasion = async (id: string, updates: Partial<FamilyOccasion>) => {
+    setOccasions((prev) =>
+      prev.map((occ) => {
+        if (occ.id === id) {
+          return { ...occ, ...updates };
+        }
+        return occ;
+      })
+    );
+    showToast('Occasion updated (saved to disk)');
+    await apiUpdateOccasion(id, updates);
+  };
+
   const handleDeleteOccasion = async (id: string) => {
     const target = occasions.find((o) => o.id === id);
     if (confirm(`Remove "${target?.title}" from the family record?`)) {
@@ -313,6 +328,7 @@ export default function App() {
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenIntakeModal={() => setIsIntakeModalOpen(true)}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
+        onOpenShareModal={() => setIsShareModalOpen(true)}
         onOpenChatbot={() => {
           setChatbotInitialPrompt('');
           setIsChatbotOpen(true);
@@ -395,7 +411,9 @@ export default function App() {
             onGeneratePriestNote={handleGeneratePriestNote}
             onNavigateTab={(tab) => setActiveTab(tab)}
             onOpenAddModal={() => setIsAddModalOpen(true)}
+            onOpenShareModal={() => setIsShareModalOpen(true)}
             onTogglePerformed={handleTogglePerformed}
+            onUpdateOccasion={handleUpdateOccasion}
             onAddMemoryPhoto={handleAddMemoryPhoto}
             onDeleteMemoryPhoto={handleDeleteMemoryPhoto}
           />
@@ -404,6 +422,7 @@ export default function App() {
         {activeTab === 'occasions' && (
           <OccasionList
             occasions={occasions}
+            family={family}
             members={members}
             people={people}
             onOpenAddModal={() => setIsAddModalOpen(true)}
@@ -507,6 +526,14 @@ export default function App() {
         isOpen={isIntakeModalOpen}
         onClose={() => setIsIntakeModalOpen(false)}
         onSubmitSuccess={handlePilotIntakeSuccess}
+      />
+
+      {/* Share Family Calendar on WhatsApp Modal */}
+      <ShareFamilyModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        family={family}
+        occasions={occasions}
       />
 
       {/* Calm Footer */}

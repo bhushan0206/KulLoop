@@ -15,6 +15,8 @@ import {
   Calendar,
   Sparkles
 } from 'lucide-react';
+import { OccasionCardActionMenu } from './OccasionCardActionMenu';
+import { SlideOverTab } from './OccasionSlideOver';
 
 interface MonthlyRitualTrackerProps {
   occasions: FamilyOccasion[];
@@ -24,6 +26,7 @@ interface MonthlyRitualTrackerProps {
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
   onAddMemoryPhoto?: (occasionId: string, photo: { id: string; url: string; caption?: string; year?: number; uploadedAt: string }) => void;
   onDeleteMemoryPhoto?: (occasionId: string, photoId: string) => void;
+  onOpenSlideOver?: (occ: FamilyOccasion, tab: SlideOverTab) => void;
 }
 
 export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
@@ -34,6 +37,7 @@ export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
   onGeneratePriestNote,
   onAddMemoryPhoto,
   onDeleteMemoryPhoto,
+  onOpenSlideOver,
 }) => {
   // Available month cohorts to track
   const availableMonths = [
@@ -302,6 +306,16 @@ export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
                     >
                       WhatsApp
                     </button>
+
+                    {onOpenSlideOver && (
+                      <OccasionCardActionMenu
+                        occasion={occ}
+                        onOpenSlideOver={onOpenSlideOver}
+                        onPreviewWhatsApp={onPreviewWhatsApp}
+                        onGeneratePriestNote={onGeneratePriestNote}
+                        compact={false}
+                      />
+                    )}
                   </div>
                 </div>
 

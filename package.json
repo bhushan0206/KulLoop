@@ -1,7 +1,8 @@
 {
-  "name": "react-example",
+  "name": "kulloop",
+  "description": "KulLoop — Tithi-aware family occasions loop for Shraddhas, birthdays, and sacred rituals.",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",

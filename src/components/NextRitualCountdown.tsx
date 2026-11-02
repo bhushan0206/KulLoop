@@ -12,6 +12,8 @@ import {
   Calendar,
   CalendarCheck
 } from 'lucide-react';
+import { OccasionCardActionMenu } from './OccasionCardActionMenu';
+import { SlideOverTab } from './OccasionSlideOver';
 
 interface NextRitualCountdownProps {
   occasions: FamilyOccasion[];
@@ -19,6 +21,7 @@ interface NextRitualCountdownProps {
   onPreviewWhatsApp: (occ: FamilyOccasion) => void;
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
   onTogglePerformed: (id: string, notes?: string, performedBy?: string) => void;
+  onOpenSlideOver?: (occ: FamilyOccasion, tab: SlideOverTab) => void;
 }
 
 export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
@@ -27,6 +30,7 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
   onPreviewWhatsApp,
   onGeneratePriestNote,
   onTogglePerformed,
+  onOpenSlideOver,
 }) => {
   // Reference date: current local time (Oct 29, 2026, or system now)
   // Find the next upcoming unperformed ritual
@@ -111,137 +115,149 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
   };
 
   return (
-    <div className="bg-gradient-to-br from-stone-900 via-stone-900 to-stone-950 rounded-2xl border border-stone-800 shadow-md p-6 sm:p-7 text-white relative overflow-hidden">
+    <div className="bg-gradient-to-br from-stone-900 via-stone-900 to-stone-950 rounded-xl border border-stone-800 shadow-sm p-4 sm:p-5 text-white relative overflow-hidden h-full flex flex-col justify-between">
       {/* Decorative subtle ambient backdrop */}
-      <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        {/* Left: Next Ritual Metadata */}
-        <div className="space-y-3 flex-1">
-          <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
-            <span className="flex items-center gap-1.5 uppercase tracking-wider">
-              <Flame className="w-3.5 h-3.5 text-amber-400" />
-              <span>Next Upcoming Sacred Observance</span>
-            </span>
-            <span aria-hidden="true" className="text-stone-500">·</span>
-            <span className="text-stone-400 capitalize">
-              {nextRitual.occasionType.replace('_', ' ')}
-            </span>
+      <div className="relative z-10 flex flex-col justify-between h-full gap-3">
+        {/* Top: Next Ritual Metadata */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-[10px] font-semibold text-amber-300">
+              <span className="flex items-center gap-1.5 uppercase tracking-wider">
+                <Flame className="w-3 h-3 text-amber-400" />
+                <span>Next Upcoming Sacred Observance</span>
+              </span>
+              <span aria-hidden="true" className="text-stone-500">·</span>
+              <span className="text-stone-400 capitalize">
+                {nextRitual.occasionType.replace('_', ' ')}
+              </span>
+            </div>
+
+            {onOpenSlideOver && (
+              <OccasionCardActionMenu
+                occasion={nextRitual}
+                onOpenSlideOver={onOpenSlideOver}
+                onPreviewWhatsApp={onPreviewWhatsApp}
+                onGeneratePriestNote={onGeneratePriestNote}
+                compact={false}
+              />
+            )}
           </div>
 
           <div>
-            <h3 className="text-xl sm:text-2xl font-bold font-serif-display text-stone-100 leading-snug">
+            <h3 className="text-base sm:text-lg font-bold font-serif-display text-stone-100 leading-snug">
               {nextRitual.title}
             </h3>
             {nextRitual.tithiFields && (
-              <p className="text-xs sm:text-sm text-stone-300 font-devanagari mt-1">
+              <p className="text-[11px] sm:text-xs text-stone-300 font-devanagari mt-0.5">
                 {nextRitual.tithiFields.lunarMonthDevanagari || nextRitual.tithiFields.lunarMonth}{' '}
                 {nextRitual.tithiFields.pakshaDevanagari || nextRitual.tithiFields.paksha}{' '}
                 {nextRitual.tithiFields.tithiDevanagari || nextRitual.tithiFields.tithi}
-                <span className="text-stone-500 font-sans mx-2">·</span>
+                <span className="text-stone-500 font-sans mx-1.5">·</span>
                 <span className="font-sans text-stone-400">{nextRitual.occurrence2027.tithiSpan}</span>
               </p>
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 text-xs text-stone-300 pt-1">
-            <div className="flex items-center gap-1.5 bg-stone-800/80 px-2.5 py-1 rounded-lg border border-stone-700/80">
-              <Calendar className="w-3.5 h-3.5 text-amber-400" />
+          <div className="flex flex-wrap items-center gap-2 text-[10px] text-stone-300 pt-0.5">
+            <div className="flex items-center gap-1 bg-stone-800/80 px-2 py-0.5 rounded-md border border-stone-700/80">
+              <Calendar className="w-3 h-3 text-amber-400" />
               <span>{nextRitual.occurrence2027.formattedDisplay} ({nextRitual.occurrence2027.weekday})</span>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-stone-800/80 px-2.5 py-1 rounded-lg border border-stone-700/80">
-              <Clock className="w-3.5 h-3.5 text-amber-400" />
+            <div className="flex items-center gap-1 bg-stone-800/80 px-2 py-0.5 rounded-md border border-stone-700/80">
+              <Clock className="w-3 h-3 text-amber-400" />
               <span>Sunrise: {nextRitual.occurrence2027.sunriseTime}</span>
             </div>
           </div>
         </div>
 
         {/* Center: Live Countdown Cards */}
-        <div className="shrink-0">
-          <div className="flex items-center gap-2 sm:gap-3">
+        <div className="py-1">
+          <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2">
             {/* Days */}
-            <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-xl px-3 sm:px-4 py-2.5 min-w-[64px] sm:min-w-[76px] shadow-inner">
-              <span className="text-2xl sm:text-3xl font-extrabold text-amber-300 font-mono tabular-nums">
+            <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
+              <span className="text-xl sm:text-2xl font-bold text-amber-300 font-mono tabular-nums">
                 {String(timeLeft.days).padStart(2, '0')}
               </span>
-              <span className="text-[10px] text-stone-400 uppercase tracking-widest font-semibold mt-0.5">
+              <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
                 Days
               </span>
             </div>
 
-            <span className="text-xl sm:text-2xl font-bold text-stone-500 font-mono">:</span>
+            <span className="text-base sm:text-lg font-bold text-stone-500 font-mono">:</span>
 
             {/* Hours */}
-            <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-xl px-3 sm:px-4 py-2.5 min-w-[64px] sm:min-w-[76px] shadow-inner">
-              <span className="text-2xl sm:text-3xl font-extrabold text-amber-300 font-mono tabular-nums">
+            <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
+              <span className="text-xl sm:text-2xl font-bold text-amber-300 font-mono tabular-nums">
                 {String(timeLeft.hours).padStart(2, '0')}
               </span>
-              <span className="text-[10px] text-stone-400 uppercase tracking-widest font-semibold mt-0.5">
+              <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
                 Hours
               </span>
             </div>
 
-            <span className="text-xl sm:text-2xl font-bold text-stone-500 font-mono">:</span>
+            <span className="text-base sm:text-lg font-bold text-stone-500 font-mono">:</span>
 
             {/* Minutes */}
-            <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-xl px-3 sm:px-4 py-2.5 min-w-[64px] sm:min-w-[76px] shadow-inner">
-              <span className="text-2xl sm:text-3xl font-extrabold text-amber-300 font-mono tabular-nums">
+            <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
+              <span className="text-xl sm:text-2xl font-bold text-amber-300 font-mono tabular-nums">
                 {String(timeLeft.minutes).padStart(2, '0')}
               </span>
-              <span className="text-[10px] text-stone-400 uppercase tracking-widest font-semibold mt-0.5">
+              <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
                 Minutes
               </span>
             </div>
 
-            <span className="text-xl sm:text-2xl font-bold text-stone-500 font-mono hidden sm:inline">:</span>
+            <span className="text-base sm:text-lg font-bold text-stone-500 font-mono hidden xs:inline">:</span>
 
-            {/* Seconds (hidden on very small screens, visible on sm+) */}
-            <div className="hidden sm:flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-xl px-3 sm:px-4 py-2.5 min-w-[64px] sm:min-w-[76px] shadow-inner">
-              <span className="text-2xl sm:text-3xl font-extrabold text-amber-200 font-mono tabular-nums">
+            {/* Seconds */}
+            <div className="hidden xs:flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
+              <span className="text-xl sm:text-2xl font-bold text-amber-200 font-mono tabular-nums">
                 {String(timeLeft.seconds).padStart(2, '0')}
               </span>
-              <span className="text-[10px] text-stone-400 uppercase tracking-widest font-semibold mt-0.5">
-                Seconds
+              <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
+                Sec
               </span>
             </div>
           </div>
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex flex-row lg:flex-col items-stretch gap-2 shrink-0">
+        {/* Bottom: Actions in a clean flex row */}
+        <div className="flex items-center gap-1.5 pt-2 border-t border-stone-800/80">
           <button
             onClick={() => onPreviewWhatsApp(nextRitual)}
-            className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-stone-950 bg-amber-400 hover:bg-amber-300 rounded-xl transition-colors cursor-pointer shadow-sm whitespace-nowrap"
+            className="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-stone-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer shadow-sm whitespace-nowrap"
           >
-            <Smartphone className="w-3.5 h-3.5" />
-            <span>WhatsApp Reminder</span>
+            <Smartphone className="w-3 h-3" />
+            <span>Reminder</span>
           </button>
 
           <button
             onClick={handleSyncToCalendar}
-            className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-medium text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
+            className="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 text-[11px] font-medium text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
             title="Export this ritual to Apple / Google Calendar (.ics)"
           >
-            <CalendarCheck className={`w-3.5 h-3.5 ${synced ? 'text-emerald-400' : 'text-amber-400'}`} />
-            <span>{synced ? 'Downloaded .ics!' : 'Sync to Calendar'}</span>
+            <CalendarCheck className={`w-3 h-3 ${synced ? 'text-emerald-400' : 'text-amber-400'}`} />
+            <span>{synced ? 'Synced' : 'Calendar'}</span>
           </button>
 
           {isShraddha ? (
             <button
               onClick={() => onGeneratePriestNote(nextRitual)}
-              className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-medium text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
+              className="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 text-[11px] font-medium text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
             >
-              <FileText className="w-3.5 h-3.5" />
+              <FileText className="w-3 h-3" />
               <span>Priest Note</span>
             </button>
           ) : (
             <button
               onClick={() => onTogglePerformed(nextRitual.id)}
-              className="flex-1 lg:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-2 text-xs font-medium text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-xl transition-colors cursor-pointer whitespace-nowrap"
+              className="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 text-[11px] font-medium text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
             >
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Mark as Done</span>
+              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+              <span>Done</span>
             </button>
           )}
         </div>

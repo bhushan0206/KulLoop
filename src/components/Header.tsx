@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, Sparkles, User, FileText } from 'lucide-react';
+import { PlusCircle, Sparkles, User, FileText, Share2 } from 'lucide-react';
 import { UserProfile } from '../services/firebase';
 
 interface HeaderProps {
@@ -9,6 +9,7 @@ interface HeaderProps {
   onOpenIntakeModal: () => void;
   onOpenProfileModal: () => void;
   onOpenChatbot: () => void;
+  onOpenShareModal: () => void;
   currentUser: UserProfile;
 }
 
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenIntakeModal,
   onOpenProfileModal,
   onOpenChatbot,
+  onOpenShareModal,
   currentUser,
 }) => {
   return (
@@ -118,6 +120,16 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Zone 3: AI Assistant, Profile & Primary Action */}
           <div className="flex items-center gap-2.5 shrink-0">
+
+            {/* Share Family Calendar on WhatsApp */}
+            <button
+              onClick={onOpenShareModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-2xs"
+              title="Share Family Calendar on WhatsApp or Mobile"
+            >
+              <Share2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Share Calendar</span>
+            </button>
 
             {/* Gemini AI Assistant Button */}
             <button

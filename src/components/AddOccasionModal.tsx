@@ -95,6 +95,8 @@ export const AddOccasionModal: React.FC<AddOccasionModalProps> = ({
     } else if (occasionType === 'vrat_kuldevta') {
       const vr = AVAILABLE_VRATS.find((v) => v.id === selectedVratKey);
       title = vr ? `${vr.nameEn}` : 'Kuldevta / Vrat Day';
+    } else if (occasionType === 'custom') {
+      title = personName || 'Custom Family Observance';
     } else if (!title) {
       title = 'Family Observance';
     }
@@ -228,35 +230,37 @@ export const AddOccasionModal: React.FC<AddOccasionModalProps> = ({
           </div>
 
           {/* Conditional Person Details */}
-          {(occasionType === 'shraddha' || occasionType === 'birthday' || occasionType === 'anniversary') && (
+          {(occasionType === 'shraddha' || occasionType === 'birthday' || occasionType === 'anniversary' || occasionType === 'custom') && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-stone-50 border border-stone-200">
               <div className="space-y-1">
                 <label className="text-xs font-medium text-stone-700">
-                  {occasionType === 'shraddha' ? 'Ancestor Name (पितरांचे नाव)' : 'Person Name'}
+                  {occasionType === 'shraddha' ? 'Ancestor Name (पितरांचे नाव)' : occasionType === 'custom' ? 'Occasion Title' : 'Person Name'}
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder={occasionType === 'shraddha' ? 'e.g. Late Vasant Joshi (कै. वसंत जोशी)' : 'e.g. Malati Joshi'}
+                  placeholder={occasionType === 'shraddha' ? 'e.g. Late Vasant Joshi (कै. वसंत जोशी)' : occasionType === 'custom' ? 'e.g. Annual Family Pilgrimage' : 'e.g. Malati Joshi'}
                   value={personName}
                   onChange={(e) => setPersonName(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500"
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-medium text-stone-700">
-                  Relationship to Family (नातेसंबंध)
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Grandfather (आजोबा), Mother, Elder Uncle"
-                  value={relationship}
-                  onChange={(e) => setRelationship(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500"
-                />
-              </div>
+              {occasionType !== 'custom' && (
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-stone-700">
+                    Relationship to Family (नातेसंबंध)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Grandfather (आजोबा), Mother, Elder Uncle"
+                    value={relationship}
+                    onChange={(e) => setRelationship(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  />
+                </div>
+              )}
             </div>
           )}
 

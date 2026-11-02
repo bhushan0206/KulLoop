@@ -1,0 +1,20 @@
+{
+  "name": "KulLoop — Family Tithi Loop",
+  "short_name": "KulLoop",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#78350f",
+  "description": "Tithi-aware family occasions loop. Shraddhas, birthdays, and rituals entered once, reminded on WhatsApp in their own language.",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "family", "utilities"]
+}

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { FamilyOccasion, OccasionType, Member, Person } from '../types';
+import { FamilyOccasion, OccasionType, Member, Person, Family } from '../types';
+import { exportFamilyRecordToICS, downloadFile } from '../utils/tithiCalculator';
 import { 
   Search, 
   Filter, 
@@ -16,11 +17,16 @@ import {
   X,
   User,
   Tag,
-  History
+  History,
+  Download,
+  CalendarCheck,
+  HelpCircle,
+  Check
 } from 'lucide-react';
 
 interface OccasionListProps {
   occasions: FamilyOccasion[];
+  family?: Family;
   members?: Member[];
   people?: Person[];
   onOpenAddModal: () => void;
@@ -44,6 +50,7 @@ const RITUAL_SYNONYMS: Record<OccasionType, string[]> = {
 
 export const OccasionList: React.FC<OccasionListProps> = ({
   occasions,
+  family,
   members = [],
   people = [],
   onOpenAddModal,
@@ -54,6 +61,50 @@ export const OccasionList: React.FC<OccasionListProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | OccasionType>('all');
+  const [downloadToast, setDownloadToast] = useState<string | null>(null);
+  const [showSyncGuideModal, setShowSyncGuideModal] = useState(false);
+
+  const activeFamily: Family = family || {
+    id: 'fam_01',
+    name: 'Joshi Family Record',
+    homeLocation: 'Pune, Maharashtra',
+    region: 'Maharashtra',
+    convention: 'Amanta',
+    configuratorName: 'Bhushan Joshi',
+    configuratorPhone: '+91 98220 12345',
+    validationSource: 'Datar Panchang (Pune)',
+    traditionNotes: 'Jejuri Khandoba, Kuldevi Bhavani',
+    plan: 'pilot_founding',
+    payer: 'configurator',
+    consultedEntity: 'Printed almanac'
+  };
+
+  const showDownloadNotice = (msg: string) => {
+    setDownloadToast(msg);
+    setTimeout(() => setDownloadToast(null), 3500);
+  };
+
+  const handleExportAllICS = () => {
+    const icsContent = exportFamilyRecordToICS(occasions, activeFamily);
+    const fileName = `${activeFamily.name.replace(/[^a-zA-Z0-9]/g, '_')}_tithi_calendar.ics`;
+    downloadFile(fileName, icsContent, 'text/calendar;charset=utf-8;');
+    showDownloadNotice(`Exported all ${occasions.length} family occasions to .ics! Open in Google Calendar or Apple Calendar.`);
+  };
+
+  const handleExportFilteredICS = () => {
+    const listToExport = filteredOccasions.length > 0 ? filteredOccasions : occasions;
+    const icsContent = exportFamilyRecordToICS(listToExport, activeFamily);
+    const fileName = `${activeFamily.name.replace(/[^a-zA-Z0-9]/g, '_')}_filtered_tithis.ics`;
+    downloadFile(fileName, icsContent, 'text/calendar;charset=utf-8;');
+    showDownloadNotice(`Exported ${listToExport.length} filtered occasions to .ics file!`);
+  };
+
+  const handleExportSingleICS = (occ: FamilyOccasion) => {
+    const icsContent = exportFamilyRecordToICS([occ], activeFamily);
+    const fileName = `${occ.title.replace(/[^a-zA-Z0-9]/g, '_')}.ics`;
+    downloadFile(fileName, icsContent, 'text/calendar;charset=utf-8;');
+    showDownloadNotice(`Exported "${occ.title}" to .ics`);
+  };
 
   // Filter occasions based on title, ritual type, and associated family member
   const filteredOccasions = useMemo(() => {
@@ -150,13 +201,36 @@ export const OccasionList: React.FC<OccasionListProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onOpenAddModal}
-          className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap self-start sm:self-auto shadow-sm cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add New Occasion</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* ICS Export Action */}
+          <button
+            onClick={searchTerm || typeFilter !== 'all' ? handleExportFilteredICS : handleExportAllICS}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-stone-800 bg-white hover:bg-stone-100 border border-stone-300 rounded-lg transition-colors whitespace-nowrap shadow-2xs cursor-pointer"
+            title="Download iCalendar (.ics) file to import into Google Calendar or Apple Calendar"
+          >
+            <CalendarCheck className="w-4 h-4 text-amber-700" />
+            <span>Export Calendar (.ics)</span>
+          </button>
+
+          {/* Sync Guide Helper */}
+          <button
+            onClick={() => setShowSyncGuideModal(true)}
+            className="p-2 text-stone-500 hover:text-stone-800 bg-white hover:bg-stone-100 border border-stone-200 rounded-lg transition-colors cursor-pointer"
+            title="How to sync with Google Calendar & Apple Calendar"
+            aria-label="Calendar sync instructions"
+          >
+            <HelpCircle className="w-4 h-4" />
+          </button>
+
+          {/* Add Occasion */}
+          <button
+            onClick={onOpenAddModal}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap shadow-sm cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add New Occasion</span>
+          </button>
+        </div>
       </div>
 
       {/* Unconfirmed Alert Banner if any */}
@@ -458,17 +532,26 @@ export const OccasionList: React.FC<OccasionListProps> = ({
                 <div className="flex md:flex-col items-center justify-end gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0">
                   <button
                     onClick={() => onPreviewWhatsApp(occ)}
-                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
+                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
                     title="Preview WhatsApp message in Marathi, Hindi & English"
                   >
                     <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
                     <span>WhatsApp</span>
                   </button>
 
+                  <button
+                    onClick={() => handleExportSingleICS(occ)}
+                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-lg transition-colors cursor-pointer"
+                    title="Export single occasion as .ics file for Google or Apple Calendar"
+                  >
+                    <Download className="w-3.5 h-3.5 text-amber-700" />
+                    <span>.ics</span>
+                  </button>
+
                   {isShraddha && (
                     <button
                       onClick={() => onGeneratePriestNote(occ)}
-                      className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors"
+                      className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors cursor-pointer"
                       title="Generate Priest-Ready Note (गुरुजींसाठी नोंद)"
                     >
                       <FileText className="w-3.5 h-3.5" />
@@ -478,7 +561,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
 
                   <button
                     onClick={() => onDeleteOccasion(occ.id)}
-                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-md transition-colors"
+                    className="p-1.5 text-stone-400 hover:text-rose-600 rounded-md transition-colors cursor-pointer"
                     title="Delete occasion"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -489,6 +572,99 @@ export const OccasionList: React.FC<OccasionListProps> = ({
           })
         )}
       </div>
+
+      {/* Download Feedback Toast */}
+      {downloadToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 text-amber-300 text-xs px-4 py-2.5 rounded-xl shadow-xl border border-stone-800 flex items-center gap-2">
+          <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{downloadToast}</span>
+        </div>
+      )}
+
+      {/* Calendar Sync Instructions Modal */}
+      {showSyncGuideModal && (
+        <div className="fixed inset-0 z-50 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full border border-stone-200 shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-stone-100 pb-3">
+              <div className="flex items-center gap-2">
+                <CalendarCheck className="w-5 h-5 text-amber-600" />
+                <h3 className="font-bold text-stone-900 text-base font-serif-display">
+                  Sync Tithis to Your Personal Calendar
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowSyncGuideModal(false)}
+                className="p-1 text-stone-400 hover:text-stone-700 rounded-md cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-stone-600 leading-relaxed">
+              When you download an <strong>.ics</strong> file from KulLoop, all occasions are encoded with dual 7-day and 2-day reminder alarms, exact local sunrise times, tithi spans, and practice notes.
+            </p>
+
+            <div className="space-y-3 pt-1 text-xs text-stone-700">
+              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
+                <div className="font-bold text-stone-900 flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-900 text-[10px] flex items-center justify-center font-bold">1</span>
+                  <span>Google Calendar (Web / Android)</span>
+                </div>
+                <ol className="list-decimal list-inside text-stone-600 space-y-0.5 pl-6 text-[11px]">
+                  <li>Open <strong>calendar.google.com</strong> on your computer.</li>
+                  <li>Click the gear icon (Settings) in the top-right &rarr; <strong>Settings</strong>.</li>
+                  <li>In the left sidebar, click <strong>Import &amp; export</strong>.</li>
+                  <li>Click <strong>Select file from your computer</strong> and choose the downloaded .ics file.</li>
+                  <li>Select which calendar to add the tithis to, then click <strong>Import</strong>.</li>
+                </ol>
+              </div>
+
+              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
+                <div className="font-bold text-stone-900 flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-900 text-[10px] flex items-center justify-center font-bold">2</span>
+                  <span>Apple Calendar (iPhone, iPad, Mac)</span>
+                </div>
+                <ol className="list-decimal list-inside text-stone-600 space-y-0.5 pl-6 text-[11px]">
+                  <li>On iPhone / iPad: Tap the downloaded .ics file in Safari or Files, then tap <strong>Add All</strong>.</li>
+                  <li>On Mac: Double-click the .ics file &rarr; Choose the calendar to add &rarr; Click <strong>OK</strong>.</li>
+                  <li>Events will automatically sync across all your Apple devices via iCloud.</li>
+                </ol>
+              </div>
+
+              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200/80 space-y-1">
+                <div className="font-bold text-stone-900 flex items-center gap-1.5">
+                  <span className="w-5 h-5 rounded-full bg-amber-200 text-amber-900 text-[10px] flex items-center justify-center font-bold">3</span>
+                  <span>Microsoft Outlook</span>
+                </div>
+                <ol className="list-decimal list-inside text-stone-600 space-y-0.5 pl-6 text-[11px]">
+                  <li>Go to <strong>outlook.live.com/calendar</strong> &rarr; Click <strong>Add calendar</strong>.</li>
+                  <li>Select <strong>Upload from file</strong> &rarr; Browse and choose the downloaded .ics file.</li>
+                  <li>Click <strong>Import</strong>.</li>
+                </ol>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-end gap-2 border-t border-stone-100">
+              <button
+                onClick={() => {
+                  setShowSyncGuideModal(false);
+                  handleExportAllICS();
+                }}
+                className="px-4 py-2 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download .ics Now</span>
+              </button>
+              <button
+                onClick={() => setShowSyncGuideModal(false)}
+                className="px-3.5 py-2 text-xs font-medium text-stone-600 hover:text-stone-900 rounded-lg cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
