@@ -19,15 +19,16 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { LanguageCode } from '../types';
+import appletConfig from '../../firebase-applet-config.json';
 
-// Default mock/fallback config if firebase-applet-config.json is not yet populated
+// Hydrate from firebase-applet-config.json or env variables, with fallback
 const firebaseConfig = {
-  apiKey: "AIzaSyDummyKeyForPreviewMode-12345",
-  authDomain: "kulloop-app.firebaseapp.com",
-  projectId: "kulloop-app",
-  storageBucket: "kulloop-app.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef123456"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || appletConfig.apiKey || "AIzaSyDummyKeyForPreviewMode-12345",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || appletConfig.authDomain || "gen-lang-client-0572007240.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || appletConfig.projectId || "gen-lang-client-0572007240",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || appletConfig.storageBucket || "gen-lang-client-0572007240.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || appletConfig.messagingSenderId || "603461405029",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || appletConfig.appId || "1:603461405029:web:689b3f9b6a365ce095f98c"
 };
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
