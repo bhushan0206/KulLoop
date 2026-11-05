@@ -53,7 +53,8 @@ import { PilotIntakeModal } from './components/PilotIntakeModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { GeminiChatbot } from './components/GeminiChatbot';
 import { ShareFamilyModal } from './components/ShareFamilyModal';
-import { Check, ShieldCheck, Sparkles, User, Users } from 'lucide-react';
+import { OnboardingFlow } from './components/OnboardingFlow';
+import { Check, ShieldCheck, Sparkles, User, Users, RefreshCw } from 'lucide-react';
 
 const DEFAULT_USER_PROFILE: UserProfile = {
   uid: 'user_bhushan_01',
@@ -79,8 +80,11 @@ export default function App() {
   const [people, setPeople] = useState<Person[]>(INITIAL_PEOPLE);
   const [lineageMembers, setLineageMembers] = useState<LineageMember[]>(INITIAL_LINEAGE_MEMBERS);
 
-  // User Profile state
+  // User Profile & Onboarding state
   const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_USER_PROFILE);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
+    return localStorage.getItem('kulloop_has_onboarded') === 'true';
+  });
 
   // Modals & previews
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -319,6 +323,47 @@ export default function App() {
     await apiUpdateLineageMember(updated);
   };
 
+  const handleCompleteOnboarding = async (user: UserProfile, newFamily: Partial<Family>) => {
+    localStorage.setItem('kulloop_has_onboarded', 'true');
+    setHasCompletedOnboarding(true);
+    setCurrentUser(user);
+    await saveUserProfile(user);
+
+    const updatedFamily: Family = {
+      ...family,
+      ...newFamily,
+      name: newFamily.name || family.name,
+      homeLocation: newFamily.homeLocation || family.homeLocation,
+      convention: newFamily.convention || family.convention,
+      configuratorName: user.displayName,
+      configuratorPhone: newFamily.configuratorPhone || family.configuratorPhone,
+    };
+    setFamily(updatedFamily);
+    await apiUpdateFamily(updatedFamily);
+    showToast(`Welcome to KulLoop! Configured for ${updatedFamily.name}`);
+  };
+
+  const handleExploreDemo = () => {
+    localStorage.setItem('kulloop_has_onboarded', 'true');
+    setHasCompletedOnboarding(true);
+    showToast('Loaded The Joshi Family demonstration record.');
+  };
+
+  const handleSwitchToOnboarding = () => {
+    localStorage.removeItem('kulloop_has_onboarded');
+    setHasCompletedOnboarding(false);
+  };
+
+  // Screen 0: First-time Sign-in & Onboarding Gate
+  if (!hasCompletedOnboarding) {
+    return (
+      <OnboardingFlow
+        onComplete={handleCompleteOnboarding}
+        onExploreDemo={handleExploreDemo}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900">
       {/* Top Bar Header */}
@@ -380,6 +425,14 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+            <button
+              onClick={handleSwitchToOnboarding}
+              className="px-3 py-1.5 text-xs font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+              title="Configure a new family or switch account"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-stone-500" />
+              <span>Switch / New Setup</span>
+            </button>
             <button
               onClick={() => setIsProfileModalOpen(true)}
               className="px-3.5 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"

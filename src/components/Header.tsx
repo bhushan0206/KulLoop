@@ -141,21 +141,25 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="hidden sm:inline">Heritage AI</span>
             </button>
 
-            {/* Profile Avatar Button */}
+            {/* Profile Avatar & Sign In/Out Button */}
             <button
               onClick={onOpenProfileModal}
-              className="inline-flex items-center gap-2 p-1 pl-1.5 pr-2.5 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg text-xs font-medium transition-all text-stone-200 cursor-pointer"
-              title="View & Edit Profile, Passions, and Community"
+              className={`inline-flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                currentUser.email 
+                  ? 'bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200' 
+                  : 'bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold shadow-xs'
+              }`}
+              title={currentUser.email ? `Signed in as ${currentUser.displayName}` : 'Sign In / View Profile'}
             >
-              <div className="w-6 h-6 rounded-full bg-amber-400 text-stone-950 font-bold flex items-center justify-center overflow-hidden text-[11px] shrink-0">
+              <div className="w-6 h-6 rounded-full bg-amber-400 text-stone-950 font-bold flex items-center justify-center overflow-hidden text-[11px] shrink-0 border border-amber-500/40">
                 {currentUser.photoURL ? (
                   <img src={currentUser.photoURL} alt={currentUser.displayName} className="w-full h-full object-cover" />
                 ) : (
                   currentUser.displayName.charAt(0)
                 )}
               </div>
-              <span className="hidden sm:inline max-w-[90px] truncate text-stone-200">
-                @{currentUser.username}
+              <span className="hidden sm:inline max-w-[100px] truncate">
+                {currentUser.email ? `@${currentUser.username}` : 'Sign In'}
               </span>
             </button>
 

@@ -32,34 +32,26 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
   onTogglePerformed,
   onOpenSlideOver,
 }) => {
-  // Reference date: current local time (Oct 29, 2026, or system now)
-  // Find the next upcoming unperformed ritual
-  const upcomingRituals = occasions
-    .filter((o) => !o.isPerformed)
-    .sort((a, b) => {
-      return (
-        new Date(a.occurrence2027.gregorianDateStr).getTime() -
-        new Date(b.occurrence2027.gregorianDateStr).getTime()
-      );
-    });
-
-  // Pick the closest upcoming ritual (default to Diwali Lakshmi Puja or the first upcoming)
-  const nextRitual = upcomingRituals[0] || occasions[0];
-
-  // Calculate target timestamp
-  // If date string has year 2026/2027, parse with standard evening / sunrise hour
+  // Helper to compute precise target timestamp for countdown
   const getTargetTimestamp = (occ: FamilyOccasion): number => {
-    const dateStr = occ.occurrence2027.gregorianDateStr; // e.g. "2026-10-31"
-    
-    // Check if it's Diwali / evening ritual or morning shraddha
+    const dateStr = occ.occurrence2027.gregorianDateStr;
     if (occ.occasionType === 'festival' || occ.title.toLowerCase().includes('lakshmi')) {
       return new Date(`${dateStr}T18:15:00`).getTime();
-    } else if (occ.occasionType === 'shraddha') {
+    } else if (occ.occasionType === 'shraddha' || occ.occasionType === 'mahalaya') {
       return new Date(`${dateStr}T11:30:00`).getTime();
     } else {
       return new Date(`${dateStr}T09:00:00`).getTime();
     }
   };
+
+  // Find unperformed rituals whose target time has NOT yet passed
+  const nowMs = Date.now();
+  const futureRituals = occasions
+    .filter((o) => !o.isPerformed && getTargetTimestamp(o) > nowMs)
+    .sort((a, b) => getTargetTimestamp(a) - getTargetTimestamp(b));
+
+  // Pick the closest upcoming future ritual. If all scheduled dates have elapsed, fallback to the next in the sequence.
+  const nextRitual = futureRituals[0] || occasions.filter((o) => !o.isPerformed)[0] || occasions[0];
 
   const [timeLeft, setTimeLeft] = useState<{
     days: number;
@@ -173,55 +165,62 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
           </div>
         </div>
 
-        {/* Center: Live Countdown Cards */}
+        {/* Center: Live Countdown Cards or Observance Day Banner */}
         <div className="py-1">
-          <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2">
-            {/* Days */}
-            <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
-              <span className="text-xl sm:text-2xl font-bold text-amber-300 font-mono tabular-nums">
-                {String(timeLeft.days).padStart(2, '0')}
-              </span>
-              <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
-                Days
-              </span>
+          {timeLeft.isPast ? (
+            <div className="flex items-center gap-2 p-2.5 bg-amber-500/20 border border-amber-500/40 rounded-lg text-amber-200 text-xs font-medium">
+              <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Observance concluded or scheduled for today. Ready for sankalpa.</span>
             </div>
+          ) : (
+            <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2">
+              {/* Days */}
+              <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
+                <span className="text-xl sm:text-2xl font-bold text-amber-300 font-mono tabular-nums">
+                  {String(timeLeft.days).padStart(2, '0')}
+                </span>
+                <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
+                  Days
+                </span>
+              </div>
 
-            <span className="text-base sm:text-lg font-bold text-stone-500 font-mono">:</span>
+              <span className="text-base sm:text-lg font-bold text-stone-500 font-mono">:</span>
 
-            {/* Hours */}
-            <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
-              <span className="text-xl sm:text-2xl font-bold text-amber-300 font-mono tabular-nums">
-                {String(timeLeft.hours).padStart(2, '0')}
-              </span>
-              <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
-                Hours
-              </span>
+              {/* Hours */}
+              <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
+                <span className="text-xl sm:text-2xl font-bold text-amber-300 font-mono tabular-nums">
+                  {String(timeLeft.hours).padStart(2, '0')}
+                </span>
+                <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
+                  Hours
+                </span>
+              </div>
+
+              <span className="text-base sm:text-lg font-bold text-stone-500 font-mono">:</span>
+
+              {/* Minutes */}
+              <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
+                <span className="text-xl sm:text-2xl font-bold text-amber-300 font-mono tabular-nums">
+                  {String(timeLeft.minutes).padStart(2, '0')}
+                </span>
+                <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
+                  Minutes
+                </span>
+              </div>
+
+              <span className="text-base sm:text-lg font-bold text-stone-500 font-mono hidden xs:inline">:</span>
+
+              {/* Seconds */}
+              <div className="hidden xs:flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
+                <span className="text-xl sm:text-2xl font-bold text-amber-200 font-mono tabular-nums">
+                  {String(timeLeft.seconds).padStart(2, '0')}
+                </span>
+                <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
+                  Sec
+                </span>
+              </div>
             </div>
-
-            <span className="text-base sm:text-lg font-bold text-stone-500 font-mono">:</span>
-
-            {/* Minutes */}
-            <div className="flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
-              <span className="text-xl sm:text-2xl font-bold text-amber-300 font-mono tabular-nums">
-                {String(timeLeft.minutes).padStart(2, '0')}
-              </span>
-              <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
-                Minutes
-              </span>
-            </div>
-
-            <span className="text-base sm:text-lg font-bold text-stone-500 font-mono hidden xs:inline">:</span>
-
-            {/* Seconds */}
-            <div className="hidden xs:flex flex-col items-center bg-stone-800/90 border border-stone-700/80 rounded-lg px-2.5 py-1.5 min-w-[52px] shadow-inner flex-1 sm:flex-none">
-              <span className="text-xl sm:text-2xl font-bold text-amber-200 font-mono tabular-nums">
-                {String(timeLeft.seconds).padStart(2, '0')}
-              </span>
-              <span className="text-[9px] text-stone-400 uppercase tracking-widest font-semibold">
-                Sec
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Bottom: Actions in a clean flex row */}
