@@ -83,11 +83,16 @@ export default function App() {
   // User Profile & Onboarding state
   const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_USER_PROFILE);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
-    // Only consider onboarded if user explicitly completed onboarding with their own record
+    // Check if user has explicitly onboarded with a real profile
     const hasOnboarded = localStorage.getItem('kulloop_has_onboarded') === 'true';
     const isDemo = localStorage.getItem('kulloop_is_demo') === 'true';
-    // If it was just a temporary demo visit, don't trap them on refresh
-    return hasOnboarded && !isDemo;
+    const profile = localStorage.getItem('kulloop_current_user_profile');
+    
+    // If no real profile was configured or if in demo mode, always show onboarding
+    if (!profile || isDemo || !hasOnboarded) {
+      return false;
+    }
+    return true;
   });
 
   // Modals & previews
@@ -354,10 +359,7 @@ export default function App() {
   };
 
   const handleSwitchToOnboarding = () => {
-    localStorage.removeItem('kulloop_has_onboarded');
-    localStorage.removeItem('kulloop_is_demo');
-    localStorage.removeItem('kulloop_pending_family_name');
-    localStorage.removeItem('kulloop_pending_family_code');
+    localStorage.clear();
     setHasCompletedOnboarding(false);
   };
 
