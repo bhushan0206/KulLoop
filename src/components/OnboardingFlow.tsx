@@ -65,7 +65,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
       }
     } catch (err: any) {
       console.error('Sign in error:', err);
-      setAuthError('Authentication failed. Please retry.');
+      setAuthError(err?.message || 'Authentication failed. Please retry.');
     } finally {
       setIsLoadingAuth(false);
     }

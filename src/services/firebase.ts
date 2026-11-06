@@ -193,7 +193,7 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
 // Google Auth Sign-In
 export async function signInWithGoogle(): Promise<UserProfile | null> {
   try {
-    // 1. Attempt Firebase Auth popup if configured
+    // 1. Attempt Firebase Auth popup
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
     
@@ -223,25 +223,20 @@ export async function signInWithGoogle(): Promise<UserProfile | null> {
     await saveUserProfile(newProfile);
     return newProfile;
   } catch (err: any) {
-    // Fallback for preview/iframe environments: bind verified Google user profile
-    console.info('[Google Auth] Binding Google Account profile session...');
-    const googleProfile: UserProfile = {
-      uid: 'google_bhushangavhale86',
-      username: 'bhushan_pune',
-      displayName: 'Bhushan Joshi',
-      email: 'bhushangavhale86@gmail.com',
-      photoURL: '/src/assets/images/kulloop_avatar_elder_1793303629841.jpg',
-      bio: 'Family ritual configurator preserving ancestral Jejuri Khandoba traditions.',
-      interests: ['Ancestral Rites (श्राद्ध)', 'Panchang & Astronomy', 'Family Heritage', 'Marathi Traditions'],
-      homeLocation: 'Pune, Maharashtra',
-      tradition: 'Amanta (Maharashtra)',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      language: 'mr',
-    };
+    console.error('[Google Auth Error]:', err?.code, err?.message);
 
-    await saveUserProfile(googleProfile);
-    return googleProfile;
+    // If popup was closed by user or cancelled, surface error instead of silently bypassing
+    if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+      throw new Error('Sign-in cancelled. Please click "Continue with Google Account" again.');
+    }
+
+    // If unauthorized domain (e.g. localhost missing from Firebase authorized domains), explain clearly
+    if (err?.code === 'auth/unauthorized-domain') {
+      throw new Error('localhost is not in Firebase authorized domains. Please add localhost to Firebase Auth Settings.');
+    }
+
+    // Only fallback for non-recoverable environment failures (e.g. test runner/sandboxed iframe)
+    throw err;
   }
 }
 
