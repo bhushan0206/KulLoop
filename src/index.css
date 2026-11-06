@@ -23,6 +23,7 @@
   body {
     background: white !important;
     color: black !important;
+    font-size: 11pt !important;
   }
   .printable-area {
     width: 100% !important;
@@ -30,5 +31,19 @@
     padding: 0 !important;
     box-shadow: none !important;
     border: none !important;
+  }
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+  th, td {
+    border-bottom: 1px solid #d6d3d1 !important;
+    padding: 6pt 8pt !important;
+  }
+  thead {
+    display: table-header-group !important;
+  }
+  tr {
+    page-break-inside: avoid !important;
   }
 }

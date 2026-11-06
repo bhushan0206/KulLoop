@@ -84,6 +84,8 @@ export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
     window.print();
   };
 
+  const currentYear = 2027;
+
   return (
     <div className="space-y-8">
       {/* Top Banner */}
@@ -127,13 +129,14 @@ export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
             <span>CSV</span>
           </button>
 
-          {/* Print */}
+          {/* Print Puja Room Almanac */}
           <button
             onClick={handlePrint}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-stone-700 bg-white hover:bg-stone-50 border border-stone-200 rounded-lg transition-colors shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
+            title="Print a beautiful 1-page physical almanac for your altar or elders"
           >
-            <Printer className="w-3.5 h-3.5 text-stone-500" />
-            <span>Print</span>
+            <Printer className="w-3.5 h-3.5 text-amber-700" />
+            <span>Print Puja Room Calendar</span>
           </button>
         </div>
       </div>
@@ -178,8 +181,25 @@ export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
 
       {/* Printable Almanac Table */}
       <div className="printable-area bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
-        {/* Print Header */}
-        <div className="p-6 border-b border-stone-200 bg-stone-50/70">
+        {/* Dedicated Print Only Banner Header for Altar / Puja Room */}
+        <div className="hidden print:block p-6 border-b-2 border-stone-900 bg-amber-50/50 text-stone-900">
+          <div className="flex items-center justify-between pb-3 border-b border-amber-300">
+            <div>
+              <span className="text-xl font-bold font-serif-display tracking-tight text-amber-900">KulLoop · {family.name}</span>
+              <p className="text-xs font-devanagari text-amber-800 mt-0.5">वार्षिक कुटुंब दिनदर्शिका व तिथी स्मरणिका २०२७</p>
+            </div>
+            <div className="text-right text-xs">
+              <span className="font-semibold block">{family.homeLocation}</span>
+              <span className="text-stone-600 text-[10px]">{family.convention} System · {family.validationSource}</span>
+            </div>
+          </div>
+          <p className="text-[10px] text-stone-600 mt-2 italic text-center">
+            "Every occasion remembered, computed with mathematical accuracy for our home sunrise. Keep on puja altar."
+          </p>
+        </div>
+
+        {/* Regular Web Header */}
+        <div className="p-6 border-b border-stone-200 bg-stone-50/70 print:hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <h1 className="text-lg font-bold text-stone-900 font-serif-display">
