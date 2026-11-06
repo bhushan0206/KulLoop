@@ -83,16 +83,8 @@ export default function App() {
   // User Profile & Onboarding state
   const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_USER_PROFILE);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
-    // Check if user has explicitly onboarded with a real profile
-    const hasOnboarded = localStorage.getItem('kulloop_has_onboarded') === 'true';
-    const isDemo = localStorage.getItem('kulloop_is_demo') === 'true';
-    const profile = localStorage.getItem('kulloop_current_user_profile');
-    
-    // If no real profile was configured or if in demo mode, always show onboarding
-    if (!profile || isDemo || !hasOnboarded) {
-      return false;
-    }
-    return true;
+    // Look at session/local state: ONLY true if user actively finished onboarding in THIS browser session
+    return sessionStorage.getItem('kulloop_session_active') === 'true' && localStorage.getItem('kulloop_has_onboarded') === 'true';
   });
 
   // Modals & previews
@@ -333,6 +325,7 @@ export default function App() {
   };
 
   const handleCompleteOnboarding = async (user: UserProfile, newFamily: Partial<Family>) => {
+    sessionStorage.setItem('kulloop_session_active', 'true');
     localStorage.setItem('kulloop_has_onboarded', 'true');
     setHasCompletedOnboarding(true);
     setCurrentUser(user);
@@ -353,12 +346,14 @@ export default function App() {
   };
 
   const handleExploreDemo = () => {
+    sessionStorage.setItem('kulloop_session_active', 'true');
     localStorage.setItem('kulloop_is_demo', 'true');
     setHasCompletedOnboarding(true);
     showToast('Viewing The Joshi Family demonstration record.');
   };
 
   const handleSwitchToOnboarding = () => {
+    sessionStorage.clear();
     localStorage.clear();
     setHasCompletedOnboarding(false);
   };
