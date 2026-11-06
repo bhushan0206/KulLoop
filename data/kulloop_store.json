@@ -3,19 +3,19 @@
     "driver": "file-json-persistent-engine",
     "version": 1,
     "createdAt": "2026-11-06T00:00:00.000Z",
-    "lastSavedAt": "2026-11-06T12:24:07.061Z",
+    "lastSavedAt": "2026-11-06T18:40:46.841Z",
     "persistenceFile": "/app/applet/data/kulloop_store.json",
     "recordsCount": {
       "occasions": 0,
-      "members": 0,
+      "members": 1,
       "people": 0,
       "lineageMembers": 0,
-      "users": 1
+      "users": 2
     }
   },
   "family": {
-    "id": "fam_default",
-    "name": "My Family Lineage",
+    "id": "fam_1793990446275",
+    "name": "Gavhale",
     "homeLocation": "Pune, Maharashtra",
     "secondLocation": "",
     "region": "Maharashtra",
@@ -23,13 +23,63 @@
     "validationSource": "Datar Panchang (Amanta) — verified by family pandit",
     "plan": "pilot_founding",
     "payer": "configurator",
-    "configuratorName": "Family Configurator",
-    "configuratorPhone": "",
+    "configuratorName": "Bhushan Gavhale",
+    "configuratorPhone": "+91 98000 00000",
     "traditionNotes": "Amanta tradition calendar. Computed for local sunrise.",
     "consultedEntity": "An elder"
   },
   "occasions": [],
-  "members": [],
+  "members": [
+    {
+      "id": "mem_1793990446659",
+      "familyId": "fam_1793990446275",
+      "name": "Bhushan Gavhale",
+      "relationship": "Family Configurator (Self)",
+      "phone": "+91 98000 00000",
+      "email": "bhushan0206@gmail.com",
+      "language": "mr",
+      "country": "India",
+      "city": "Pune",
+      "timeZone": "Asia/Kolkata",
+      "optIns": "all",
+      "leadTime": "7+2",
+      "receiveDayOfNote": true,
+      "digestPreference": "individual",
+      "frequencyCapPerWeek": 2,
+      "status": "active",
+      "reminderPreferences": {
+        "emailAddress": "bhushan0206@gmail.com",
+        "pushEnabled": false,
+        "categories": {
+          "shraddha": {
+            "whatsapp": true,
+            "email": true,
+            "push": false
+          },
+          "birthday": {
+            "whatsapp": true,
+            "email": true,
+            "push": false
+          },
+          "vrat_kuldevta": {
+            "whatsapp": true,
+            "email": false,
+            "push": false
+          },
+          "festival": {
+            "whatsapp": true,
+            "email": false,
+            "push": false
+          },
+          "milestone": {
+            "whatsapp": true,
+            "email": true,
+            "push": false
+          }
+        }
+      }
+    }
+  ],
   "people": [],
   "lineageMembers": [],
   "users": {
@@ -51,9 +101,56 @@
       "displayName": "Bhushan Gavhale",
       "tradition": "Amanta (Maharashtra)",
       "updatedAt": "2026-11-06T12:24:07.061Z"
+    },
+    "HBsRYUnLqKR9EPwTu7IekvcXnkz2": {
+      "uid": "HBsRYUnLqKR9EPwTu7IekvcXnkz2",
+      "username": "bhushan0206",
+      "displayName": "Bhushan Gavhale",
+      "email": "bhushan0206@gmail.com",
+      "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocLcuPUELlt2ZxZiDHXJthR8W2_MCnS4s5SZrcdLlkU8drIEpa8DpA=s96-c",
+      "bio": "Family ritual configurator preserving our ancestral traditions.",
+      "interests": [
+        "Ancestral Rites (श्राद्ध)",
+        "Panchang & Astronomy",
+        "Family Heritage",
+        "Marathi Traditions"
+      ],
+      "homeLocation": "Pune, Maharashtra",
+      "tradition": "Amanta (Maharashtra)",
+      "createdAt": "2026-11-06T18:40:44.242Z",
+      "language": "mr",
+      "updatedAt": "2026-11-06T18:40:46.437Z"
     }
   },
   "auditLogs": [
+    {
+      "id": "log_1793990446841_xa0e",
+      "action": "ADD_MEMBER",
+      "entityType": "MEMBER",
+      "entityId": "mem_1793990446659",
+      "timestamp": "2026-11-06T18:40:46.841Z"
+    },
+    {
+      "id": "log_1793990446657_3455",
+      "action": "UPDATE_FAMILY",
+      "entityType": "FAMILY",
+      "entityId": "fam_1793990446275",
+      "timestamp": "2026-11-06T18:40:46.657Z"
+    },
+    {
+      "id": "log_1793990446437_g53b",
+      "action": "SAVE_USER_PROFILE",
+      "entityType": "USER",
+      "entityId": "HBsRYUnLqKR9EPwTu7IekvcXnkz2",
+      "timestamp": "2026-11-06T18:40:46.437Z"
+    },
+    {
+      "id": "log_1793990444563_nb6n",
+      "action": "SAVE_USER_PROFILE",
+      "entityType": "USER",
+      "entityId": "HBsRYUnLqKR9EPwTu7IekvcXnkz2",
+      "timestamp": "2026-11-06T18:40:44.563Z"
+    },
     {
       "id": "log_1793967847061_6kg5",
       "action": "SAVE_USER_PROFILE",

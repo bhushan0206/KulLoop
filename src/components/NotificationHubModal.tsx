@@ -167,18 +167,18 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-stone-950/70 backdrop-blur-xs flex items-center justify-center p-4">
       <div 
-        className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-stone-200 overflow-hidden text-stone-900 transition-all flex flex-col max-h-[90vh]"
+        className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-stone-200 overflow-hidden text-stone-900 transition-all flex flex-col max-h-[90vh]"
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="bg-stone-900 text-stone-100 p-5 flex items-center justify-between border-b border-stone-800 shrink-0">
+        <div className="bg-stone-900 text-stone-100 p-4 sm:p-5 flex items-center justify-between border-b border-stone-800 shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-amber-500/20 rounded-xl text-amber-400 border border-amber-500/30">
               <Bell className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold font-serif-display text-stone-100">
+              <h2 className="text-base sm:text-lg font-bold font-serif-display text-stone-100">
                 KulLoop Reminder Hub
               </h2>
               <p className="text-xs text-stone-300">
@@ -196,50 +196,50 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
         </div>
 
         {/* Channels Tabs */}
-        <div className="flex border-b border-stone-200 bg-stone-50 px-4 pt-2 gap-2 shrink-0 overflow-x-auto no-scrollbar">
+        <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-stone-200 bg-stone-50 p-1.5 gap-1 shrink-0">
           <button
             onClick={() => setActiveTab('whatsapp')}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors border-b-2 cursor-pointer whitespace-nowrap ${
+            className={`flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
               activeTab === 'whatsapp'
-                ? 'border-emerald-600 text-emerald-800 bg-white shadow-xs'
-                : 'border-transparent text-stone-600 hover:text-stone-900'
+                ? 'bg-white text-emerald-800 shadow-xs border border-stone-200/80 font-bold'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100/70'
             }`}
           >
-            <MessageSquare className="w-4 h-4 text-emerald-600" />
-            <span>1. WhatsApp Direct (Free)</span>
+            <MessageSquare className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span className="truncate">1. WhatsApp</span>
           </button>
           <button
             onClick={() => setActiveTab('calendar')}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors border-b-2 cursor-pointer whitespace-nowrap ${
+            className={`flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
               activeTab === 'calendar'
-                ? 'border-amber-600 text-amber-800 bg-white shadow-xs'
-                : 'border-transparent text-stone-600 hover:text-stone-900'
+                ? 'bg-white text-amber-800 shadow-xs border border-stone-200/80 font-bold'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100/70'
             }`}
           >
-            <Calendar className="w-4 h-4 text-amber-600" />
-            <span>2. Calendar Sync (.ics)</span>
+            <Calendar className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span className="truncate">2. Calendar Sync</span>
           </button>
           <button
             onClick={() => setActiveTab('email')}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors border-b-2 cursor-pointer whitespace-nowrap ${
+            className={`flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
               activeTab === 'email'
-                ? 'border-blue-600 text-blue-800 bg-white shadow-xs'
-                : 'border-transparent text-stone-600 hover:text-stone-900'
+                ? 'bg-white text-blue-800 shadow-xs border border-stone-200/80 font-bold'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100/70'
             }`}
           >
-            <Mail className="w-4 h-4 text-blue-600" />
-            <span>3. Email Digests</span>
+            <Mail className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <span className="truncate">3. Email Digest</span>
           </button>
           <button
             onClick={() => setActiveTab('push')}
-            className={`flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-t-lg transition-colors border-b-2 cursor-pointer whitespace-nowrap ${
+            className={`flex items-center justify-center gap-1.5 px-2.5 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer text-center ${
               activeTab === 'push'
-                ? 'border-purple-600 text-purple-800 bg-white shadow-xs'
-                : 'border-transparent text-stone-600 hover:text-stone-900'
+                ? 'bg-white text-purple-800 shadow-xs border border-stone-200/80 font-bold'
+                : 'text-stone-600 hover:text-stone-900 hover:bg-stone-100/70'
             }`}
           >
-            <Bell className="w-4 h-4 text-purple-600" />
-            <span>4. Web Push Alerts</span>
+            <Bell className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+            <span className="truncate">4. Web Push</span>
           </button>
         </div>
 
