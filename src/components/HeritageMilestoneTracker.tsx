@@ -20,6 +20,7 @@ interface HeritageMilestoneTrackerProps {
   family: Family;
   onSelectOccasion?: (occ: FamilyOccasion) => void;
   onPreviewWhatsApp?: (occ: FamilyOccasion) => void;
+  onOpenRemindersModal?: (occ?: FamilyOccasion) => void;
 }
 
 export const HeritageMilestoneTracker: React.FC<HeritageMilestoneTrackerProps> = ({
@@ -27,6 +28,7 @@ export const HeritageMilestoneTracker: React.FC<HeritageMilestoneTrackerProps> =
   family,
   onSelectOccasion,
   onPreviewWhatsApp,
+  onOpenRemindersModal,
 }) => {
   // Current calendar reference years
   const currentCalendarYear = 2026;
@@ -342,7 +344,15 @@ export const HeritageMilestoneTracker: React.FC<HeritageMilestoneTrackerProps> =
                     <span>{copiedNote ? 'Copied Heritage Summary!' : 'Copy Heritage Summary'}</span>
                   </button>
 
-                  {onPreviewWhatsApp && (
+                  {onOpenRemindersModal ? (
+                    <button
+                      onClick={() => onOpenRemindersModal(selectedMilestone)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 text-xs font-medium text-emerald-300 border border-emerald-800 transition-colors cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Zero-Fee Reminders (Cal/WA)</span>
+                    </button>
+                  ) : onPreviewWhatsApp ? (
                     <button
                       onClick={() => onPreviewWhatsApp(selectedMilestone)}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/70 hover:bg-emerald-900/80 text-xs font-medium text-emerald-300 border border-emerald-800 transition-colors cursor-pointer"
@@ -350,7 +360,7 @@ export const HeritageMilestoneTracker: React.FC<HeritageMilestoneTrackerProps> =
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Preview WhatsApp Card</span>
                     </button>
-                  )}
+                  ) : null}
                 </div>
 
                 {onSelectOccasion && (

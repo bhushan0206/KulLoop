@@ -8,13 +8,15 @@ import {
   Camera, 
   Smartphone, 
   FileText,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Bell
 } from 'lucide-react';
 
 interface OccasionCardActionMenuProps {
   occasion: FamilyOccasion;
   onOpenSlideOver: (occ: FamilyOccasion, tab: SlideOverTab) => void;
   onPreviewWhatsApp?: (occ: FamilyOccasion) => void;
+  onOpenRemindersModal?: (occ: FamilyOccasion) => void;
   onGeneratePriestNote?: (occ: FamilyOccasion) => void;
   compact?: boolean;
 }
@@ -23,6 +25,7 @@ export const OccasionCardActionMenu: React.FC<OccasionCardActionMenuProps> = ({
   occasion,
   onOpenSlideOver,
   onPreviewWhatsApp,
+  onOpenRemindersModal,
   onGeneratePriestNote,
   compact = false,
 }) => {
@@ -153,7 +156,21 @@ export const OccasionCardActionMenu: React.FC<OccasionCardActionMenuProps> = ({
           </div>
 
           <div className="pt-1 mt-1 border-t border-stone-100 p-1 space-y-0.5">
-            {onPreviewWhatsApp && (
+            {onOpenRemindersModal ? (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                  onOpenRemindersModal(occasion);
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-stone-700 hover:text-stone-900 hover:bg-amber-50 rounded-lg transition-colors cursor-pointer text-left font-medium"
+              >
+                <Bell className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span>Zero-Fee Reminders (Cal/WA/Push)</span>
+              </button>
+            ) : onPreviewWhatsApp ? (
               <button
                 type="button"
                 role="menuitem"
@@ -167,7 +184,7 @@ export const OccasionCardActionMenu: React.FC<OccasionCardActionMenuProps> = ({
                 <Smartphone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 <span>WhatsApp Preview</span>
               </button>
-            )}
+            ) : null}
 
             {isShraddha && onGeneratePriestNote && (
               <button

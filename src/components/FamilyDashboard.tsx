@@ -426,6 +426,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
                         occasion={occ}
                         onOpenSlideOver={handleOpenSlideOver}
                         onPreviewWhatsApp={onPreviewWhatsApp}
+                        onOpenRemindersModal={onOpenRemindersModal}
                         onGeneratePriestNote={onGeneratePriestNote}
                         compact={false}
                       />
@@ -579,6 +580,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
             family={family}
             onTogglePerformed={onTogglePerformed}
             onPreviewWhatsApp={onPreviewWhatsApp}
+            onOpenRemindersModal={onOpenRemindersModal}
             onGeneratePriestNote={onGeneratePriestNote}
             onAddMemoryPhoto={onAddMemoryPhoto}
             onDeleteMemoryPhoto={onDeleteMemoryPhoto}
@@ -590,6 +592,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
             family={family}
             onSelectOccasion={onSelectOccasion}
             onPreviewWhatsApp={onPreviewWhatsApp}
+            onOpenRemindersModal={onOpenRemindersModal}
           />
         )}
       </div>

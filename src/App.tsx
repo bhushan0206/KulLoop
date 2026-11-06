@@ -630,6 +630,10 @@ export default function App() {
             family={family}
             lineageMembers={lineageMembers}
             onOpenAddModal={() => setIsAddModalOpen(true)}
+            onOpenRemindersModal={() => {
+              setNotificationHubOccasion(null);
+              setIsNotificationHubOpen(true);
+            }}
             onUpdateLineageMember={handleUpdateLineageMember}
             onNavigateToOccasion={(occId) => {
               setActiveTab('occasions');

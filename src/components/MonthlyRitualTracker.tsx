@@ -23,6 +23,7 @@ interface MonthlyRitualTrackerProps {
   family: Family;
   onTogglePerformed: (id: string, notes?: string, performedBy?: string) => void;
   onPreviewWhatsApp: (occ: FamilyOccasion) => void;
+  onOpenRemindersModal?: (occ?: FamilyOccasion) => void;
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
   onAddMemoryPhoto?: (occasionId: string, photo: { id: string; url: string; caption?: string; year?: number; uploadedAt: string }) => void;
   onDeleteMemoryPhoto?: (occasionId: string, photoId: string) => void;
@@ -34,6 +35,7 @@ export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
   family,
   onTogglePerformed,
   onPreviewWhatsApp,
+  onOpenRemindersModal,
   onGeneratePriestNote,
   onAddMemoryPhoto,
   onDeleteMemoryPhoto,
@@ -300,11 +302,11 @@ export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
                     )}
 
                     <button
-                      onClick={() => onPreviewWhatsApp(occ)}
-                      className="px-2.5 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
-                      title="WhatsApp view"
+                      onClick={() => onOpenRemindersModal ? onOpenRemindersModal(occ) : onPreviewWhatsApp(occ)}
+                      className="px-2.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                      title="Open Zero-Fee Reminders (Cal/WA/Push)"
                     >
-                      WhatsApp
+                      Reminders
                     </button>
 
                     {onOpenSlideOver && (
@@ -312,6 +314,7 @@ export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
                         occasion={occ}
                         onOpenSlideOver={onOpenSlideOver}
                         onPreviewWhatsApp={onPreviewWhatsApp}
+                        onOpenRemindersModal={onOpenRemindersModal}
                         onGeneratePriestNote={onGeneratePriestNote}
                         compact={false}
                       />

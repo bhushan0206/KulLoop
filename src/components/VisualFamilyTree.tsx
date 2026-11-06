@@ -26,6 +26,7 @@ interface VisualFamilyTreeProps {
   family: Family;
   lineageMembers: LineageMember[];
   onOpenAddModal?: () => void;
+  onOpenRemindersModal?: () => void;
   onUpdateLineageMember?: (member: LineageMember) => void;
   onNavigateToOccasion?: (occasionId?: string) => void;
   onPreviewWhatsApp?: (memberName: string, duty: RitualResponsibility) => void;
@@ -35,6 +36,7 @@ export const VisualFamilyTree: React.FC<VisualFamilyTreeProps> = ({
   family,
   lineageMembers: initialMembers,
   onOpenAddModal,
+  onOpenRemindersModal,
   onUpdateLineageMember,
   onNavigateToOccasion,
   onPreviewWhatsApp,
@@ -678,7 +680,15 @@ export const VisualFamilyTree: React.FC<VisualFamilyTreeProps> = ({
 
                       {/* Action Links */}
                       <div className="mt-3 pt-2 flex items-center justify-between text-xs">
-                        {onPreviewWhatsApp && (
+                        {onOpenRemindersModal ? (
+                          <button
+                            onClick={onOpenRemindersModal}
+                            className="text-stone-600 hover:text-stone-900 font-medium flex items-center gap-1 cursor-pointer"
+                          >
+                            <Smartphone className="w-3 h-3 text-emerald-600" />
+                            <span>Zero-Fee Reminders</span>
+                          </button>
+                        ) : onPreviewWhatsApp ? (
                           <button
                             onClick={() => onPreviewWhatsApp(selectedMember.name, duty)}
                             className="text-stone-500 hover:text-stone-800 flex items-center gap-1 cursor-pointer"
@@ -686,7 +696,7 @@ export const VisualFamilyTree: React.FC<VisualFamilyTreeProps> = ({
                             <Smartphone className="w-3 h-3 text-emerald-600" />
                             <span>Preview WhatsApp Reminder</span>
                           </button>
-                        )}
+                        ) : null}
                         {duty.occasionId && onNavigateToOccasion && (
                           <button
                             onClick={() => onNavigateToOccasion(duty.occasionId)}

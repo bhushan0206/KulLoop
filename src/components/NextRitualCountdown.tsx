@@ -165,6 +165,7 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
                 occasion={nextRitual}
                 onOpenSlideOver={onOpenSlideOver}
                 onPreviewWhatsApp={onPreviewWhatsApp}
+                onOpenRemindersModal={onOpenRemindersModal}
                 onGeneratePriestNote={onGeneratePriestNote}
                 compact={false}
               />
