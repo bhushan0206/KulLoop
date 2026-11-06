@@ -3,10 +3,10 @@
     "driver": "file-json-persistent-engine",
     "version": 1,
     "createdAt": "2026-11-06T00:00:00.000Z",
-    "lastSavedAt": "2026-11-06T18:40:46.841Z",
+    "lastSavedAt": "2026-11-06T18:42:03.006Z",
     "persistenceFile": "/app/applet/data/kulloop_store.json",
     "recordsCount": {
-      "occasions": 0,
+      "occasions": 1,
       "members": 1,
       "people": 0,
       "lineageMembers": 0,
@@ -28,7 +28,67 @@
     "traditionNotes": "Amanta tradition calendar. Computed for local sunrise.",
     "consultedEntity": "An elder"
   },
-  "occasions": [],
+  "occasions": [
+    {
+      "id": "occ_1793990522928",
+      "familyId": "fam_1793990446275",
+      "title": "Kaavya's Birthday (Calendar Date)",
+      "occasionType": "birthday",
+      "recurrenceType": "gregorian",
+      "personIds": [
+        "per_1793990522928"
+      ],
+      "personNameDisplay": "Kaavya",
+      "relationshipDisplay": "Daughter",
+      "gregorianFields": {
+        "day": 24,
+        "month": 5,
+        "originalYear": 2012
+      },
+      "establishedYear": 2012,
+      "isConfirmed": true,
+      "confirmedSource": "Aaji (Grandmother) & Printed Almanan",
+      "practiceNotes": "Observed as per family tradition at home.",
+      "priority": "normal",
+      "occurrence2027": {
+        "year": 2027,
+        "gregorianDateStr": "2027-04-14",
+        "formattedDisplay": "14 April 2027",
+        "weekday": "Wednesday",
+        "sunriseTime": "06:14 AM IST (Pune)",
+        "tithiSpan": "Magha Krishna Saptami observed as per Pune sunrise",
+        "isVerified": true,
+        "validationSourceUsed": "Datar Panchang (Amanta) — verified by family pandit",
+        "edgeCaseNote": "Computed for home sunrise location."
+      },
+      "contentNote": {
+        "mr": {
+          "title": "Kaavya's Birthday (Calendar Date) स्मरण",
+          "body": "येत्या चालू वर्षातील तिथीनुसार Kaavya's Birthday (Calendar Date) चे स्मरण. स्थान: Pune, Maharashtra सूर्योदयानुरूप.",
+          "prepList": [
+            "पूजेचे साहित्य व नैवेद्य आदल्या दिवशी तयार ठेवा."
+          ],
+          "wish": "वाढदिवसाच्या हार्दिक शुभेच्छा!"
+        },
+        "hi": {
+          "title": "Kaavya's Birthday (Calendar Date) स्मरण",
+          "body": "इस वर्ष की तिथि अनुसार Kaavya's Birthday (Calendar Date) का स्मरण। स्थान: Pune, Maharashtra सूर्योदय अनुसार।",
+          "prepList": [
+            "पूजा सामग्री समय से व्यवस्थित करें।"
+          ],
+          "wish": "जन्मदिन की हार्दिक शुभकामनाएं!"
+        },
+        "en": {
+          "title": "Family Remembrance: Kaavya's Birthday (Calendar Date)",
+          "body": "Upcoming observance for Kaavya's Birthday (Calendar Date), calculated for Pune, Maharashtra local sunrise.",
+          "prepList": [
+            "Keep ritual offerings and preparations ready in advance."
+          ],
+          "wish": "Wishing a very happy and blessed birthday!"
+        }
+      }
+    }
+  ],
   "members": [
     {
       "id": "mem_1793990446659",
@@ -123,6 +183,13 @@
     }
   },
   "auditLogs": [
+    {
+      "id": "log_1793990522995_bh5o",
+      "action": "ADD_OCCASION",
+      "entityType": "OCCASION",
+      "entityId": "occ_1793990522928",
+      "timestamp": "2026-11-06T18:42:02.995Z"
+    },
     {
       "id": "log_1793990446841_xa0e",
       "action": "ADD_MEMBER",

@@ -23,6 +23,7 @@ interface NotificationHubModalProps {
   onClose: () => void;
   occasions: FamilyOccasion[];
   family: Family;
+  members?: import('../types').Member[];
   activeOccasion?: FamilyOccasion | null;
 }
 
@@ -31,6 +32,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
   onClose,
   occasions,
   family,
+  members = [],
   activeOccasion,
 }) => {
   const [activeTab, setActiveTab] = useState<'whatsapp' | 'calendar' | 'email' | 'push'>('whatsapp');
@@ -308,31 +310,81 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
               </div>
 
               {/* Target Phone & Action */}
-              <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-                <div className="w-full sm:flex-1">
-                  <input
-                    type="tel"
-                    placeholder="Recipient WhatsApp number (e.g. +91 98220 12345)"
-                    value={targetPhone}
-                    onChange={(e) => setTargetPhone(e.target.value)}
-                    className="w-full text-xs px-3 py-2 border border-stone-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-                </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <button
-                    onClick={handleCopyMessage}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-stone-300 rounded-xl text-xs font-medium text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
-                  >
-                    {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-stone-600" />}
-                    <span>{copied ? 'Copied!' : 'Copy'}</span>
-                  </button>
-                  <button
-                    onClick={handleSendWhatsAppDirect}
-                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-sm"
-                  >
-                    <Send className="w-4 h-4" />
-                    <span>Open in WhatsApp</span>
-                  </button>
+              <div className="space-y-3 pt-2">
+                {/* 1-Click Family Member Quick Selector */}
+                {members.length > 0 && (
+                  <div>
+                    <label className="text-[11px] font-semibold text-stone-600 block mb-1.5">
+                      Send Directly to Family Member:
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {members.map((m) => {
+                        const isSelected = targetPhone.replace(/[^0-9]/g, '') === m.phone.replace(/[^0-9]/g, '');
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              setTargetPhone(m.phone);
+                              if (m.language === 'marathi' || m.language === 'hindi' || m.language === 'english') {
+                                setSelectedLang(m.language);
+                              }
+                            }}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
+                              isSelected
+                                ? 'bg-emerald-100 text-emerald-900 border-emerald-400 font-semibold shadow-xs'
+                                : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'
+                            }`}
+                          >
+                            <span>{m.name}</span>
+                            <span className="text-[10px] text-stone-500 capitalize">({m.relationship})</span>
+                          </button>
+                        );
+                      })}
+                      {family.configuratorPhone && (
+                        <button
+                          type="button"
+                          onClick={() => setTargetPhone(family.configuratorPhone)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer border ${
+                            targetPhone === family.configuratorPhone
+                              ? 'bg-emerald-100 text-emerald-900 border-emerald-400 font-semibold shadow-xs'
+                              : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'
+                          }`}
+                        >
+                          <span>{family.configuratorName || 'Configurator'}</span>
+                          <span className="text-[10px] text-stone-500">(Self)</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="w-full sm:flex-1">
+                    <input
+                      type="tel"
+                      placeholder="Recipient WhatsApp number (e.g. 98220 12345)"
+                      value={targetPhone}
+                      onChange={(e) => setTargetPhone(e.target.value)}
+                      className="w-full text-xs px-3 py-2 border border-stone-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={handleCopyMessage}
+                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 border border-stone-300 rounded-xl text-xs font-medium text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4 text-stone-600" />}
+                      <span>{copied ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                    <button
+                      onClick={handleSendWhatsAppDirect}
+                      className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer shadow-sm"
+                    >
+                      <Send className="w-4 h-4" />
+                      <span>Open in WhatsApp</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

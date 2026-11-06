@@ -723,6 +723,7 @@ export default function App() {
         onClose={() => setIsNotificationHubOpen(false)}
         occasions={occasions}
         family={family}
+        members={members}
         activeOccasion={notificationHubOccasion}
       />
 
