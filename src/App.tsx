@@ -345,12 +345,14 @@ export default function App() {
 
   const handleExploreDemo = () => {
     localStorage.setItem('kulloop_has_onboarded', 'true');
+    localStorage.setItem('kulloop_is_demo', 'true');
     setHasCompletedOnboarding(true);
     showToast('Loaded The Joshi Family demonstration record.');
   };
 
   const handleSwitchToOnboarding = () => {
     localStorage.removeItem('kulloop_has_onboarded');
+    localStorage.removeItem('kulloop_is_demo');
     setHasCompletedOnboarding(false);
   };
 
@@ -378,6 +380,8 @@ export default function App() {
           setChatbotInitialPrompt('');
           setIsChatbotOpen(true);
         }}
+        onExitDemo={handleSwitchToOnboarding}
+        isDemoMode={localStorage.getItem('kulloop_is_demo') === 'true' || family.id === 'joshi_family_01'}
         currentUser={currentUser}
       />
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, Sparkles, User, FileText, Share2 } from 'lucide-react';
+import { PlusCircle, Sparkles, User, FileText, Share2, LogOut } from 'lucide-react';
 import { UserProfile } from '../services/firebase';
 
 interface HeaderProps {
@@ -10,6 +10,8 @@ interface HeaderProps {
   onOpenProfileModal: () => void;
   onOpenChatbot: () => void;
   onOpenShareModal: () => void;
+  onExitDemo?: () => void;
+  isDemoMode?: boolean;
   currentUser: UserProfile;
 }
 
@@ -21,6 +23,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfileModal,
   onOpenChatbot,
   onOpenShareModal,
+  onExitDemo,
+  isDemoMode,
   currentUser,
 }) => {
   return (
@@ -48,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Zone 2: Clean single-line text navigation links */}
-          <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-stone-300">
+          <nav className="hidden xl:flex items-center gap-4 text-xs lg:text-sm font-medium text-stone-300">
             <button
               onClick={() => setActiveTab('overview')}
               className={`hover:text-amber-200 transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
@@ -57,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'border-transparent text-stone-300'
               }`}
             >
-              Family Home
+              Home
             </button>
             <button
               onClick={() => setActiveTab('occasions')}
@@ -67,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'border-transparent text-stone-300'
               }`}
             >
-              Occasions & Tithis
+              Occasions
             </button>
             <button
               onClick={() => setActiveTab('whatsapp')}
@@ -77,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'border-transparent text-stone-300'
               }`}
             >
-              WhatsApp Experience
+              WhatsApp
             </button>
             <button
               onClick={() => setActiveTab('tree')}
@@ -87,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'border-transparent text-stone-300'
               }`}
             >
-              Family Tree & Lineage
+              Tree
             </button>
             <button
               onClick={() => setActiveTab('members')}
@@ -107,7 +111,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'border-transparent text-stone-300'
               }`}
             >
-              Annual Calendar
+              Calendar
             </button>
             <button
               onClick={() => setActiveTab('pricing')}
@@ -117,51 +121,61 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'border-transparent text-stone-300'
               }`}
             >
-              Pricing & Pilot
+              Pricing
             </button>
           </nav>
 
-          {/* Zone 3: AI Assistant, Profile & Primary Action */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          {/* Zone 3: Actions, Demo Badge & Profile */}
+          <div className="flex items-center gap-2 shrink-0">
+            {isDemoMode && onExitDemo && (
+              <button
+                onClick={onExitDemo}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-all cursor-pointer shadow-xs animate-pulse"
+                title="Exit Demo and Set Up Your Family"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Exit Demo</span>
+              </button>
+            )}
 
             {/* Share Family Calendar on WhatsApp */}
             <button
               onClick={onOpenShareModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-2xs"
               title="Share Family Calendar on WhatsApp or Mobile"
             >
               <Share2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="hidden sm:inline">Share Calendar</span>
+              <span className="hidden md:inline">Share</span>
             </button>
 
             {/* Gemini AI Assistant Button */}
             <button
               onClick={onOpenChatbot}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-200 bg-stone-800/90 hover:bg-stone-700/90 border border-amber-500/30 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-200 bg-stone-800/90 hover:bg-stone-700/90 border border-amber-500/30 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-2xs"
               title="Chat with KulLoop Gemini Heritage Assistant"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span className="hidden sm:inline">Heritage AI</span>
+              <span className="hidden md:inline">Heritage AI</span>
             </button>
 
             {/* Profile Avatar & Sign In/Out Button */}
             <button
               onClick={onOpenProfileModal}
-              className={`inline-flex items-center gap-2 p-1 pl-1.5 pr-2.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 p-1 pl-1.5 pr-2 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                 currentUser.email 
                   ? 'bg-stone-800 hover:bg-stone-700 border border-stone-700 text-stone-200' 
                   : 'bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold shadow-xs'
               }`}
               title={currentUser.email ? `Signed in as ${currentUser.displayName}` : 'Sign In / View Profile'}
             >
-              <div className="w-6 h-6 rounded-full bg-amber-400 text-stone-950 font-bold flex items-center justify-center overflow-hidden text-[11px] shrink-0 border border-amber-500/40">
+              <div className="w-5 h-5 rounded-full bg-amber-400 text-stone-950 font-bold flex items-center justify-center overflow-hidden text-[10px] shrink-0 border border-amber-500/40">
                 {currentUser.photoURL ? (
                   <img src={currentUser.photoURL} alt={currentUser.displayName} className="w-full h-full object-cover" />
                 ) : (
                   currentUser.displayName.charAt(0)
                 )}
               </div>
-              <span className="hidden sm:inline max-w-[100px] truncate">
+              <span className="hidden lg:inline max-w-[80px] truncate text-[11px]">
                 {currentUser.email ? `@${currentUser.username}` : 'Sign In'}
               </span>
             </button>
@@ -169,11 +183,10 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Primary Action Button */}
             <button
               onClick={onOpenAddModal}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-sm cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-sm cursor-pointer"
             >
-              <PlusCircle className="w-4 h-4" />
-              <span className="hidden sm:inline">Add Occasion</span>
-              <span className="sm:hidden">Add</span>
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Add</span>
             </button>
           </div>
         </div>
