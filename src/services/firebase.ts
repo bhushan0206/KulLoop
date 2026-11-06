@@ -40,6 +40,10 @@ export const auth = getAuth(app);
 const databaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-kulloopfamilytit-7b0c965a-e838-4cef-afb2-a45a3a38dc75";
 export const db = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
+// Force Google to show the account picker every single time
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 export enum OperationType {
   CREATE = 'create',
