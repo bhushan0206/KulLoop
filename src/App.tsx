@@ -53,6 +53,7 @@ import { PilotIntakeModal } from './components/PilotIntakeModal';
 import { UserProfileModal } from './components/UserProfileModal';
 import { GeminiChatbot } from './components/GeminiChatbot';
 import { ShareFamilyModal } from './components/ShareFamilyModal';
+import { NotificationHubModal } from './components/NotificationHubModal';
 import { OnboardingFlow } from './components/OnboardingFlow';
 import { Check, ShieldCheck, Sparkles, User, Users, RefreshCw } from 'lucide-react';
 
@@ -108,6 +109,8 @@ export default function App() {
   const [isIntakeModalOpen, setIsIntakeModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isNotificationHubOpen, setIsNotificationHubOpen] = useState(false);
+  const [notificationHubOccasion, setNotificationHubOccasion] = useState<FamilyOccasion | null>(null);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [chatbotInitialPrompt, setChatbotInitialPrompt] = useState<string>('');
   const [priestModalOccasion, setPriestModalOccasion] = useState<FamilyOccasion | null>(null);
@@ -470,6 +473,10 @@ export default function App() {
         onOpenIntakeModal={() => setIsIntakeModalOpen(true)}
         onOpenProfileModal={() => setIsProfileModalOpen(true)}
         onOpenShareModal={() => setIsShareModalOpen(true)}
+        onOpenRemindersModal={() => {
+          setNotificationHubOccasion(null);
+          setIsNotificationHubOpen(true);
+        }}
         onOpenChatbot={() => {
           setChatbotInitialPrompt('');
           setIsChatbotOpen(true);
@@ -563,6 +570,10 @@ export default function App() {
             onNavigateTab={(tab) => setActiveTab(tab)}
             onOpenAddModal={() => setIsAddModalOpen(true)}
             onOpenShareModal={() => setIsShareModalOpen(true)}
+            onOpenRemindersModal={(occ) => {
+              setNotificationHubOccasion(occ || null);
+              setIsNotificationHubOpen(true);
+            }}
             onTogglePerformed={handleTogglePerformed}
             onUpdateOccasion={handleUpdateOccasion}
             onAddMemoryPhoto={handleAddMemoryPhoto}
@@ -578,6 +589,10 @@ export default function App() {
             people={people}
             onOpenAddModal={() => setIsAddModalOpen(true)}
             onPreviewWhatsApp={handlePreviewWhatsApp}
+            onOpenRemindersModal={(occ) => {
+              setNotificationHubOccasion(occ || null);
+              setIsNotificationHubOpen(true);
+            }}
             onGeneratePriestNote={handleGeneratePriestNote}
             onToggleConfirm={handleToggleConfirm}
             onDeleteOccasion={handleDeleteOccasion}
@@ -591,6 +606,10 @@ export default function App() {
             members={members}
             initialOccasion={activeWhatsAppOccasion}
             onOpenAddModal={() => setIsAddModalOpen(true)}
+            onOpenRemindersModal={(occ) => {
+              setNotificationHubOccasion(occ || null);
+              setIsNotificationHubOpen(true);
+            }}
             onGeneratePriestNote={handleGeneratePriestNote}
           />
         )}
@@ -627,6 +646,10 @@ export default function App() {
             occasions={occasions}
             family={family}
             onOpenAddModal={() => setIsAddModalOpen(true)}
+            onOpenRemindersModal={(occ) => {
+              setNotificationHubOccasion(occ || null);
+              setIsNotificationHubOpen(true);
+            }}
             onPreviewWhatsApp={handlePreviewWhatsApp}
             onGeneratePriestNote={handleGeneratePriestNote}
           />
@@ -688,6 +711,15 @@ export default function App() {
         onClose={() => setIsShareModalOpen(false)}
         family={family}
         occasions={occasions}
+      />
+
+      {/* Zero-Fee Notification & Reminders Hub Modal (Options 1-4) */}
+      <NotificationHubModal
+        isOpen={isNotificationHubOpen}
+        onClose={() => setIsNotificationHubOpen(false)}
+        occasions={occasions}
+        family={family}
+        activeOccasion={notificationHubOccasion}
       />
 
       {/* Calm Footer */}

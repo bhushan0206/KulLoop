@@ -42,6 +42,7 @@ interface FamilyDashboardProps {
   onNavigateTab: (tab: 'occasions' | 'whatsapp' | 'members' | 'calendar' | 'pricing' | 'tree') => void;
   onOpenAddModal: () => void;
   onOpenShareModal: () => void;
+  onOpenRemindersModal?: (occ?: FamilyOccasion) => void;
   onTogglePerformed: (id: string, notes?: string, performedBy?: string) => void;
   onUpdateOccasion: (id: string, updates: Partial<FamilyOccasion>) => void;
   onAddMemoryPhoto?: (occasionId: string, photo: { id: string; url: string; caption?: string; year?: number; uploadedAt: string }) => void;
@@ -58,6 +59,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
   onNavigateTab,
   onOpenAddModal,
   onOpenShareModal,
+  onOpenRemindersModal,
   onTogglePerformed,
   onUpdateOccasion,
   onAddMemoryPhoto,
@@ -159,6 +161,15 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
             >
               + Add Occasion
             </button>
+            {onOpenRemindersModal && (
+              <button
+                onClick={() => onOpenRemindersModal()}
+                className="px-3 py-1.5 text-[11px] font-semibold text-amber-200 bg-stone-800 hover:bg-stone-700 border border-amber-500/40 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-2xs"
+                title="Zero-fee WhatsApp P2P, Calendar Sync, Email, Push"
+              >
+                <span>Free Reminders Hub</span>
+              </button>
+            )}
             <button
               onClick={() => onNavigateTab('whatsapp')}
               className="px-3 py-1.5 text-[11px] font-medium text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg transition-colors cursor-pointer"
@@ -196,6 +207,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
             occasions={occasions}
             family={family}
             onOpenAddModal={onOpenAddModal}
+            onOpenRemindersModal={onOpenRemindersModal}
             onPreviewWhatsApp={onPreviewWhatsApp}
             onGeneratePriestNote={onGeneratePriestNote}
             onTogglePerformed={onTogglePerformed}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlusCircle, Sparkles, User, FileText, Share2, LogOut } from 'lucide-react';
+import { PlusCircle, Sparkles, User, FileText, Share2, LogOut, Bell } from 'lucide-react';
 import { UserProfile } from '../services/firebase';
 
 interface HeaderProps {
@@ -10,6 +10,7 @@ interface HeaderProps {
   onOpenProfileModal: () => void;
   onOpenChatbot: () => void;
   onOpenShareModal: () => void;
+  onOpenRemindersModal?: () => void;
   onExitDemo?: () => void;
   isDemoMode?: boolean;
   currentUser: UserProfile;
@@ -23,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenProfileModal,
   onOpenChatbot,
   onOpenShareModal,
+  onOpenRemindersModal,
   onExitDemo,
   isDemoMode,
   currentUser,
@@ -147,6 +149,18 @@ export const Header: React.FC<HeaderProps> = ({
               <Share2 className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden md:inline">Share</span>
             </button>
+
+            {/* Zero-Cost Notification & Reminder Hub */}
+            {onOpenRemindersModal && (
+              <button
+                onClick={onOpenRemindersModal}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-amber-200 bg-stone-800/90 hover:bg-stone-700/90 border border-amber-500/30 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-2xs"
+                title="Open Zero-Fee Reminder Hub (WhatsApp, Calendar, Email, Push)"
+              >
+                <Bell className="w-3.5 h-3.5 text-amber-400" />
+                <span className="hidden md:inline">Reminders</span>
+              </button>
+            )}
 
             {/* Gemini AI Assistant Button */}
             <button

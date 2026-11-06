@@ -24,6 +24,7 @@ interface AnnualCalendarViewProps {
   occasions: FamilyOccasion[];
   family: Family;
   onOpenAddModal?: () => void;
+  onOpenRemindersModal?: (occ?: FamilyOccasion) => void;
   onPreviewWhatsApp: (occ: FamilyOccasion) => void;
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
 }
@@ -32,6 +33,7 @@ export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
   occasions,
   family,
   onOpenAddModal,
+  onOpenRemindersModal,
   onPreviewWhatsApp,
   onGeneratePriestNote,
 }) => {
@@ -312,11 +314,11 @@ export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
                           + iCal
                         </button>
                         <button
-                          onClick={() => onPreviewWhatsApp(occ)}
-                          className="text-stone-600 hover:text-amber-800 text-xs font-medium cursor-pointer"
-                          title="Preview WhatsApp reminder"
+                          onClick={() => onOpenRemindersModal ? onOpenRemindersModal(occ) : onPreviewWhatsApp(occ)}
+                          className="text-emerald-700 hover:text-emerald-900 text-xs font-semibold cursor-pointer"
+                          title="Open 100% Free Reminders Hub (WhatsApp P2P, Calendar Sync, Email, Push)"
                         >
-                          WhatsApp
+                          Reminders
                         </button>
                         {isShraddha && (
                           <button

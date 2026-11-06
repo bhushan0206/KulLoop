@@ -31,6 +31,7 @@ interface OccasionListProps {
   people?: Person[];
   onOpenAddModal: () => void;
   onPreviewWhatsApp: (occ: FamilyOccasion) => void;
+  onOpenRemindersModal?: (occ?: FamilyOccasion) => void;
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
   onToggleConfirm: (id: string) => void;
   onDeleteOccasion: (id: string) => void;
@@ -55,6 +56,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
   people = [],
   onOpenAddModal,
   onPreviewWhatsApp,
+  onOpenRemindersModal,
   onGeneratePriestNote,
   onToggleConfirm,
   onDeleteOccasion,
@@ -531,12 +533,12 @@ export const OccasionList: React.FC<OccasionListProps> = ({
                 {/* Right Actions */}
                 <div className="flex md:flex-col items-center justify-end gap-2 shrink-0 border-t md:border-t-0 pt-2 md:pt-0">
                   <button
-                    onClick={() => onPreviewWhatsApp(occ)}
-                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer"
-                    title="Preview WhatsApp message in Marathi, Hindi & English"
+                    onClick={() => onOpenRemindersModal ? onOpenRemindersModal(occ) : onPreviewWhatsApp(occ)}
+                    className="flex-1 md:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors cursor-pointer"
+                    title="Open Zero-Fee Reminders: WhatsApp P2P, Calendar Sync, Email, Push"
                   >
                     <Smartphone className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>WhatsApp</span>
+                    <span>Remind Hub</span>
                   </button>
 
                   <button

@@ -19,6 +19,7 @@ interface NextRitualCountdownProps {
   occasions: FamilyOccasion[];
   family: Family;
   onOpenAddModal?: () => void;
+  onOpenRemindersModal?: (occ?: FamilyOccasion) => void;
   onPreviewWhatsApp: (occ: FamilyOccasion) => void;
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
   onTogglePerformed: (id: string, notes?: string, performedBy?: string) => void;
@@ -29,6 +30,7 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
   occasions,
   family,
   onOpenAddModal,
+  onOpenRemindersModal,
   onPreviewWhatsApp,
   onGeneratePriestNote,
   onTogglePerformed,
@@ -258,11 +260,12 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
         {/* Bottom: Actions in a clean flex row */}
         <div className="flex items-center gap-1.5 pt-2 border-t border-stone-800/80">
           <button
-            onClick={() => onPreviewWhatsApp(nextRitual)}
+            onClick={() => onOpenRemindersModal ? onOpenRemindersModal(nextRitual) : onPreviewWhatsApp(nextRitual)}
             className="flex-1 inline-flex items-center justify-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-stone-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer shadow-sm whitespace-nowrap"
+            title="Options 1-4: WhatsApp P2P, Calendar Sync, Email Digest, Push"
           >
             <Smartphone className="w-3 h-3" />
-            <span>Reminder</span>
+            <span>Reminders</span>
           </button>
 
           <button
