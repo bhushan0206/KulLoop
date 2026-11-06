@@ -487,14 +487,14 @@ app.post('/api/gemini/chat', async (req, res) => {
 
   // Prepare model priority list
   // If user asked for a specific model, try it first, then fall back to high-availability alternatives
-  const primaryModel = requestedModel || 'gemini-3.8-flash';
-  const fallbackModel = primaryModel === 'gemini-3.1-flash-lite' ? 'gemini-3.8-flash' : 'gemini-3.1-flash-lite';
+  const primaryModel = requestedModel || 'gemini-2.5-flash';
+  const fallbackModel = primaryModel === 'gemini-2.0-flash' ? 'gemini-2.5-flash' : 'gemini-2.0-flash';
   const candidateModels = [primaryModel, fallbackModel];
 
   // Format conversation history for @google/genai
-  const formattedContents = messages.map((m: { role: string; text: string }) => ({
+  const formattedContents = messages.map((m: { role: string; text?: string; content?: string }) => ({
     role: m.role === 'model' ? 'model' : 'user',
-    parts: [{ text: m.text }],
+    parts: [{ text: m.text || m.content || '' }],
   }));
 
   const systemInstruction = `You are the KulLoop Heritage & Tithi Assistant (संस्कार व कुलधर्म मार्गदर्शक), an expert, respectful, and calm guide for Indian family traditions, panchang calculations, ancestral shraddha rites, tithi birthdays, and festival observances.
@@ -505,7 +505,7 @@ Key principles:
 4. Community & Passions: If the user has specific passions or interests (${userInterests ? userInterests.join(', ') : 'Family Heritage'}), highlight connections to relevant traditions and suggest meaningful ways to engage with family and community members.
 5. Language: You can respond in English, Hindi, or Marathi depending on what the user asks or uses.`;
 
-  const ai = new GoogleGenAI();
+  const ai = new GoogleGenAI({ apiKey });
   let lastError: any = null;
 
   for (const modelToTry of candidateModels) {

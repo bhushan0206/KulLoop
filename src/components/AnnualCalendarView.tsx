@@ -163,7 +163,7 @@ export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
           </div>
           <div className="md:col-span-4 hidden md:block">
             <img
-              src="/src/assets/images/kulloop_almanac_art_1793303629720.jpg"
+              src="/assets/images/kulloop_almanac_art_1793303629720.jpg"
               alt="Traditional wooden almanac and diya lamp"
               referrerPolicy="no-referrer"
               className="rounded-xl object-cover h-32 w-full border border-stone-700"

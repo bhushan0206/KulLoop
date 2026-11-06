@@ -102,7 +102,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
       return;
     }
 
+    const newFamId = `fam_${Date.now()}`;
     const customFamily: Partial<Family> = {
+      id: newFamId,
       name: familyName.trim() || 'My Family Lineage',
       homeLocation: homeLocation.trim() || 'Pune, Maharashtra',
       secondLocation: secondLocation.trim(),

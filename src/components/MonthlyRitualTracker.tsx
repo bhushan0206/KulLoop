@@ -529,21 +529,21 @@ export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
                   <div className="flex items-center justify-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setNewPhotoURL('/src/assets/images/kulloop_almanac_art_1793303629720.jpg')}
+                      onClick={() => setNewPhotoURL('/assets/images/kulloop_almanac_art_1793303629720.jpg')}
                       className="text-[10px] font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-md border border-stone-200 cursor-pointer"
                     >
                       Diya & Marigolds
                     </button>
                     <button
                       type="button"
-                      onClick={() => setNewPhotoURL('/src/assets/images/kulloop_hero_family_1793303629503.jpg')}
+                      onClick={() => setNewPhotoURL('/assets/images/kulloop_hero_family_1793303629503.jpg')}
                       className="text-[10px] font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-md border border-stone-200 cursor-pointer"
                     >
                       Family Gathering
                     </button>
                     <button
                       type="button"
-                      onClick={() => setNewPhotoURL('/src/assets/images/kulloop_avatar_elder_1793303629841.jpg')}
+                      onClick={() => setNewPhotoURL('/assets/images/kulloop_avatar_elder_1793303629841.jpg')}
                       className="text-[10px] font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-md border border-stone-200 cursor-pointer"
                     >
                       Aaji’s Blessings

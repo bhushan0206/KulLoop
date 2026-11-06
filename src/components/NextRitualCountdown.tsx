@@ -88,7 +88,28 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
     return () => clearInterval(interval);
   }, [nextRitual]);
 
-  if (!nextRitual) return null;
+  if (!nextRitual) {
+    return (
+      <div className="bg-gradient-to-br from-stone-900 via-stone-900 to-stone-950 rounded-xl border border-stone-800 shadow-sm p-5 text-white relative overflow-hidden h-full flex flex-col justify-between">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative z-10 space-y-3">
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-300 uppercase tracking-wider">
+            <Flame className="w-3.5 h-3.5 text-amber-400" />
+            <span>Sacred Observances</span>
+          </div>
+          <h4 className="text-base font-bold text-stone-100 font-serif-display">
+            No upcoming observances recorded yet
+          </h4>
+          <p className="text-xs text-stone-300 leading-relaxed">
+            Add your family's annual shraddha tithis, birthdays, or festivals. KulLoop will compute the exact sunrise timing and count down here.
+          </p>
+        </div>
+        <div className="relative z-10 pt-4 border-t border-stone-800">
+          <span className="text-[11px] text-amber-300 font-medium">Click "+ Add Occasion" to begin</span>
+        </div>
+      </div>
+    );
+  }
 
   const isShraddha = nextRitual.occasionType === 'shraddha' || nextRitual.occasionType === 'mahalaya';
 

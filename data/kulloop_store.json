@@ -3,29 +3,29 @@
     "driver": "file-json-persistent-engine",
     "version": 1,
     "createdAt": "2026-10-29T21:47:53.625Z",
-    "lastSavedAt": "2026-10-29T21:48:15.467Z",
+    "lastSavedAt": "2026-11-06T01:58:39.090Z",
     "persistenceFile": "/app/applet/data/kulloop_store.json",
     "recordsCount": {
       "occasions": 9,
       "members": 4,
       "people": 3,
       "lineageMembers": 9,
-      "users": 5
+      "users": 7
     }
   },
   "family": {
     "id": "fam_joshi_01",
-    "name": "The Joshi Family (जोशी परिवार)",
-    "homeLocation": "Pune, Maharashtra (पुणे)",
-    "secondLocation": "Toronto, Canada",
+    "name": "Gavhale",
+    "homeLocation": "Pune, Maharashtra",
+    "secondLocation": "",
     "region": "Maharashtra",
     "convention": "Amanta",
-    "validationSource": "Datar Panchang (Amanta) — reviewed with Pt. Shrikant Joshi",
+    "validationSource": "Datar Panchang (Amanta) — verified by family pandit",
     "plan": "pilot_founding",
     "payer": "configurator",
-    "configuratorName": "Bhushan Joshi",
-    "configuratorPhone": "+91 98220 12345",
-    "traditionNotes": "Kuldevta: Khandoba (Jejuri). Follows Amanta calendar for shraddhas tied to local sunrise in Pune. Mahalaya shraddha kept on ancestor tithi.",
+    "configuratorName": "Bhushan Gavhale",
+    "configuratorPhone": "+917506990883",
+    "traditionNotes": "Amanta tradition calendar. Computed for local sunrise.",
     "consultedEntity": "An elder"
   },
   "occasions": [
@@ -1348,9 +1348,96 @@
       "homeLocation": "Jaipur, Rajasthan",
       "tradition": "Purnimanta",
       "createdAt": "2026-10-29T21:47:53.625Z"
+    },
+    "google_bhushangavhale86": {
+      "uid": "google_bhushangavhale86",
+      "username": "bhushan_pune",
+      "displayName": "Bhushan Joshi",
+      "email": "bhushangavhale86@gmail.com",
+      "photoURL": "/src/assets/images/kulloop_avatar_elder_1793303629841.jpg",
+      "bio": "Family ritual configurator preserving ancestral Jejuri Khandoba traditions.",
+      "interests": [
+        "Ancestral Rites (श्राद्ध)",
+        "Panchang & Astronomy",
+        "Family Heritage",
+        "Marathi Traditions"
+      ],
+      "homeLocation": "Pune, Maharashtra",
+      "tradition": "Amanta (Maharashtra)",
+      "createdAt": "2026-11-06T01:25:37.249Z",
+      "updatedAt": "2026-11-06T01:25:37.556Z",
+      "language": "mr"
+    },
+    "SsqGvZ5XqaRhtnAdzEHUtlbSaTP2": {
+      "uid": "SsqGvZ5XqaRhtnAdzEHUtlbSaTP2",
+      "username": "bhushangavhale86",
+      "displayName": "Bhushan Gavhale",
+      "email": "bhushangavhale86@gmail.com",
+      "photoURL": "https://lh3.googleusercontent.com/a/ACg8ocKkJ71s_YAVuTkM5CEkI9DxMrpGwr4NY65oQGXsF3XT4gzIkw=s96-c",
+      "bio": "Family ritual configurator preserving our ancestral traditions.",
+      "interests": [
+        "Ancestral Rites (श्राद्ध)",
+        "Panchang & Astronomy",
+        "Family Heritage",
+        "Marathi Traditions"
+      ],
+      "homeLocation": "Pune, Maharashtra",
+      "tradition": "Amanta (Maharashtra)",
+      "createdAt": "2026-11-06T01:21:28.081Z",
+      "language": "mr",
+      "updatedAt": "2026-11-06T01:58:38.790Z"
     }
   },
   "auditLogs": [
+    {
+      "id": "log_1793930319089_h8tn",
+      "action": "UPDATE_FAMILY",
+      "entityType": "FAMILY",
+      "entityId": "fam_joshi_01",
+      "timestamp": "2026-11-06T01:58:39.089Z"
+    },
+    {
+      "id": "log_1793930318790_6n1l",
+      "action": "SAVE_USER_PROFILE",
+      "entityType": "USER",
+      "entityId": "SsqGvZ5XqaRhtnAdzEHUtlbSaTP2",
+      "timestamp": "2026-11-06T01:58:38.790Z"
+    },
+    {
+      "id": "log_1793928337557_m9jo",
+      "action": "SAVE_USER_PROFILE",
+      "entityType": "USER",
+      "entityId": "google_bhushangavhale86",
+      "timestamp": "2026-11-06T01:25:37.557Z"
+    },
+    {
+      "id": "log_1793928293913_anju",
+      "action": "SAVE_USER_PROFILE",
+      "entityType": "USER",
+      "entityId": "google_bhushangavhale86",
+      "timestamp": "2026-11-06T01:24:53.913Z"
+    },
+    {
+      "id": "log_1793928267897_nr5b",
+      "action": "SAVE_USER_PROFILE",
+      "entityType": "USER",
+      "entityId": "google_bhushangavhale86",
+      "timestamp": "2026-11-06T01:24:27.897Z"
+    },
+    {
+      "id": "log_1793928088549_hp6d",
+      "action": "SAVE_USER_PROFILE",
+      "entityType": "USER",
+      "entityId": "SsqGvZ5XqaRhtnAdzEHUtlbSaTP2",
+      "timestamp": "2026-11-06T01:21:28.550Z"
+    },
+    {
+      "id": "log_1793927936788_5x32",
+      "action": "SAVE_USER_PROFILE",
+      "entityType": "USER",
+      "entityId": "google_bhushangavhale86",
+      "timestamp": "2026-11-06T01:18:56.788Z"
+    },
     {
       "id": "log_1793310495467_4xf0",
       "action": "TOGGLE_PERFORMED_OCCASION",

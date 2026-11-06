@@ -61,7 +61,7 @@ const DEFAULT_USER_PROFILE: UserProfile = {
   username: 'bhushan_pune',
   displayName: 'Bhushan Joshi',
   email: 'bhushangavhale86@gmail.com',
-  photoURL: '/src/assets/images/kulloop_avatar_elder_1793303629841.jpg',
+  photoURL: '/assets/images/kulloop_avatar_elder_1793303629841.jpg',
   bio: 'Family ritual configurator. Preserving our ancestral Jejuri Khandoba traditions and shraddha tithis for the entire family.',
   interests: ['Ancestral Rites (श्राद्ध)', 'Panchang & Astronomy', 'Family Heritage', 'Marathi Traditions'],
   homeLocation: 'Pune, Maharashtra',
@@ -327,27 +327,76 @@ export default function App() {
   const handleCompleteOnboarding = async (user: UserProfile, newFamily: Partial<Family>) => {
     sessionStorage.setItem('kulloop_session_active', 'true');
     localStorage.setItem('kulloop_has_onboarded', 'true');
+    localStorage.removeItem('kulloop_is_demo');
     setHasCompletedOnboarding(true);
     setCurrentUser(user);
     await saveUserProfile(user);
 
+    const famId = newFamily.id || `fam_${Date.now()}`;
     const updatedFamily: Family = {
       ...family,
       ...newFamily,
-      name: newFamily.name || family.name,
-      homeLocation: newFamily.homeLocation || family.homeLocation,
-      convention: newFamily.convention || family.convention,
+      id: famId,
+      name: newFamily.name || 'My Family Lineage',
+      homeLocation: newFamily.homeLocation || 'Pune, Maharashtra',
+      convention: newFamily.convention || 'Amanta',
       configuratorName: user.displayName,
       configuratorPhone: newFamily.configuratorPhone || family.configuratorPhone,
     };
     setFamily(updatedFamily);
     await apiUpdateFamily(updatedFamily);
+
+    // Initial clean slate for new family: configurator is member #1
+    const configuratorMember: Member = {
+      id: `mem_${Date.now()}`,
+      familyId: famId,
+      name: user.displayName,
+      relationship: 'Family Configurator (Self)',
+      phone: updatedFamily.configuratorPhone || '+91 98000 00000',
+      email: user.email,
+      language: user.language || 'mr',
+      country: 'India',
+      city: updatedFamily.homeLocation.split(',')[0].trim(),
+      timeZone: 'Asia/Kolkata',
+      optIns: 'all',
+      leadTime: '7+2',
+      receiveDayOfNote: true,
+      digestPreference: 'individual',
+      frequencyCapPerWeek: 2,
+      status: 'active',
+      reminderPreferences: {
+        emailAddress: user.email,
+        pushEnabled: false,
+        categories: {
+          shraddha: { whatsapp: true, email: true, push: false },
+          birthday: { whatsapp: true, email: true, push: false },
+          vrat_kuldevta: { whatsapp: true, email: false, push: false },
+          festival: { whatsapp: true, email: false, push: false },
+          milestone: { whatsapp: true, email: true, push: false },
+        },
+      },
+    };
+
+    // Set clean slate for occasions & members belonging to this new family
+    setOccasions([]);
+    setMembers([configuratorMember]);
+    setPeople([]);
+    setLineageMembers([]);
+
+    // Persist configurator member
+    await apiCreateMember(configuratorMember);
+
     showToast(`Welcome to KulLoop! Configured for ${updatedFamily.name}`);
   };
 
   const handleExploreDemo = () => {
     sessionStorage.setItem('kulloop_session_active', 'true');
     localStorage.setItem('kulloop_is_demo', 'true');
+    setFamily(INITIAL_FAMILY);
+    setOccasions(INITIAL_OCCASIONS);
+    setMembers(INITIAL_MEMBERS);
+    setPeople(INITIAL_PEOPLE);
+    setLineageMembers(INITIAL_LINEAGE_MEMBERS);
     setHasCompletedOnboarding(true);
     showToast('Viewing The Joshi Family demonstration record.');
   };

@@ -125,9 +125,9 @@ export const INTEREST_OPTIONS = [
 ];
 
 export const CULTURAL_AVATARS = [
-  { id: 'elder_aaji', url: '/src/assets/images/kulloop_avatar_elder_1793303629841.jpg', label: 'Aaji (Matriarch)' },
-  { id: 'almanac_keeper', url: '/src/assets/images/kulloop_almanac_art_1793303629720.jpg', label: 'Almanac Keeper' },
-  { id: 'family_lead', url: '/src/assets/images/kulloop_hero_family_1793303629503.jpg', label: 'Family Heritage' },
+  { id: 'elder_aaji', url: '/assets/images/kulloop_avatar_elder_1793303629841.jpg', label: 'Aaji (Matriarch)' },
+  { id: 'almanac_keeper', url: '/assets/images/kulloop_almanac_art_1793303629720.jpg', label: 'Almanac Keeper' },
+  { id: 'family_lead', url: '/assets/images/kulloop_hero_family_1793303629503.jpg', label: 'Family Heritage' },
 ];
 
 const LOCAL_STORAGE_KEY = 'kulloop_current_user_profile';

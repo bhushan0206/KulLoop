@@ -566,7 +566,7 @@ export const INITIAL_OCCASIONS: FamilyOccasion[] = [
     memoryPhotos: [
       {
         id: 'photo_rama_1',
-        url: '/src/assets/images/kulloop_avatar_elder_1793303629841.jpg',
+        url: '/assets/images/kulloop_avatar_elder_1793303629841.jpg',
         caption: 'Aaji offering fresh tulsi leaves and water during morning puja',
         year: 2026,
         uploadedAt: '26 Oct 2026',
@@ -625,14 +625,14 @@ export const INITIAL_OCCASIONS: FamilyOccasion[] = [
     memoryPhotos: [
       {
         id: 'photo_dhan_1',
-        url: '/src/assets/images/kulloop_almanac_art_1793303629720.jpg',
+        url: '/assets/images/kulloop_almanac_art_1793303629720.jpg',
         caption: 'Traditional brass deep and marigold offerings placed at the entrance for Yamadeep daan',
         year: 2026,
         uploadedAt: '29 Oct 2026',
       },
       {
         id: 'photo_dhan_2',
-        url: '/src/assets/images/kulloop_hero_family_1793303629503.jpg',
+        url: '/assets/images/kulloop_hero_family_1793303629503.jpg',
         caption: 'Family gathering in the veranda for evening deep pujan',
         year: 2026,
         uploadedAt: '29 Oct 2026',

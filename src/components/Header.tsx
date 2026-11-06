@@ -191,11 +191,11 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Mobile secondary navigation strip */}
-        <div className="flex lg:hidden items-center justify-between overflow-x-auto py-2 text-xs border-t border-stone-800 gap-4 no-scrollbar">
+        {/* Secondary navigation strip (visible below xl breakpoint) */}
+        <div className="flex xl:hidden items-center justify-between overflow-x-auto py-2 text-xs border-t border-stone-800 gap-3 no-scrollbar">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`whitespace-nowrap px-2 py-1 rounded cursor-pointer ${
+            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
               activeTab === 'overview' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
             }`}
           >
@@ -203,7 +203,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('occasions')}
-            className={`whitespace-nowrap px-2 py-1 rounded cursor-pointer ${
+            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
               activeTab === 'occasions' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
             }`}
           >
@@ -211,7 +211,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('whatsapp')}
-            className={`whitespace-nowrap px-2 py-1 rounded cursor-pointer ${
+            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
               activeTab === 'whatsapp' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
             }`}
           >
@@ -219,15 +219,15 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('tree')}
-            className={`whitespace-nowrap px-2 py-1 rounded cursor-pointer ${
+            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
               activeTab === 'tree' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
             }`}
           >
-            Tree & Duties
+            Tree
           </button>
           <button
             onClick={() => setActiveTab('members')}
-            className={`whitespace-nowrap px-2 py-1 rounded cursor-pointer ${
+            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
               activeTab === 'members' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
             }`}
           >
@@ -235,7 +235,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('calendar')}
-            className={`whitespace-nowrap px-2 py-1 rounded cursor-pointer ${
+            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
               activeTab === 'calendar' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
             }`}
           >
@@ -243,7 +243,7 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('pricing')}
-            className={`whitespace-nowrap px-2 py-1 rounded cursor-pointer ${
+            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
               activeTab === 'pricing' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
             }`}
           >

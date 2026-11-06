@@ -360,141 +360,161 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {upcomingOccasions.map((occ) => {
-            const isShraddha = occ.occasionType === 'shraddha' || occ.occasionType === 'mahalaya';
-            const estYear = occ.establishedYear || occ.gregorianFields?.originalYear;
-            const yearsSinceEstablished = estYear ? 2027 - estYear : null;
-            return (
-              <div
-                key={occ.id}
-                className="bg-white rounded-xl border border-stone-200 p-4 shadow-2xs hover:border-amber-300 transition-all flex flex-col justify-between space-y-3"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2 text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-semibold text-stone-500 capitalize text-[10px]">
-                        {occ.occasionType.replace('_', ' ')}
-                      </span>
-                      {occ.isPerformed ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded">
-                          <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
-                          Performed
+        {upcomingOccasions.length === 0 ? (
+          <div className="bg-white rounded-xl border border-stone-200 p-8 text-center space-y-3">
+            <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-full flex items-center justify-center mx-auto">
+              <Calendar className="w-6 h-6 text-amber-600" />
+            </div>
+            <h4 className="text-base font-bold text-stone-900 font-serif-display">
+              No occasions recorded yet for {family.name}
+            </h4>
+            <p className="text-xs text-stone-500 max-w-md mx-auto">
+              Record your family's annual Shraddha tithis, birthdays, or festivals. Each date is accurately matched to your local sunrise and notified on WhatsApp.
+            </p>
+            <button
+              onClick={onOpenAddModal}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer shadow-sm mt-2"
+            >
+              <span>+ Record First Occasion</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {upcomingOccasions.map((occ) => {
+              const isShraddha = occ.occasionType === 'shraddha' || occ.occasionType === 'mahalaya';
+              const estYear = occ.establishedYear || occ.gregorianFields?.originalYear;
+              const yearsSinceEstablished = estYear ? 2027 - estYear : null;
+              return (
+                <div
+                  key={occ.id}
+                  className="bg-white rounded-xl border border-stone-200 p-4 shadow-2xs hover:border-amber-300 transition-all flex flex-col justify-between space-y-3"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-stone-500 capitalize text-[10px]">
+                          {occ.occasionType.replace('_', ' ')}
                         </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
-                          <CheckCircle className="w-2.5 h-2.5" />
-                          Checked
-                        </span>
+                        {occ.isPerformed ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded">
+                            <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                            Performed
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded">
+                            <CheckCircle className="w-2.5 h-2.5" />
+                            Checked
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Floating Action Menu for this card */}
+                      <OccasionCardActionMenu
+                        occasion={occ}
+                        onOpenSlideOver={handleOpenSlideOver}
+                        onPreviewWhatsApp={onPreviewWhatsApp}
+                        onGeneratePriestNote={onGeneratePriestNote}
+                        compact={false}
+                      />
+                    </div>
+
+                    <div>
+                      <h4 className="font-bold text-stone-900 text-sm leading-snug">
+                        {occ.title}
+                      </h4>
+                      {occ.tithiFields && (
+                        <p className="text-[11px] text-stone-600 font-devanagari mt-0.5">
+                          {occ.tithiFields.lunarMonthDevanagari || occ.tithiFields.lunarMonth} {occ.tithiFields.pakshaDevanagari || occ.tithiFields.paksha} {occ.tithiFields.tithiDevanagari || occ.tithiFields.tithi}
+                        </p>
                       )}
                     </div>
 
-                    {/* Floating Action Menu for this card */}
-                    <OccasionCardActionMenu
-                      occasion={occ}
-                      onOpenSlideOver={handleOpenSlideOver}
-                      onPreviewWhatsApp={onPreviewWhatsApp}
-                      onGeneratePriestNote={onGeneratePriestNote}
-                      compact={false}
-                    />
-                  </div>
-
-                  <div>
-                    <h4 className="font-bold text-stone-900 text-sm leading-snug">
-                      {occ.title}
-                    </h4>
-                    {occ.tithiFields && (
-                      <p className="text-[11px] text-stone-600 font-devanagari mt-0.5">
-                        {occ.tithiFields.lunarMonthDevanagari || occ.tithiFields.lunarMonth} {occ.tithiFields.pakshaDevanagari || occ.tithiFields.paksha} {occ.tithiFields.tithiDevanagari || occ.tithiFields.tithi}
-                      </p>
+                    {/* Heritage Milestone Badge on Card */}
+                    {estYear && yearsSinceEstablished && (
+                      <div className="flex items-center gap-1 text-[10px] font-medium text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md">
+                        <History className="w-3 h-3 text-amber-700 shrink-0" />
+                        <span className="tabular-nums font-semibold">
+                          {yearsSinceEstablished}th Year of Tradition
+                        </span>
+                        <span className="text-stone-400 font-normal">·</span>
+                        <span className="text-stone-500 font-normal">Est. {estYear}</span>
+                      </div>
                     )}
-                  </div>
 
-                  {/* Heritage Milestone Badge on Card */}
-                  {estYear && yearsSinceEstablished && (
-                    <div className="flex items-center gap-1 text-[10px] font-medium text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md">
-                      <History className="w-3 h-3 text-amber-700 shrink-0" />
-                      <span className="tabular-nums font-semibold">
-                        {yearsSinceEstablished}th Year of Tradition
-                      </span>
-                      <span className="text-stone-400 font-normal">·</span>
-                      <span className="text-stone-500 font-normal">Est. {estYear}</span>
-                    </div>
-                  )}
-
-                  <div className="p-2.5 bg-stone-50 rounded-lg text-xs space-y-0.5 border border-stone-100">
-                    <div className="flex items-center justify-between text-stone-800 font-semibold text-[11px]">
-                      <span>{occ.occurrence2027.formattedDisplay}</span>
-                      <span className="text-stone-500 font-normal">({occ.occurrence2027.weekday})</span>
-                    </div>
-                    <div className="text-[10px] text-stone-500">
-                      Sunrise: {occ.occurrence2027.sunriseTime}
+                    <div className="p-2.5 bg-stone-50 rounded-lg text-xs space-y-0.5 border border-stone-100">
+                      <div className="flex items-center justify-between text-stone-800 font-semibold text-[11px]">
+                        <span>{occ.occurrence2027.formattedDisplay}</span>
+                        <span className="text-stone-500 font-normal">({occ.occurrence2027.weekday})</span>
+                      </div>
+                      <div className="text-[10px] text-stone-500">
+                        Sunrise: {occ.occurrence2027.sunriseTime}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Card Quick Action Bar: Edit, Mark Performed, Add Photo, WhatsApp */}
-                <div className="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between gap-1.5 text-xs">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSlideOver(occ, 'edit')}
-                      className="text-[11px] font-medium text-stone-600 hover:text-amber-800 inline-flex items-center gap-1 cursor-pointer transition-colors"
-                      title="Edit occasion title, date & tradition"
-                    >
-                      <Edit3 className="w-3 h-3 text-stone-400" />
-                      <span>Edit</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSlideOver(occ, 'performed')}
-                      className={`text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer transition-colors ${
-                        occ.isPerformed ? 'text-emerald-700 font-semibold' : 'text-stone-600 hover:text-emerald-700'
-                      }`}
-                      title="Record ritual completion & performer"
-                    >
-                      <CheckCircle2 className={`w-3 h-3 ${occ.isPerformed ? 'text-emerald-600' : 'text-stone-400'}`} />
-                      <span>{occ.isPerformed ? 'Done' : 'Mark'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleOpenSlideOver(occ, 'photos')}
-                      className="text-[11px] font-medium text-stone-600 hover:text-amber-800 inline-flex items-center gap-1 cursor-pointer transition-colors"
-                      title="Add or view memory photos"
-                    >
-                      <Camera className="w-3 h-3 text-stone-400" />
-                      <span>Photo {occ.memoryPhotos?.length ? `(${occ.memoryPhotos.length})` : ''}</span>
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => onPreviewWhatsApp(occ)}
-                      className="text-[11px] font-semibold text-stone-700 hover:text-amber-800 inline-flex items-center gap-1 cursor-pointer"
-                    >
-                      <Smartphone className="w-3 h-3 text-stone-500" />
-                      <span>WhatsApp</span>
-                    </button>
-
-                    {isShraddha && (
+                  {/* Card Quick Action Bar: Edit, Mark Performed, Add Photo, WhatsApp */}
+                  <div className="pt-2 border-t border-stone-100 flex flex-wrap items-center justify-between gap-1.5 text-xs">
+                    <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => onGeneratePriestNote(occ)}
-                        className="text-[11px] font-medium text-amber-700 hover:text-amber-900 inline-flex items-center gap-1 cursor-pointer"
+                        onClick={() => handleOpenSlideOver(occ, 'edit')}
+                        className="text-[11px] font-medium text-stone-600 hover:text-amber-800 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        title="Edit occasion title, date & tradition"
                       >
-                        <FileText className="w-3 h-3" />
-                        <span>Priest</span>
+                        <Edit3 className="w-3 h-3 text-stone-400" />
+                        <span>Edit</span>
                       </button>
-                    )}
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenSlideOver(occ, 'performed')}
+                        className={`text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer transition-colors ${
+                          occ.isPerformed ? 'text-emerald-700 font-semibold' : 'text-stone-600 hover:text-emerald-700'
+                        }`}
+                        title="Record ritual completion & performer"
+                      >
+                        <CheckCircle2 className={`w-3 h-3 ${occ.isPerformed ? 'text-emerald-600' : 'text-stone-400'}`} />
+                        <span>{occ.isPerformed ? 'Done' : 'Mark'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenSlideOver(occ, 'photos')}
+                        className="text-[11px] font-medium text-stone-600 hover:text-amber-800 inline-flex items-center gap-1 cursor-pointer transition-colors"
+                        title="Add or view memory photos"
+                      >
+                        <Camera className="w-3 h-3 text-stone-400" />
+                        <span>Photo {occ.memoryPhotos?.length ? `(${occ.memoryPhotos.length})` : ''}</span>
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onPreviewWhatsApp(occ)}
+                        className="text-[11px] font-semibold text-stone-700 hover:text-amber-800 inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <Smartphone className="w-3 h-3 text-stone-500" />
+                        <span>WhatsApp</span>
+                      </button>
+
+                      {isShraddha && (
+                        <button
+                          type="button"
+                          onClick={() => onGeneratePriestNote(occ)}
+                          className="text-[11px] font-medium text-amber-700 hover:text-amber-900 inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <FileText className="w-3 h-3" />
+                          <span>Priest</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* GRID ROW 4: Deep Tracking Suite (Tabbed View Switcher) */}
