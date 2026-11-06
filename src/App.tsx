@@ -57,12 +57,12 @@ import { OnboardingFlow } from './components/OnboardingFlow';
 import { Check, ShieldCheck, Sparkles, User, Users, RefreshCw } from 'lucide-react';
 
 const DEFAULT_USER_PROFILE: UserProfile = {
-  uid: 'user_bhushan_01',
-  username: 'bhushan_pune',
-  displayName: 'Bhushan Joshi',
-  email: 'bhushangavhale86@gmail.com',
+  uid: 'user_configurator_init',
+  username: 'family_lead',
+  displayName: 'Family Configurator',
+  email: '',
   photoURL: '/assets/images/kulloop_avatar_elder_1793303629841.jpg',
-  bio: 'Family ritual configurator. Preserving our ancestral Jejuri Khandoba traditions and shraddha tithis for the entire family.',
+  bio: 'Family ritual configurator preserving our ancestral traditions.',
   interests: ['Ancestral Rites (श्राद्ध)', 'Panchang & Astronomy', 'Family Heritage', 'Marathi Traditions'],
   homeLocation: 'Pune, Maharashtra',
   tradition: 'Amanta (Maharashtra)',
@@ -70,15 +70,31 @@ const DEFAULT_USER_PROFILE: UserProfile = {
   language: 'mr',
 };
 
+const DEFAULT_CLEAN_FAMILY: Family = {
+  id: 'fam_default',
+  name: 'My Family Lineage',
+  homeLocation: 'Pune, Maharashtra',
+  secondLocation: '',
+  region: 'Maharashtra',
+  convention: 'Amanta',
+  validationSource: 'Datar Panchang (Amanta) — verified by family pandit',
+  plan: 'pilot_founding',
+  payer: 'configurator',
+  configuratorName: 'Family Configurator',
+  configuratorPhone: '',
+  traditionNotes: 'Amanta tradition calendar. Computed for local sunrise.',
+  consultedEntity: 'An elder',
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<'overview' | 'occasions' | 'whatsapp' | 'members' | 'tree' | 'calendar' | 'pricing'>('overview');
   
   // App data state
-  const [family, setFamily] = useState<Family>(INITIAL_FAMILY);
-  const [occasions, setOccasions] = useState<FamilyOccasion[]>(INITIAL_OCCASIONS);
-  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
-  const [people, setPeople] = useState<Person[]>(INITIAL_PEOPLE);
-  const [lineageMembers, setLineageMembers] = useState<LineageMember[]>(INITIAL_LINEAGE_MEMBERS);
+  const [family, setFamily] = useState<Family>(DEFAULT_CLEAN_FAMILY);
+  const [occasions, setOccasions] = useState<FamilyOccasion[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [people, setPeople] = useState<Person[]>([]);
+  const [lineageMembers, setLineageMembers] = useState<LineageMember[]>([]);
 
   // User Profile & Onboarding state
   const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_USER_PROFILE);
@@ -100,17 +116,44 @@ export default function App() {
   // Toast feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Load persistent database on mount
+  // Load persistent database on mount (scoped to active user & family)
   const loadDatabaseData = async () => {
+    // If demo mode is active, load sample demo dataset
+    if (localStorage.getItem('kulloop_is_demo') === 'true') {
+      setFamily(INITIAL_FAMILY);
+      setOccasions(INITIAL_OCCASIONS);
+      setMembers(INITIAL_MEMBERS);
+      setPeople(INITIAL_PEOPLE);
+      setLineageMembers(INITIAL_LINEAGE_MEMBERS);
+      return;
+    }
+
     try {
       const bundle = await fetchInitialDatabase();
       if (bundle) {
-        if (bundle.family) setFamily(bundle.family);
-        if (bundle.occasions && bundle.occasions.length > 0) setOccasions(bundle.occasions);
-        if (bundle.members && bundle.members.length > 0) setMembers(bundle.members);
-        if (bundle.people && bundle.people.length > 0) setPeople(bundle.people);
-        if (bundle.lineageMembers && bundle.lineageMembers.length > 0) setLineageMembers(bundle.lineageMembers);
-        if (bundle.currentUser) setCurrentUser(bundle.currentUser);
+        if (bundle.family && bundle.family.name !== 'The Joshi Family (जोशी परिवार)') {
+          setFamily(bundle.family);
+        }
+        // Do not bleed mock Joshi occasions into a newly configured custom family
+        if (bundle.occasions && bundle.occasions.length > 0) {
+          const nonMockOccasions = bundle.occasions.filter(o => o.familyId !== 'fam_joshi_01');
+          setOccasions(nonMockOccasions);
+        }
+        if (bundle.members && bundle.members.length > 0) {
+          const nonMockMembers = bundle.members.filter(m => m.familyId !== 'fam_joshi_01');
+          setMembers(nonMockMembers);
+        }
+        if (bundle.people && bundle.people.length > 0) {
+          const nonMockPeople = bundle.people.filter(p => p.familyId !== 'fam_joshi_01');
+          setPeople(nonMockPeople);
+        }
+        if (bundle.lineageMembers && bundle.lineageMembers.length > 0) {
+          const nonMockLineage = bundle.lineageMembers.filter(lm => lm.familyId !== 'fam_joshi_01');
+          setLineageMembers(nonMockLineage);
+        }
+        if (bundle.currentUser && bundle.currentUser.displayName !== 'Bhushan Joshi') {
+          setCurrentUser(bundle.currentUser);
+        }
       }
     } catch (err) {
       console.warn('Backend file load error, using initial defaults:', err);

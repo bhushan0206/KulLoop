@@ -46,7 +46,7 @@ app.get('/api/db/all', (req, res) => {
     people: data.people,
     lineageMembers: data.lineageMembers,
     users: Object.values(data.users),
-    currentUser: data.users['user_bhushan_01'] || null,
+    currentUser: null,
     meta: data.meta,
   });
 });
