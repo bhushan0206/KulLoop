@@ -61,6 +61,8 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
     isPast: boolean;
   }>({ days: 0, hours: 0, minutes: 0, seconds: 0, isPast: false });
 
+  const [synced, setSynced] = useState(false);
+
   useEffect(() => {
     if (!nextRitual) return;
 
@@ -112,8 +114,6 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
   }
 
   const isShraddha = nextRitual.occasionType === 'shraddha' || nextRitual.occasionType === 'mahalaya';
-
-  const [synced, setSynced] = useState(false);
 
   const handleSyncToCalendar = () => {
     try {
