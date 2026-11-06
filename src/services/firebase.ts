@@ -2,6 +2,8 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider, 
   signOut as fbSignOut, 
   onAuthStateChanged,
@@ -190,57 +192,72 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
   }
 }
 
-// Google Auth Sign-In
+// Check for redirect result on app load
+export async function checkRedirectSignInResult(): Promise<UserProfile | null> {
+  try {
+    const result = await getRedirectResult(auth);
+    if (!result?.user) return null;
+    return await buildAndSaveProfile(result.user);
+  } catch (err) {
+    console.warn('Redirect sign-in check:', err);
+    return null;
+  }
+}
+
+async function buildAndSaveProfile(user: FirebaseUser): Promise<UserProfile> {
+  const existing = await fetchUserProfile(user.uid);
+  if (existing) {
+    return existing;
+  }
+
+  const cleanUsername = user.email 
+    ? user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') 
+    : `user_${user.uid.slice(0, 6)}`;
+
+  const newProfile: UserProfile = {
+    uid: user.uid,
+    username: cleanUsername,
+    displayName: user.displayName || 'KulLoop Member',
+    email: user.email || '',
+    photoURL: user.photoURL || '',
+    bio: 'Family ritual configurator preserving our ancestral traditions.',
+    interests: ['Ancestral Rites (श्राद्ध)', 'Panchang & Astronomy', 'Family Heritage', 'Marathi Traditions'],
+    homeLocation: 'Pune, Maharashtra',
+    tradition: 'Amanta (Maharashtra)',
+    createdAt: new Date().toISOString(),
+    language: 'mr',
+  };
+
+  await saveUserProfile(newProfile);
+  return newProfile;
+}
+
+// Google Auth Sign-In (Popup with automatic Redirect fallback)
 export async function signInWithGoogle(): Promise<UserProfile | null> {
   try {
     // 1. Attempt Firebase Auth popup
     const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    
-    const existing = await fetchUserProfile(user.uid);
-    if (existing) {
-      return existing;
-    }
-
-    const cleanUsername = user.email 
-      ? user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') 
-      : `user_${user.uid.slice(0, 6)}`;
-
-    const newProfile: UserProfile = {
-      uid: user.uid,
-      username: cleanUsername,
-      displayName: user.displayName || 'KulLoop Member',
-      email: user.email || '',
-      photoURL: user.photoURL || '',
-      bio: 'Family ritual configurator preserving our ancestral traditions.',
-      interests: ['Ancestral Rites (श्राद्ध)', 'Panchang & Astronomy', 'Family Heritage', 'Marathi Traditions'],
-      homeLocation: 'Pune, Maharashtra',
-      tradition: 'Amanta (Maharashtra)',
-      createdAt: new Date().toISOString(),
-      language: 'mr',
-    };
-
-    await saveUserProfile(newProfile);
-    return newProfile;
+    return await buildAndSaveProfile(result.user);
   } catch (err: any) {
     console.error('[Google Auth Error]:', err?.code, err?.message);
 
-    // If popup was blocked by browser pop-up blocker
+    // If popup is blocked by the browser, seamlessly fall back to full-page redirect!
+    // This guarantees mobile browsers & strict pop-up blockers work with 0 manual steps.
     if (err?.code === 'auth/popup-blocked') {
-      throw new Error('Your browser blocked the Google Sign-in pop-up. Please look for the pop-up blocker icon in your browser address bar and select "Always allow pop-ups for localhost".');
+      console.info('[Google Auth] Popup blocked, initiating full-page OAuth redirect...');
+      await signInWithRedirect(auth, googleProvider);
+      return null;
     }
 
-    // If popup was closed by user or cancelled, surface error instead of silently bypassing
+    // If popup was closed by user or cancelled, surface clean message
     if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
       throw new Error('Sign-in cancelled. Please click "Continue with Google Account" again.');
     }
 
-    // If unauthorized domain (e.g. localhost missing from Firebase authorized domains), explain clearly
     if (err?.code === 'auth/unauthorized-domain') {
-      throw new Error('localhost is not in Firebase authorized domains. Please add localhost to Firebase Auth Settings.');
+      throw new Error('Domain not authorized in Firebase Auth Settings. Please add your current domain.');
     }
 
-    // Only fallback for non-recoverable environment failures (e.g. test runner/sandboxed iframe)
     throw err;
   }
 }

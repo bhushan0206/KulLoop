@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sparkles, 
   LogIn, 
@@ -15,7 +15,7 @@ import {
   ArrowLeft,
   AlertCircle
 } from 'lucide-react';
-import { UserProfile, signInWithGoogle } from '../services/firebase';
+import { UserProfile, signInWithGoogle, checkRedirectSignInResult } from '../services/firebase';
 import { Family, LanguageCode } from '../types';
 
 interface OnboardingFlowProps {
@@ -35,8 +35,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Form states
-  const [familyName, setFamilyName] = useState('');
-  const [familyCode, setFamilyCode] = useState('');
+  const [familyName, setFamilyName] = useState(() => localStorage.getItem('kulloop_pending_family_name') || '');
+  const [familyCode, setFamilyCode] = useState(() => localStorage.getItem('kulloop_pending_family_code') || '');
   const [homeLocation, setHomeLocation] = useState('Pune, Maharashtra');
   const [secondLocation, setSecondLocation] = useState('');
   const [convention, setConvention] = useState<'Amanta' | 'Purnimanta'>('Amanta');
@@ -44,11 +44,23 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [language, setLanguage] = useState<LanguageCode>('mr');
 
+  // Check if returning from a full-page OAuth redirect
+  useEffect(() => {
+    checkRedirectSignInResult().then((profile) => {
+      if (profile) {
+        setUserProfile(profile);
+        setStep('tradition');
+      }
+    });
+  }, []);
+
   // Step 1: Proceed to mandatory authentication
   const handleProceedToAuth = (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === 'create' && !familyName.trim()) return;
     if (mode === 'join' && !familyCode.trim()) return;
+    localStorage.setItem('kulloop_pending_family_name', familyName);
+    localStorage.setItem('kulloop_pending_family_code', familyCode);
     setStep('auth');
   };
 
