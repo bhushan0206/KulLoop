@@ -47,6 +47,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
   );
   const [emailStatus, setEmailStatus] = useState<string | null>(null);
+  const [showEmailPreview, setShowEmailPreview] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
@@ -451,14 +452,24 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
 
               <form onSubmit={handleSendEmailDigest} className="space-y-3 pt-2">
                 <div>
-                  <label className="text-xs font-semibold text-stone-700 block mb-1">
-                    Send Test Digest to Email:
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-stone-700">
+                      Send Test Digest to Email:
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowEmailPreview(!showEmailPreview)}
+                      className="text-[11px] text-blue-600 hover:text-blue-800 font-medium cursor-pointer underline"
+                    >
+                      {showEmailPreview ? 'Hide HTML Preview' : 'Preview HTML Template'}
+                    </button>
+                  </div>
+
                   <div className="flex gap-2">
                     <input
                       type="email"
                       required
-                      placeholder="e.g. bhushan.family@gmail.com"
+                      placeholder="e.g. bhushan0206@gmail.com"
                       value={targetEmail}
                       onChange={(e) => setTargetEmail(e.target.value)}
                       className="flex-1 text-xs px-3 py-2 border border-stone-300 rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -472,6 +483,31 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
                     </button>
                   </div>
                 </div>
+
+                {/* Email Preview Card */}
+                {showEmailPreview && (
+                  <div className="mt-3 p-4 bg-stone-50 border border-stone-200 rounded-xl space-y-3 animate-fade-in text-left">
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-stone-400">
+                      Live Email Layout Preview:
+                    </div>
+                    <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-xs max-w-md mx-auto text-stone-900 space-y-3">
+                      <div className="bg-stone-950 text-amber-200 p-3 rounded-lg">
+                        <div className="text-sm font-bold font-serif-display">KulLoop · Family Tithi Reminders</div>
+                        <div className="text-[10px] text-stone-400">Sacred observances calculated for {familyDisplayName}</div>
+                      </div>
+                      <div className="border border-stone-200 rounded-lg p-3 space-y-1">
+                        <div className="text-xs font-bold text-amber-900">{currentOccasion?.title}</div>
+                        <div className="text-[11px] text-stone-600"><strong>Date:</strong> {currentOccasion?.occurrence2027?.gregorianDateStr || '2027'}</div>
+                        <div className="text-[11px] text-stone-600"><strong>Tithi:</strong> {currentOccasion?.tithiDefinition?.name || 'Traditional Timing'}</div>
+                        <div className="text-[11px] text-stone-600"><strong>Sunrise:</strong> {currentOccasion?.occurrence2027?.sunriseTime || '06:50 AM'} ({family.homeLocation})</div>
+                        <div className="text-[10px] text-stone-500 pt-1 italic">Sent with zero charges via your configured KulLoop Notification Hub.</div>
+                      </div>
+                      <div className="text-[9px] text-center text-stone-400">
+                        KulLoop — Independent Family Ritual Service
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {emailStatus && (
                   <p className="text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 animate-fade-in">

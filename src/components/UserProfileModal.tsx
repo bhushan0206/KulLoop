@@ -206,16 +206,20 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <button
                 type="button"
                 onClick={async () => {
-                  if (currentUser.email) {
-                    const guestUser = await signOutGoogle();
-                    onUpdateCurrentUser(guestUser);
-                  } else {
-                    const userP = await signInWithGoogle();
-                    if (userP) {
-                      onUpdateCurrentUser(userP);
-                      setSavedSuccess(true);
-                      setTimeout(() => setSavedSuccess(false), 3000);
+                  try {
+                    if (currentUser.email) {
+                      const guestUser = await signOutGoogle();
+                      onUpdateCurrentUser(guestUser);
+                    } else {
+                      const userP = await signInWithGoogle();
+                      if (userP) {
+                        onUpdateCurrentUser(userP);
+                        setSavedSuccess(true);
+                        setTimeout(() => setSavedSuccess(false), 3000);
+                      }
                     }
+                  } catch (err: any) {
+                    console.info('[Google Sign-in status]:', err?.message || err);
                   }
                 }}
                 className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-stone-900 bg-white hover:bg-stone-100 border border-stone-300 rounded-lg shadow-2xs transition-colors cursor-pointer shrink-0"
