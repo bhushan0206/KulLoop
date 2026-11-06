@@ -25,9 +25,10 @@ interface OnboardingFlowProps {
 
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onExploreDemo }) => {
   // Ordered Funnel:
-  // 1. Family Lineage Setup (Enter family details first)
+  // 1. Family Lineage Setup (Create new or Join via Family Code)
   // 2. Sign-In / Account Link Gate (Mandatory to tie and persist details to authenticated user)
   // 3. Reminders & Traditions Launch
+  const [mode, setMode] = useState<'create' | 'join'>('create');
   const [step, setStep] = useState<'family' | 'auth' | 'tradition'>('family');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
@@ -35,6 +36,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
 
   // Form states
   const [familyName, setFamilyName] = useState('');
+  const [familyCode, setFamilyCode] = useState('');
   const [homeLocation, setHomeLocation] = useState('Pune, Maharashtra');
   const [secondLocation, setSecondLocation] = useState('');
   const [convention, setConvention] = useState<'Amanta' | 'Purnimanta'>('Amanta');
@@ -45,7 +47,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
   // Step 1: Proceed to mandatory authentication
   const handleProceedToAuth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!familyName.trim()) return;
+    if (mode === 'create' && !familyName.trim()) return;
+    if (mode === 'join' && !familyCode.trim()) return;
     setStep('auth');
   };
 
@@ -71,6 +74,21 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
   // Step 3: Complete and launch
   const handleFinishOnboarding = () => {
     if (!userProfile) return;
+
+    if (mode === 'join') {
+      const joinedFamily: Partial<Family> = {
+        id: familyCode.trim().toLowerCase(),
+        name: `Joined Loop (${familyCode.trim().toUpperCase()})`,
+        homeLocation: 'Pune, Maharashtra',
+        convention: 'Amanta',
+        configuratorName: userProfile.displayName,
+        configuratorPhone: whatsappNumber.trim() || '+91 98000 00000',
+        traditionNotes: `Joined existing family ledger with invite code ${familyCode.trim().toUpperCase()}.`,
+        validationSource: 'Verified Family Ledger',
+      };
+      onComplete(userProfile, joinedFamily);
+      return;
+    }
 
     const customFamily: Partial<Family> = {
       name: familyName.trim() || 'My Family Lineage',
@@ -118,7 +136,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 z-10">
         <div className="max-w-xl w-full bg-stone-900/90 border border-stone-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md space-y-6">
           
-          {/* STEP 1: FAMILY SETUP FIRST */}
+          {/* STEP 1: FAMILY SETUP FIRST OR JOIN EXISTING */}
           {step === 'family' && (
             <div className="space-y-6">
               <div className="space-y-2">
@@ -130,107 +148,159 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
                   Welcome to KulLoop
                 </h1>
                 <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-                  Start by telling us your family name and ancestral home. In the next step, you will sign in to securely link and save your family’s sacred tithis.
+                  Start fresh by creating your family’s sacred tithi loop, or join an existing family ledger using a family invite code.
                 </p>
               </div>
 
+              {/* Mode Selector */}
+              <div className="grid grid-cols-2 gap-2 p-1 bg-stone-950 border border-stone-800 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setMode('create')}
+                  className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    mode === 'create'
+                      ? 'bg-amber-400 text-stone-950 shadow-sm'
+                      : 'text-stone-400 hover:text-stone-200'
+                  }`}
+                >
+                  <Flame className="w-3.5 h-3.5" />
+                  <span>Create New Family</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('join')}
+                  className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                    mode === 'join'
+                      ? 'bg-amber-400 text-stone-950 shadow-sm'
+                      : 'text-stone-400 hover:text-stone-200'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Join with Invite Code</span>
+                </button>
+              </div>
+
               <form onSubmit={handleProceedToAuth} className="space-y-4 text-xs">
-                <div>
-                  <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1.5">
-                    Family Name (कुटुंबाचे नाव) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={familyName}
-                    onChange={(e) => setFamilyName(e.target.value)}
-                    placeholder="e.g. The Deshmukh Family (देशमुख परिवार) or Gavhale Parivar"
-                    className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 shadow-inner"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-amber-400" />
-                      <span>Ancestral Home Location *</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={homeLocation}
-                      onChange={(e) => setHomeLocation(e.target.value)}
-                      placeholder="e.g. Pune, Maharashtra or Varanasi"
-                      className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-                    />
-                    <span className="text-[10px] text-stone-500 mt-0.5 block">Used for local sunrise tithi maths</span>
+                {mode === 'join' ? (
+                  <div className="space-y-4 animate-fade-in">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Family Invite Code (कुटुंब कोड) *</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={familyCode}
+                        onChange={(e) => setFamilyCode(e.target.value.toUpperCase())}
+                        placeholder="e.g. KUL-8942 or GAVHALE-PUNE"
+                        className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3.5 py-3 text-sm font-mono tracking-wider text-amber-300 placeholder-stone-600 focus:outline-none focus:border-amber-400 shadow-inner uppercase"
+                      />
+                      <span className="text-[11px] text-stone-400 mt-1.5 block leading-relaxed">
+                        Received an invite link or code from your family lead? Enter it here to attach your Google login directly to their shared family ledger.
+                      </span>
+                    </div>
                   </div>
+                ) : (
+                  <div className="space-y-4 animate-fade-in">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1.5">
+                        Family Name (कुटुंबाचे नाव) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={familyName}
+                        onChange={(e) => setFamilyName(e.target.value)}
+                        placeholder="e.g. The Deshmukh Family (देशमुख परिवार) or Gavhale Parivar"
+                        className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-600 focus:outline-none focus:border-amber-400 shadow-inner"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1">
-                      Diaspora Location (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={secondLocation}
-                      onChange={(e) => setSecondLocation(e.target.value)}
-                      placeholder="e.g. Toronto, Canada or London, UK"
-                      className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
-                    />
-                    <span className="text-[10px] text-stone-500 mt-0.5 block">For members living overseas</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 text-amber-400" />
+                          <span>Ancestral Home Location *</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={homeLocation}
+                          onChange={(e) => setHomeLocation(e.target.value)}
+                          placeholder="e.g. Pune, Maharashtra or Varanasi"
+                          className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                        />
+                        <span className="text-[10px] text-stone-500 mt-0.5 block">Used for local sunrise tithi maths</span>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1">
+                          Diaspora Location (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={secondLocation}
+                          onChange={(e) => setSecondLocation(e.target.value)}
+                          placeholder="e.g. Toronto, Canada or London, UK"
+                          className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400"
+                        />
+                        <span className="text-[10px] text-stone-500 mt-0.5 block">For members living overseas</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <Compass className="w-3 h-3 text-amber-400" />
+                        <span>Calendar Tradition (Panchang Convention)</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setConvention('Amanta')}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                            convention === 'Amanta'
+                              ? 'bg-amber-500/20 border-amber-400 text-white shadow-xs'
+                              : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700'
+                          }`}
+                        >
+                          <div className="font-semibold text-xs flex items-center justify-between">
+                            <span>Amanta (अमांत)</span>
+                            {convention === 'Amanta' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                          </div>
+                          <div className="text-[10px] text-stone-400 mt-1">
+                            Month ends on Amavasya (Maharashtra, Gujarat, South India)
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setConvention('Purnimanta')}
+                          className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                            convention === 'Purnimanta'
+                              ? 'bg-amber-500/20 border-amber-400 text-white shadow-xs'
+                              : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700'
+                          }`}
+                        >
+                          <div className="font-semibold text-xs flex items-center justify-between">
+                            <span>Purnimanta (पूर्णिमांत)</span>
+                            {convention === 'Purnimanta' && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                          </div>
+                          <div className="text-[10px] text-stone-400 mt-1">
+                            Month ends on Purnima (North India, Rajasthan, UP, Bihar)
+                          </div>
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                    <Compass className="w-3 h-3 text-amber-400" />
-                    <span>Calendar Tradition (Panchang Convention)</span>
-                  </label>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setConvention('Amanta')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        convention === 'Amanta'
-                          ? 'bg-amber-500/20 border-amber-400 text-white shadow-xs'
-                          : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700'
-                      }`}
-                    >
-                      <div className="font-semibold text-xs flex items-center justify-between">
-                        <span>Amanta (अमांत)</span>
-                        {convention === 'Amanta' && <Check className="w-3.5 h-3.5 text-amber-400" />}
-                      </div>
-                      <div className="text-[10px] text-stone-400 mt-1">
-                        Month ends on Amavasya (Maharashtra, Gujarat, South India)
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setConvention('Purnimanta')}
-                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
-                        convention === 'Purnimanta'
-                          ? 'bg-amber-500/20 border-amber-400 text-white shadow-xs'
-                          : 'bg-stone-950 border-stone-800 text-stone-400 hover:border-stone-700'
-                      }`}
-                    >
-                      <div className="font-semibold text-xs flex items-center justify-between">
-                        <span>Purnimanta (पूर्णिमांत)</span>
-                        {convention === 'Purnimanta' && <Check className="w-3.5 h-3.5 text-amber-400" />}
-                      </div>
-                      <div className="text-[10px] text-stone-400 mt-1">
-                        Month ends on Purnima (North India, Rajasthan, UP, Bihar)
-                      </div>
-                    </button>
-                  </div>
-                </div>
+                )}
 
                 <div className="pt-2">
                   <button
                     type="submit"
                     className="w-full py-3 px-4 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-stone-950 font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    <span>Continue to Sign In & Link Family</span>
+                    <span>{mode === 'join' ? 'Verify Code & Sign In with Google' : 'Continue to Sign In & Link Family'}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
