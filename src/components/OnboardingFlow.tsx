@@ -114,14 +114,23 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
 
       {/* Top Simple Nav */}
       <header className="border-b border-stone-800/80 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto w-full z-10">
-        <div className="flex items-center gap-2.5">
-          <span className="text-2xl font-bold tracking-tight text-amber-300 font-serif-display">
+        <a
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            setStep('family');
+            setMode('create');
+          }}
+          className="flex items-center gap-2.5 group cursor-pointer transition-opacity hover:opacity-90 focus:outline-none"
+          title="KulLoop Home"
+        >
+          <span className="text-2xl font-bold tracking-tight text-amber-300 font-serif-display group-hover:text-amber-200 transition-colors">
             KulLoop
           </span>
           <span className="text-xs text-stone-400 font-medium">
             · Family Tithi Loop (कुललूप)
           </span>
-        </div>
+        </a>
 
         <button
           onClick={onExploreDemo}

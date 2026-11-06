@@ -29,19 +29,22 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between gap-6 h-16">
           {/* Zone 1: Brand title, one line */}
           <div className="flex items-center gap-3 whitespace-nowrap shrink-0">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className="text-left group cursor-pointer focus:outline-none"
+            <a
+              href="/"
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab('overview');
+              }}
+              className="text-left group cursor-pointer focus:outline-none flex items-center gap-2"
+              title="Return to Home Overview"
             >
-              <div className="flex items-center gap-2">
-                <span className="text-xl font-bold tracking-tight text-amber-300 font-serif-display">
-                  KulLoop
-                </span>
-                <span className="text-xs text-stone-400 font-medium hidden sm:inline">
-                  · Family Tithi Loop
-                </span>
-              </div>
-            </button>
+              <span className="text-xl font-bold tracking-tight text-amber-300 font-serif-display group-hover:text-amber-200 transition-colors">
+                KulLoop
+              </span>
+              <span className="text-xs text-stone-400 font-medium hidden sm:inline">
+                · Family Tithi Loop
+              </span>
+            </a>
           </div>
 
           {/* Zone 2: Clean single-line text navigation links */}
