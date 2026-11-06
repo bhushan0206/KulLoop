@@ -1,5 +1,22 @@
-import React from 'react';
-import { PlusCircle, Sparkles, User, FileText, Share2, LogOut, Bell } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  PlusCircle, 
+  Sparkles, 
+  User, 
+  FileText, 
+  Share2, 
+  LogOut, 
+  Bell, 
+  Menu, 
+  X,
+  Home,
+  Calendar,
+  MessageSquare,
+  Users,
+  GitBranch,
+  ShieldCheck,
+  Tag
+} from 'lucide-react';
 import { UserProfile } from '../services/firebase';
 
 interface HeaderProps {
@@ -29,17 +46,43 @@ export const Header: React.FC<HeaderProps> = ({
   isDemoMode,
   currentUser,
 }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navItems = [
+    { key: 'overview' as const, label: 'Home', icon: Home },
+    { key: 'occasions' as const, label: 'Occasions', icon: Calendar },
+    { key: 'whatsapp' as const, label: 'WhatsApp', icon: MessageSquare },
+    { key: 'tree' as const, label: 'Lineage Tree', icon: GitBranch },
+    { key: 'members' as const, label: 'Members', icon: Users },
+    { key: 'calendar' as const, label: 'Annual Calendar', icon: Calendar },
+    { key: 'pricing' as const, label: 'Pricing (Pilot)', icon: Tag },
+  ];
+
+  const handleSelectNav = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-stone-900 text-stone-100 border-b border-stone-800 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-6 h-16">
+        <div className="flex items-center justify-between gap-4 sm:gap-6 h-16">
           {/* Zone 1: Brand title, one line */}
           <div className="flex items-center gap-3 whitespace-nowrap shrink-0">
+            {/* Hamburger Button for Mobile / Tablet */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="xl:hidden p-1.5 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition-colors cursor-pointer"
+              aria-label={isMobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
             <a
               href="/"
               onClick={(e) => {
                 e.preventDefault();
-                setActiveTab('overview');
+                handleSelectNav('overview');
               }}
               className="text-left group cursor-pointer focus:outline-none flex items-center gap-2"
               title="Return to Home Overview"
@@ -53,82 +96,25 @@ export const Header: React.FC<HeaderProps> = ({
             </a>
           </div>
 
-          {/* Zone 2: Clean single-line text navigation links */}
+          {/* Zone 2: Desktop text navigation links */}
           <nav className="hidden xl:flex items-center gap-4 text-xs lg:text-sm font-medium text-stone-300">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`hover:text-amber-200 transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
-                activeTab === 'overview'
-                  ? 'text-amber-300 border-amber-400 font-semibold'
-                  : 'border-transparent text-stone-300'
-              }`}
-            >
-              Home
-            </button>
-            <button
-              onClick={() => setActiveTab('occasions')}
-              className={`hover:text-amber-200 transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
-                activeTab === 'occasions'
-                  ? 'text-amber-300 border-amber-400 font-semibold'
-                  : 'border-transparent text-stone-300'
-              }`}
-            >
-              Occasions
-            </button>
-            <button
-              onClick={() => setActiveTab('whatsapp')}
-              className={`hover:text-amber-200 transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
-                activeTab === 'whatsapp'
-                  ? 'text-amber-300 border-amber-400 font-semibold'
-                  : 'border-transparent text-stone-300'
-              }`}
-            >
-              WhatsApp
-            </button>
-            <button
-              onClick={() => setActiveTab('tree')}
-              className={`hover:text-amber-200 transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
-                activeTab === 'tree'
-                  ? 'text-amber-300 border-amber-400 font-semibold'
-                  : 'border-transparent text-stone-300'
-              }`}
-            >
-              Tree
-            </button>
-            <button
-              onClick={() => setActiveTab('members')}
-              className={`hover:text-amber-200 transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
-                activeTab === 'members'
-                  ? 'text-amber-300 border-amber-400 font-semibold'
-                  : 'border-transparent text-stone-300'
-              }`}
-            >
-              Members
-            </button>
-            <button
-              onClick={() => setActiveTab('calendar')}
-              className={`hover:text-amber-200 transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
-                activeTab === 'calendar'
-                  ? 'text-amber-300 border-amber-400 font-semibold'
-                  : 'border-transparent text-stone-300'
-              }`}
-            >
-              Calendar
-            </button>
-            <button
-              onClick={() => setActiveTab('pricing')}
-              className={`hover:text-amber-200 transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
-                activeTab === 'pricing'
-                  ? 'text-amber-300 border-amber-400 font-semibold'
-                  : 'border-transparent text-stone-300'
-              }`}
-            >
-              Pricing
-            </button>
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => handleSelectNav(item.key)}
+                className={`hover:text-amber-200 transition-colors whitespace-nowrap shrink-0 py-1 border-b-2 ${
+                  activeTab === item.key
+                    ? 'text-amber-300 border-amber-400 font-semibold'
+                    : 'border-transparent text-stone-300'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
           </nav>
 
           {/* Zone 3: Actions, Demo Badge & Profile */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {isDemoMode && onExitDemo && (
               <button
                 onClick={onExitDemo}
@@ -136,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Exit Demo and Set Up Your Family"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                <span>Exit Demo</span>
+                <span className="hidden sm:inline">Exit Demo</span>
               </button>
             )}
 
@@ -206,65 +192,118 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Secondary navigation strip (visible below xl breakpoint) */}
-        <div className="flex xl:hidden items-center justify-between overflow-x-auto py-2 text-xs border-t border-stone-800 gap-3 no-scrollbar">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-              activeTab === 'overview' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
-            }`}
-          >
-            Home
-          </button>
-          <button
-            onClick={() => setActiveTab('occasions')}
-            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-              activeTab === 'occasions' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
-            }`}
-          >
-            Occasions
-          </button>
-          <button
-            onClick={() => setActiveTab('whatsapp')}
-            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-              activeTab === 'whatsapp' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
-            }`}
-          >
-            WhatsApp
-          </button>
-          <button
-            onClick={() => setActiveTab('tree')}
-            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-              activeTab === 'tree' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
-            }`}
-          >
-            Tree
-          </button>
-          <button
-            onClick={() => setActiveTab('members')}
-            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-              activeTab === 'members' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
-            }`}
-          >
-            Members
-          </button>
-          <button
-            onClick={() => setActiveTab('calendar')}
-            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-              activeTab === 'calendar' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
-            }`}
-          >
-            Calendar
-          </button>
-          <button
-            onClick={() => setActiveTab('pricing')}
-            className={`whitespace-nowrap px-2.5 py-1 rounded cursor-pointer ${
-              activeTab === 'pricing' ? 'bg-amber-400 text-stone-900 font-semibold' : 'text-stone-300'
-            }`}
-          >
-            Pilot
-          </button>
+        <div className="flex xl:hidden items-center overflow-x-auto py-2 text-xs border-t border-stone-800 gap-1.5 no-scrollbar">
+          {navItems.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => handleSelectNav(item.key)}
+              className={`whitespace-nowrap px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
+                activeTab === item.key 
+                  ? 'bg-amber-400 text-stone-950 font-semibold shadow-xs' 
+                  : 'text-stone-300 hover:text-white hover:bg-stone-800'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Slide-out Mobile Navigation Drawer Modal */}
+      {isMobileMenuOpen && (
+        <div className="xl:hidden fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-xs flex">
+          <div className="w-4/5 max-w-xs bg-stone-900 border-r border-stone-800 h-full p-5 flex flex-col justify-between shadow-2xl animate-fade-in">
+            <div className="space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl font-bold font-serif-display text-amber-300">KulLoop</span>
+                  <span className="text-[11px] text-stone-400">· Family Loop</span>
+                </div>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-1 text-stone-400 hover:text-white rounded-lg hover:bg-stone-800 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Navigation Items */}
+              <nav className="space-y-1">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.key;
+                  return (
+                    <button
+                      key={item.key}
+                      onClick={() => handleSelectNav(item.key)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left ${
+                        isActive
+                          ? 'bg-amber-400 text-stone-950 font-semibold shadow-sm'
+                          : 'text-stone-300 hover:bg-stone-800 hover:text-white'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-stone-950' : 'text-amber-400'}`} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </nav>
+
+              {/* Quick Actions in Mobile Drawer */}
+              <div className="pt-4 border-t border-stone-800 space-y-2">
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenAddModal();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>+ Record Sacred Occasion</span>
+                </button>
+
+                {onOpenRemindersModal && (
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      onOpenRemindersModal();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-stone-800 hover:bg-stone-700 text-amber-200 text-xs font-medium rounded-xl border border-stone-700 transition-colors cursor-pointer"
+                  >
+                    <Bell className="w-4 h-4 text-amber-400" />
+                    <span>Free Reminders Hub</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Drawer Footer with Account info */}
+            <div className="pt-4 border-t border-stone-800 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onOpenProfileModal();
+                }}
+                className="flex items-center gap-2 text-left group"
+              >
+                <div className="w-7 h-7 rounded-full bg-amber-400 text-stone-950 font-bold flex items-center justify-center text-xs">
+                  {currentUser.displayName ? currentUser.displayName.charAt(0) : 'U'}
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-stone-200 group-hover:text-amber-300 transition-colors">
+                    {currentUser.displayName || 'Guest User'}
+                  </div>
+                  <div className="text-[10px] text-stone-400">
+                    {currentUser.email ? `@${currentUser.username}` : 'Manage Account'}
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+          {/* Backdrop dismiss */}
+          <div className="flex-1" onClick={() => setIsMobileMenuOpen(false)} />
+        </div>
+      )}
     </header>
   );
 };
