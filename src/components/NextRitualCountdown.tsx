@@ -18,6 +18,7 @@ import { SlideOverTab } from './OccasionSlideOver';
 interface NextRitualCountdownProps {
   occasions: FamilyOccasion[];
   family: Family;
+  onOpenAddModal?: () => void;
   onPreviewWhatsApp: (occ: FamilyOccasion) => void;
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
   onTogglePerformed: (id: string, notes?: string, performedBy?: string) => void;
@@ -27,6 +28,7 @@ interface NextRitualCountdownProps {
 export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
   occasions,
   family,
+  onOpenAddModal,
   onPreviewWhatsApp,
   onGeneratePriestNote,
   onTogglePerformed,
@@ -107,7 +109,16 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
           </p>
         </div>
         <div className="relative z-10 pt-4 border-t border-stone-800">
-          <span className="text-[11px] text-amber-300 font-medium">Click "+ Add Occasion" to begin</span>
+          {onOpenAddModal ? (
+            <button
+              onClick={onOpenAddModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-lg text-xs transition-colors cursor-pointer shadow-sm"
+            >
+              <span>+ Add Occasion</span>
+            </button>
+          ) : (
+            <span className="text-[11px] text-amber-300 font-medium">+ Add Occasion</span>
+          )}
         </div>
       </div>
     );

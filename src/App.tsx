@@ -590,6 +590,7 @@ export default function App() {
             occasions={occasions}
             members={members}
             initialOccasion={activeWhatsAppOccasion}
+            onOpenAddModal={() => setIsAddModalOpen(true)}
             onGeneratePriestNote={handleGeneratePriestNote}
           />
         )}
@@ -609,6 +610,7 @@ export default function App() {
           <VisualFamilyTree
             family={family}
             lineageMembers={lineageMembers}
+            onOpenAddModal={() => setIsAddModalOpen(true)}
             onUpdateLineageMember={handleUpdateLineageMember}
             onNavigateToOccasion={(occId) => {
               setActiveTab('occasions');
@@ -624,6 +626,7 @@ export default function App() {
           <AnnualCalendarView
             occasions={occasions}
             family={family}
+            onOpenAddModal={() => setIsAddModalOpen(true)}
             onPreviewWhatsApp={handlePreviewWhatsApp}
             onGeneratePriestNote={handleGeneratePriestNote}
           />

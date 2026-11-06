@@ -23,6 +23,7 @@ import {
 interface AnnualCalendarViewProps {
   occasions: FamilyOccasion[];
   family: Family;
+  onOpenAddModal?: () => void;
   onPreviewWhatsApp: (occ: FamilyOccasion) => void;
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
 }
@@ -30,6 +31,7 @@ interface AnnualCalendarViewProps {
 export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
   occasions,
   family,
+  onOpenAddModal,
   onPreviewWhatsApp,
   onGeneratePriestNote,
 }) => {
@@ -193,7 +195,30 @@ export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
+          {sortedOccasions.length === 0 ? (
+            <div className="py-12 px-4 text-center space-y-3">
+              <div className="w-12 h-12 bg-amber-50 text-amber-700 rounded-full flex items-center justify-center mx-auto border border-amber-200">
+                <CalendarIcon className="w-6 h-6 text-amber-600" />
+              </div>
+              <h4 className="text-base font-bold text-stone-900 font-serif-display">
+                No occasions recorded yet for {family.name}
+              </h4>
+              <p className="text-xs text-stone-500 max-w-sm mx-auto">
+                Once you record your family's tithis, birthdays, and festivals, your annual calendar schedule and export tools will appear here.
+              </p>
+              {onOpenAddModal && (
+                <div className="pt-2">
+                  <button
+                    onClick={onOpenAddModal}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-xl text-xs transition-colors cursor-pointer shadow-sm"
+                  >
+                    <span>+ Record First Occasion</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-stone-100/80 border-b border-stone-200 text-stone-600 font-semibold uppercase tracking-wider text-[11px]">
                 <th className="py-3 px-4">Date</th>
@@ -309,6 +334,7 @@ export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
               })}
             </tbody>
           </table>
+          )}
         </div>
 
         {/* Footer print disclaimer */}

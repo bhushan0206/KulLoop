@@ -195,6 +195,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           <NextRitualCountdown
             occasions={occasions}
             family={family}
+            onOpenAddModal={onOpenAddModal}
             onPreviewWhatsApp={onPreviewWhatsApp}
             onGeneratePriestNote={onGeneratePriestNote}
             onTogglePerformed={onTogglePerformed}

@@ -21,6 +21,7 @@ interface WhatsAppSimulatorProps {
   occasions: FamilyOccasion[];
   members: Member[];
   initialOccasion?: FamilyOccasion;
+  onOpenAddModal?: () => void;
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
 }
 
@@ -29,6 +30,7 @@ export const WhatsAppSimulator: React.FC<WhatsAppSimulatorProps> = ({
   occasions,
   members,
   initialOccasion,
+  onOpenAddModal,
   onGeneratePriestNote,
 }) => {
   const [selectedMemberId, setSelectedMemberId] = useState<string>(members[0]?.id || '');
@@ -57,6 +59,16 @@ export const WhatsAppSimulator: React.FC<WhatsAppSimulatorProps> = ({
           <p className="text-xs text-stone-500 leading-relaxed">
             No occasions or members recorded yet. Add your family's first Shraddha tithi, birthday, or festival to preview live multi-lingual WhatsApp reminders here.
           </p>
+          {onOpenAddModal && (
+            <div className="pt-2">
+              <button
+                onClick={onOpenAddModal}
+                className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-xl text-xs transition-colors cursor-pointer shadow-sm"
+              >
+                + Add First Occasion
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );

@@ -3,14 +3,14 @@
     "driver": "file-json-persistent-engine",
     "version": 1,
     "createdAt": "2026-11-06T00:00:00.000Z",
-    "lastSavedAt": "2026-11-06T00:00:00.000Z",
+    "lastSavedAt": "2026-11-06T12:24:07.061Z",
     "persistenceFile": "/app/applet/data/kulloop_store.json",
     "recordsCount": {
       "occasions": 0,
       "members": 0,
       "people": 0,
       "lineageMembers": 0,
-      "users": 0
+      "users": 1
     }
   },
   "family": {
@@ -32,6 +32,34 @@
   "members": [],
   "people": [],
   "lineageMembers": [],
-  "users": {},
-  "auditLogs": []
+  "users": {
+    "SsqGvZ5XqaRhtnAdzEHUtlbSaTP2": {
+      "uid": "SsqGvZ5XqaRhtnAdzEHUtlbSaTP2",
+      "language": "mr",
+      "bio": "Family ritual configurator preserving our ancestral traditions.",
+      "email": "bhushangavhale86@gmail.com",
+      "createdAt": "2026-11-06T01:21:28.081Z",
+      "username": "bhushangavhale86",
+      "interests": [
+        "Ancestral Rites (श्राद्ध)",
+        "Panchang & Astronomy",
+        "Family Heritage",
+        "Marathi Traditions"
+      ],
+      "photoURL": "/assets/images/kulloop_hero_family_1793303629503.jpg",
+      "homeLocation": "Pune, Maharashtra",
+      "displayName": "Bhushan Gavhale",
+      "tradition": "Amanta (Maharashtra)",
+      "updatedAt": "2026-11-06T12:24:07.061Z"
+    }
+  },
+  "auditLogs": [
+    {
+      "id": "log_1793967847061_6kg5",
+      "action": "SAVE_USER_PROFILE",
+      "entityType": "USER",
+      "entityId": "SsqGvZ5XqaRhtnAdzEHUtlbSaTP2",
+      "timestamp": "2026-11-06T12:24:07.061Z"
+    }
+  ]
 }

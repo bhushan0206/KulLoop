@@ -25,6 +25,7 @@ import {
 interface VisualFamilyTreeProps {
   family: Family;
   lineageMembers: LineageMember[];
+  onOpenAddModal?: () => void;
   onUpdateLineageMember?: (member: LineageMember) => void;
   onNavigateToOccasion?: (occasionId?: string) => void;
   onPreviewWhatsApp?: (memberName: string, duty: RitualResponsibility) => void;
@@ -33,6 +34,7 @@ interface VisualFamilyTreeProps {
 export const VisualFamilyTree: React.FC<VisualFamilyTreeProps> = ({
   family,
   lineageMembers: initialMembers,
+  onOpenAddModal,
   onUpdateLineageMember,
   onNavigateToOccasion,
   onPreviewWhatsApp,
@@ -197,7 +199,11 @@ export const VisualFamilyTree: React.FC<VisualFamilyTreeProps> = ({
           <div className="pt-2">
             <button
               onClick={() => {
-                if (onNavigateToOccasion) onNavigateToOccasion();
+                if (onOpenAddModal) {
+                  onOpenAddModal();
+                } else if (onNavigateToOccasion) {
+                  onNavigateToOccasion();
+                }
               }}
               className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-xl text-xs transition-colors cursor-pointer shadow-sm"
             >
