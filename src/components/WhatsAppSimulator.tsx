@@ -43,6 +43,25 @@ export const WhatsAppSimulator: React.FC<WhatsAppSimulatorProps> = ({
   const activeMember = members.find((m) => m.id === selectedMemberId) || members[0];
   const activeOccasion = occasions.find((o) => o.id === selectedOccasionId) || occasions[0];
 
+  // Empty state guard when no members or occasions exist
+  if (!activeOccasion || !activeMember) {
+    return (
+      <div className="bg-white rounded-2xl border border-stone-200 p-8 sm:p-12 text-center space-y-4">
+        <div className="w-16 h-16 bg-emerald-50 text-emerald-700 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
+          <Smartphone className="w-8 h-8 text-emerald-600" />
+        </div>
+        <div className="max-w-md mx-auto space-y-2">
+          <h3 className="text-xl font-bold font-serif-display text-stone-900">
+            WhatsApp Simulator for {family.name}
+          </h3>
+          <p className="text-xs text-stone-500 leading-relaxed">
+            No occasions or members recorded yet. Add your family's first Shraddha tithi, birthday, or festival to preview live multi-lingual WhatsApp reminders here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Language based on active member preference
   const lang: LanguageCode = activeMember?.language || 'mr';
 

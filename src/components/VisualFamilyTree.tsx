@@ -38,10 +38,18 @@ export const VisualFamilyTree: React.FC<VisualFamilyTreeProps> = ({
   onPreviewWhatsApp,
 }) => {
   const [members, setMembers] = useState<LineageMember[]>(initialMembers);
-  const [selectedMemberId, setSelectedMemberId] = useState<string>('lin_bhushan');
+  const [selectedMemberId, setSelectedMemberId] = useState<string>(initialMembers[0]?.id || '');
   const [filterGeneration, setFilterGeneration] = useState<'all' | '1' | '2' | '3'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isAddDutyModalOpen, setIsAddDutyModalOpen] = useState(false);
+
+  // Sync internal state when props change
+  React.useEffect(() => {
+    setMembers(initialMembers);
+    if (!selectedMemberId && initialMembers.length > 0) {
+      setSelectedMemberId(initialMembers[0].id);
+    }
+  }, [initialMembers]);
 
   // New Duty state
   const [newOccasionTitle, setNewOccasionTitle] = useState('');
@@ -169,6 +177,37 @@ export const VisualFamilyTree: React.FC<VisualFamilyTreeProps> = ({
       m.primaryRole.toLowerCase().includes(q)
     );
   };
+
+  // Guard against empty lineage (e.g. brand new family setup)
+  if (!selectedMember || members.length === 0) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="bg-white rounded-2xl border border-stone-200/90 p-8 sm:p-12 shadow-2xs text-center space-y-4">
+          <div className="w-16 h-16 bg-amber-50 text-amber-700 rounded-full flex items-center justify-center mx-auto border border-amber-200">
+            <GitBranch className="w-8 h-8 text-amber-600" />
+          </div>
+          <div className="max-w-md mx-auto space-y-2">
+            <h3 className="text-xl font-bold font-serif-display text-stone-900">
+              Lineage & Duties for {family.name}
+            </h3>
+            <p className="text-xs text-stone-500 leading-relaxed">
+              No lineage members or ancestors mapped yet. As you record family occasions, kartas, and sacred duties, your multi-generational tree will appear here.
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              onClick={() => {
+                if (onNavigateToOccasion) onNavigateToOccasion();
+              }}
+              className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-stone-950 font-semibold rounded-xl text-xs transition-colors cursor-pointer shadow-sm"
+            >
+              + Record Ancestral Occasions
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Find relative objects for selected member
   const parents = (selectedMember.parentIds || [])
