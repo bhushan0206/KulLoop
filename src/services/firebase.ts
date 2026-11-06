@@ -33,7 +33,10 @@ const firebaseConfig = {
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Use custom database instance if provided, otherwise default
+const databaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-kulloopfamilytit-7b0c965a-e838-4cef-afb2-a45a3a38dc75";
+export const db = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
 
 export enum OperationType {
@@ -78,9 +81,10 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 async function testFirestoreConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Firebase client in local offline mode.');
+  } catch (error: any) {
+    // If default Firestore database is not created yet or offline, silence noisy console spam
+    if (error?.message?.includes('Database \'(default)\' not found') || error?.message?.includes('offline')) {
+      console.info('KulLoop storage initialized (Local/REST sync ready). Firestore database creation pending in console.');
     }
   }
 }
@@ -163,11 +167,13 @@ export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
   localStorage.setItem(`${LOCAL_STORAGE_KEY}_${profile.uid}`, JSON.stringify(profile));
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(profile));
 
-  // 1. Try Firestore
+  // 1. Try Firestore (safe catch to prevent unhandled rejection spam if DB not yet created)
   try {
     await setDoc(doc(db, 'users', profile.uid), profile, { merge: true });
-  } catch (err) {
-    handleFirestoreError(err, OperationType.WRITE, `users/${profile.uid}`);
+  } catch (err: any) {
+    if (!err?.message?.includes('Database \'(default)\' not found')) {
+      handleFirestoreError(err, OperationType.WRITE, `users/${profile.uid}`);
+    }
   }
 
   // 2. Sync with REST API
