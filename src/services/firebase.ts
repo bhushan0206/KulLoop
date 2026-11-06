@@ -225,6 +225,11 @@ export async function signInWithGoogle(): Promise<UserProfile | null> {
   } catch (err: any) {
     console.error('[Google Auth Error]:', err?.code, err?.message);
 
+    // If popup was blocked by browser pop-up blocker
+    if (err?.code === 'auth/popup-blocked') {
+      throw new Error('Your browser blocked the Google Sign-in pop-up. Please look for the pop-up blocker icon in your browser address bar and select "Always allow pop-ups for localhost".');
+    }
+
     // If popup was closed by user or cancelled, surface error instead of silently bypassing
     if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
       throw new Error('Sign-in cancelled. Please click "Continue with Google Account" again.');
