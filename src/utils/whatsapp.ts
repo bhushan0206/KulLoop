@@ -6,12 +6,17 @@ export function cleanPhoneNumber(phone: string): string {
   if (!phone) return '';
   // Keep only numeric characters
   let digits = phone.replace(/[^0-9]/g, '');
-  
+
+  // Strip leading 0 if present (e.g. 07506990883 -> 7506990883)
+  if (digits.startsWith('0') && digits.length === 11) {
+    digits = digits.slice(1);
+  }
+
   // If 10 digits (e.g. Indian mobile number without country code), default to country code 91
   if (digits.length === 10) {
     digits = '91' + digits;
   }
-  
+
   return digits;
 }
 

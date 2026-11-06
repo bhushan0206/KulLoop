@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { FamilyOccasion, Family } from '../types';
 import { exportFamilyRecordToICS, downloadFile } from '../utils/tithiCalculator';
+import { cleanPhoneNumber, openWhatsAppDirect } from '../utils/whatsapp';
 
 interface NotificationHubModalProps {
   isOpen: boolean;
@@ -48,11 +49,12 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
   if (!isOpen) return null;
 
   const currentOccasion = occasions.find((o) => o.id === selectedOccasionId) || occasions[0];
+  const familyDisplayName = family?.name || (family as any)?.familyName || 'Family';
 
   // Helper to construct P2P WhatsApp text
   const generateWhatsAppMessage = (occ?: FamilyOccasion) => {
     if (!occ) {
-      return `🙏 *${family.familyName} KulLoop Reminders*\nHere is our family sacred calendar for 2027. Visit: ${window.location.origin}`;
+      return `🙏 *${familyDisplayName} KulLoop Reminders*\nHere is our family sacred calendar for 2027. Visit: ${window.location.origin}`;
     }
 
     const dateStr = occ.occurrence2027?.gregorianDateStr || 'Upcoming';
@@ -61,21 +63,21 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
     const sunrise = occ.occurrence2027?.sunriseTime || '06:50 AM';
 
     if (selectedLang === 'marathi') {
-      return `🙏 *${family.familyName} परिवार स्मरण पत्र*\n\n` +
+      return `🙏 *${familyDisplayName} परिवार स्मरण पत्र*\n\n` +
         `*कार्य*: ${occ.title}\n` +
         `*दिनांक*: ${dateStr} (${dayStr})\n` +
         `*तिथी*: ${tithiName}\n` +
         `*वेळ / सूर्योदय*: ${sunrise} (${family.homeLocation || 'पुणे'})\n\n` +
         `कृपया सर्वांनी नोंद घ्यावी. अधिक माहिती व संकल्पासाठी KulLoop वर पहा.`;
     } else if (selectedLang === 'hindi') {
-      return `🙏 *${family.familyName} परिवार स्मरण पत्र*\n\n` +
+      return `🙏 *${familyDisplayName} परिवार स्मरण पत्र*\n\n` +
         `*कार्य*: ${occ.title}\n` +
         `*तारीख*: ${dateStr} (${dayStr})\n` +
         `*तिथि*: ${tithiName}\n` +
         `*सूर्योदय*: ${sunrise} (${family.homeLocation || 'पुणे'})\n\n` +
         `कृपया सभी परिवारजन ध्यान दें।`;
     } else {
-      return `🙏 *${family.familyName} Family Sacred Observance*\n\n` +
+      return `🙏 *${familyDisplayName} Family Sacred Observance*\n\n` +
         `*Occasion*: ${occ.title}\n` +
         `*Date*: ${dateStr} (${dayStr})\n` +
         `*Tithi*: ${tithiName}\n` +
@@ -93,12 +95,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
   };
 
   const handleSendWhatsAppDirect = () => {
-    const cleanPhone = targetPhone.replace(/[^0-9]/g, '');
-    const encoded = encodeURIComponent(currentMessage);
-    const url = cleanPhone.length >= 10 
-      ? `https://wa.me/${cleanPhone}?text=${encoded}`
-      : `https://wa.me/?text=${encoded}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    openWhatsAppDirect(targetPhone, currentMessage);
   };
 
   const handleDownloadICS = () => {
@@ -106,7 +103,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
     const icsContent = exportFamilyRecordToICS(occsToExport, family);
     const filename = currentOccasion 
       ? `${currentOccasion.title.replace(/[^a-zA-Z0-9]/g, '_')}_kulloop.ics`
-      : `${family.familyName}_All_Occasions.ics`;
+      : `${familyDisplayName}_All_Occasions.ics`;
     downloadFile(filename, icsContent, 'text/calendar;charset=utf-8;');
   };
 
@@ -115,7 +112,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
     const dateStr = currentOccasion.occurrence2027?.gregorianDateStr;
     if (!dateStr) return;
     const dateFormatted = dateStr.replace(/-/g, '');
-    const title = encodeURIComponent(`${family.familyName}: ${currentOccasion.title}`);
+    const title = encodeURIComponent(`${familyDisplayName}: ${currentOccasion.title}`);
     const details = encodeURIComponent(
       `Tithi: ${currentOccasion.tithiDefinition?.name}\nLocation: ${family.homeLocation}\nSunrise: ${currentOccasion.occurrence2027?.sunriseTime}\nRitual Notes: ${currentOccasion.ritualNotes || 'Family ritual observance'}`
     );
@@ -132,7 +129,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
     const permission = await Notification.requestPermission();
     setPushStatus(permission);
     if (permission === 'granted') {
-      new Notification(`KulLoop: ${family.familyName} Connected!`, {
+      new Notification(`KulLoop: ${familyDisplayName} Connected!`, {
         body: 'You will receive timely ritual and tithi alerts directly on this device with zero fee.',
         icon: '/favicon.ico',
       });
@@ -149,7 +146,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: targetEmail,
-          familyName: family.familyName,
+          familyName: familyDisplayName,
           occasionTitle: currentOccasion?.title,
           dateStr: currentOccasion?.occurrence2027?.gregorianDateStr,
           tithiName: currentOccasion?.tithiDefinition?.name,
@@ -471,7 +468,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
                   <button
                     onClick={() => {
                       new Notification(`KulLoop: ${currentOccasion?.title || 'Observance Alert'}`, {
-                        body: `Upcoming observance scheduled for ${currentOccasion?.occurrence2027?.gregorianDateStr}. Prepared for ${family.familyName}.`,
+                        body: `Upcoming observance scheduled for ${currentOccasion?.occurrence2027?.gregorianDateStr}. Prepared for ${familyDisplayName}.`,
                       });
                     }}
                     className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-stone-200 hover:bg-stone-300 text-stone-800 rounded-xl text-xs font-medium transition-colors cursor-pointer"
