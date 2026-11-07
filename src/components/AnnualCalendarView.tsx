@@ -361,7 +361,7 @@ export const AnnualCalendarView: React.FC<AnnualCalendarViewProps> = ({
 
         {/* Footer print disclaimer */}
         <div className="p-4 bg-stone-50 border-t border-stone-200 text-center text-xs text-stone-500">
-          KulLoop · Independent Family Tithi Loop · Delivered on WhatsApp with MyDharohar as Launch Partner
+          KulLoop · Independent Family Tithi Loop · Email + optional push · MyDharohar prep partner
         </div>
       </div>
 

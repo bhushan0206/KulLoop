@@ -59,7 +59,7 @@ export const WhatsAppSimulator: React.FC<WhatsAppSimulatorProps> = ({
             WhatsApp Simulator for {family.name}
           </h3>
           <p className="text-xs text-stone-500 leading-relaxed">
-            No occasions or members recorded yet. Add your family's first Shraddha tithi, birthday, or festival to preview live multi-lingual WhatsApp reminders here.
+            No occasions or members recorded yet. Add your family's first Shraddha tithi, birthday, or festival to preview multi-lingual WhatsApp share drafts here (you send — not auto-broadcast).
           </p>
           {onOpenAddModal && (
             <div className="pt-2">

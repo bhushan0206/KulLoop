@@ -28,17 +28,21 @@ export function tryInitFirebaseAdmin(): boolean {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const admin = require('firebase-admin');
 
-    if (jsonPath && fs.existsSync(path.resolve(jsonPath))) {
-      const serviceAccount = JSON.parse(fs.readFileSync(path.resolve(jsonPath), 'utf8'));
+    // Prefer inline JSON on Vercel/serverless (no durable filesystem for secrets/)
+    if (jsonRaw) {
+      const serviceAccount = JSON.parse(jsonRaw);
       adminApp = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: serviceAccount.project_id || projectId,
       });
+      console.info(
+        `[firebase-admin] Initialized with service account (${serviceAccount.client_email || 'json'})`
+      );
       return true;
     }
 
-    if (jsonRaw) {
-      const serviceAccount = JSON.parse(jsonRaw);
+    if (jsonPath && fs.existsSync(path.resolve(jsonPath))) {
+      const serviceAccount = JSON.parse(fs.readFileSync(path.resolve(jsonPath), 'utf8'));
       adminApp = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         projectId: serviceAccount.project_id || projectId,

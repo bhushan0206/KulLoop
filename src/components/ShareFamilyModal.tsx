@@ -45,11 +45,11 @@ export const ShareFamilyModal: React.FC<ShareFamilyModalProps> = ({
 
   // Pre-composed messages
   const messages = {
-    mr: `सस्नेह नमस्कार 🙏\n\nमी आपल्या *${family.name}* चे सर्व तिथी, श्राद्ध, आणि सणांचे वार्षिक कॅलेंडर *कुललूप (KulLoop)* वर सुरक्षित नोंदवले आहे.\n\nयेत्या काही विशेष तिथी:\n${upcomingSummary}\n\nआपल्या कुटुंबाचे कॅलेंडर व तिथी आठवणी येथे पहा:\n👉 ${shareUrl}\n\n(घरच्या ज्येष्ठांना कोणतेही ॲप डाऊनलोड करण्याची आवश्यकता नाही. सर्व आठवणी थेट व्हॉट्सॲपवर योग्य भाषेत येतात.)`,
+    mr: `सस्नेह नमस्कार 🙏\n\nमी आपल्या *${family.name}* चे सर्व तिथी, श्राद्ध, आणि सणांचे वार्षिक कॅलेंडर *कुललूप (KulLoop)* वर सुरक्षित नोंदवले आहे.\n\nयेत्या काही विशेष तिथी:\n${upcomingSummary}\n\nआपल्या कुटुंबाचे कॅलेंडर व तिथी आठवणी येथे पहा:\n👉 ${shareUrl}\n\n(घरच्या ज्येष्ठांना कोणतेही ॲप डाऊनलोड करण्याची आवश्यकता नाही. ईमेल आठवणी आपोआप जातात; व्हॉट्सॲप संदेश कुटुंब स्वतः शेअर करते.)`,
     
-    hi: `सादर प्रणाम 🙏\n\nमैंने हमारे *${family.name}* के सभी वार्षिक श्राद्ध, जन्मतिथि और पारिवारिक पर्वों का विवरण *कुललूप (KulLoop)* पर सुरक्षित दर्ज किया है।\n\nआगामी मुख्य तिथियाँ:\n${upcomingSummary}\n\nहमारे पारिवारिक कैलेंडर को यहाँ देखें:\n👉 ${shareUrl}\n\n(घर के बड़ों को कोई नया ऐप डाउनलोड नहीं करना पड़ेगा। सभी आवश्यक स्मरण सीधे व्हाट्सएप पर समय पर प्राप्त होंगे।)`,
+    hi: `सादर प्रणाम 🙏\n\nमैंने हमारे *${family.name}* के सभी वार्षिक श्राद्ध, जन्मतिथि और पारिवारिक पर्वों का विवरण *कुललूप (KulLoop)* पर सुरक्षित दर्ज किया है।\n\nआगामी मुख्य तिथियाँ:\n${upcomingSummary}\n\nहमारे पारिवारिक कैलेंडर को यहाँ देखें:\n👉 ${shareUrl}\n\n(घर के बड़ों को कोई नया ऐप डाउनलोड नहीं करना पड़ेगा। ईमेल स्मरण स्वतः जाते हैं; व्हाट्सएप संदेश परिवार स्वयं साझा करता है।)`,
     
-    en: `Namaste! 🙏\n\nI have set up our *${family.name}* ancestral shraddhas, birthdays, and family tithi calendar on *KulLoop*.\n\nUpcoming Family Dates:\n${upcomingSummary}\n\nView our family calendar here:\n👉 ${shareUrl}\n\n(No apps needed for elders. All reminders arrive peacefully on WhatsApp in their preferred language.)`
+    en: `Namaste! 🙏\n\nI have set up our *${family.name}* ancestral shraddhas, birthdays, and family tithi calendar on *KulLoop*.\n\nUpcoming Family Dates:\n${upcomingSummary}\n\nView our family calendar here:\n👉 ${shareUrl}\n\n(No apps needed for elders. Email reminders go out automatically; WhatsApp messages are shared by family when needed.)`
   };
 
   const selectedText = messages[lang];

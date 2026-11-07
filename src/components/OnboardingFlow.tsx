@@ -451,7 +451,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                   Sign In to Link "{familyName}"
                 </h2>
                 <p className="text-xs sm:text-sm text-stone-300 max-w-md mx-auto leading-relaxed">
-                  Sign in with your Google account so your family record, shraddhas, and WhatsApp reminders are securely saved to your verified identity.
+                  Sign in with your Google account so your family record, shraddhas, and reminder preferences are securely saved to your verified identity.
                 </p>
               </div>
 
@@ -514,20 +514,20 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                 <div className="flex items-center gap-2 text-xs text-amber-400 font-semibold">
                   <span>Step 3 of 3</span>
                   <span>·</span>
-                  <span>WhatsApp & Traditions</span>
+                  <span>Contact & Traditions</span>
                 </div>
                 <h2 className="text-xl font-bold font-serif-display text-white">
                   Reminders & Heritage Notes
                 </h2>
                 <p className="text-xs text-stone-400">
-                  Signed in as <strong className="text-stone-200">{userProfile?.displayName}</strong> ({userProfile?.email}). Configure your notification preferences.
+                  Signed in as <strong className="text-stone-200">{userProfile?.displayName}</strong> ({userProfile?.email}). Email reminders run automatically when SMTP is configured; WhatsApp is share-yourself from Reminders.
                 </p>
               </div>
 
               <div className="space-y-3.5 text-xs">
                 <div>
                   <label className="block text-[11px] font-semibold text-stone-400 uppercase tracking-wider mb-1">
-                    Your WhatsApp Number (Configurator)
+                    Your Phone / WhatsApp (Configurator)
                   </label>
                   <input
                     type="tel"
@@ -537,7 +537,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
                     className="w-full bg-stone-950 border border-stone-700 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-stone-600 focus:outline-none focus:border-amber-400"
                   />
                   <span className="text-[10px] text-stone-500 mt-0.5 block">
-                    You can invite other family members inside your dashboard anytime.
+                    Used for family contact and share drafts — not for automated WhatsApp broadcasts. Invite others from the dashboard anytime.
                   </span>
                 </div>
 

@@ -16,7 +16,8 @@ export async function sendFcmToToken(
 ): Promise<{ sent: boolean; simulated?: boolean; error?: string }> {
   if (!tryInitFirebaseAdmin() || !getFirebaseAdminApp()) {
     console.log(`[FCM simulated] → ${token.slice(0, 12)}… title="${payload.title}"`);
-    return { sent: true, simulated: true };
+    // Do not claim delivery — reminder worker must not dedupe on simulation
+    return { sent: false, simulated: true };
   }
 
   // Messaging requires a service account credential, not projectId-only
@@ -25,7 +26,7 @@ export async function sendFcmToToken(
     Boolean(process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim());
   if (!hasServiceAccount) {
     console.log(`[FCM simulated — add service account] → ${token.slice(0, 12)}…`);
-    return { sent: true, simulated: true };
+    return { sent: false, simulated: true };
   }
 
   try {

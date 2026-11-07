@@ -10,13 +10,13 @@
 
 ## 🌟 Overview
 
-**KulLoop** is an intelligent ancestral and family ritual tracking system built for Hindu traditions (Amanta & Purnimanta panchang systems). It converts lunar tithis reliably to Gregorian calendar dates, coordinates family rituals across generations, sends automated WhatsApp & Email reminders, generates priest-ready ritual briefs, and provides Gemini AI-powered cultural and astronomical guidance in Marathi, Hindi, and English.
+**KulLoop** is an intelligent ancestral and family ritual tracking system built for Hindu traditions (Amanta & Purnimanta panchang systems). It converts lunar tithis reliably to Gregorian calendar dates, coordinates family rituals across generations, sends **automated email and optional FCM push** reminders on lead days, offers **WhatsApp click-to-chat drafts** (you send — no Business API broadcasts yet; SMS later), generates priest-ready ritual briefs, and provides Gemini AI-powered cultural and astronomical guidance in Marathi, Hindi, and English.
 
 ### Key Features
 
 - 🕉️ **Tithi-Aware Lunar Calculation**: Accurately computes solar dates for Shraddhas, Punyatithis, Jayantis, and festival observances across Amanta (Maharashtra, Gujarat, South India) and Purnimanta (North India) traditions.
 - 👨‍👩‍👧‍👦 **Visual Family Tree & Lineage**: Interactive family tree map linking gotra, kuldaivat, ancestral roots, and multi-generational lineages.
-- 📲 **WhatsApp & Email Reminders**: Instant WhatsApp click-to-chat links and automated background SMTP email dispatch with formatted ritual schedules and priest notes.
+- 📲 **Reminders**: Automated SMTP email + optional Android FCM on each member’s lead windows; WhatsApp is peer-to-peer click-to-chat from the Reminders hub (no Meta Cloud API cost). SMS / WhatsApp Business API is a future phase.
 - 🤖 **Gemini Cultural & Shastra Assistant**: In-app AI companion explaining shastra rules, tithi timings, and ancestral rites.
 - 📋 **Priest-Ready Ritual Briefs**: One-click printable and shareable ritual preparation checklists and sankalpa details.
 - 💾 **Dual Storage Engine**: Seamless offline-capable JSON / SQLite persistence with Firebase Firestore sync and Google authentication.
@@ -97,7 +97,7 @@ Mutations on `/api/family`, `/api/occasions`, `/api/members`, and `/api/lineage`
 
 ### Scheduled reminders (email + FCM)
 
-The server runs `runReminderWorker` on a interval (`REMINDER_CRON_MS`, default 6h). It matches each member's `leadTime` (7+2, 7, 2, day_of) to upcoming occasions and sends email and/or FCM when category prefs allow. Dedup keys live in `reminderDispatchLog` in `data/kulloop_store.json`. Manual run: `POST /api/reminders/trigger` (configurator / co_karta).
+The server runs `runReminderWorker` on an interval (`REMINDER_CRON_MS`, default 6h). It matches each member's `leadTime` (7+2, 7, 2, day_of) to upcoming occasions and sends **email and/or FCM** when category prefs allow. Failed deliveries are **not** deduped so the next tick can retry. WhatsApp preferences do **not** trigger automated Business API sends. Dedup keys live in `reminderDispatchLog` in `data/kulloop_store.json`. Manual run: `POST /api/reminders/trigger` (configurator / co_karta).
 
 ---
 

@@ -93,7 +93,7 @@ export const LandingWelcome: React.FC<LandingWelcomeProps> = ({
         </h1>
         <p className="text-base sm:text-lg text-stone-300 max-w-xl mx-auto leading-relaxed text-balance">
           Quiet for most of the year. Useful exactly when it matters — shraddhas, tithi birthdays, and
-          sacred days, reminded on WhatsApp.
+          sacred days, with calm email and optional push reminders when the day approaches.
         </p>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 pt-2">
           <button
@@ -132,8 +132,10 @@ export const LandingWelcome: React.FC<LandingWelcomeProps> = ({
         <h2 className="text-lg font-bold font-serif-display text-amber-200">About us</h2>
         <p className="text-sm text-stone-300 leading-relaxed max-w-2xl">
           KulLoop is an independent family ritual service. One person in the family keeps the ledger of
-          occasions; everyone else receives clear reminders where they already are — WhatsApp, email, or
-          optional push. We are not a daily panchang app and we do not sell fear-based astrology.
+          occasions; the family receives automated email (and optional Android push) when a day approaches.
+          WhatsApp is share-yourself — open a pre-written message from the Reminders hub with no Business
+          API fees. SMS and automated WhatsApp broadcasts are a later phase. We are not a daily panchang
+          app and we do not sell fear-based astrology.
         </p>
       </section>
 
@@ -193,8 +195,8 @@ export const LandingWelcome: React.FC<LandingWelcomeProps> = ({
               <p className="font-semibold text-stone-100">Remind calmly</p>
               <p className="text-xs text-stone-400 mt-0.5 flex items-start gap-1.5">
                 <MessageSquare className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" aria-hidden />
-                WhatsApp-first digests, calendar export, email, and optional Android push — no app install
-                for elders.
+                Automated email + optional Android push on lead days; WhatsApp click-to-chat when you want
+                to message elders yourself — no app install required for them.
               </p>
             </div>
           </li>

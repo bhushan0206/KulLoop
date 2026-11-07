@@ -24,3 +24,4 @@ data/*.tmp
 secrets/*
 !secrets/*.example.json
 !secrets/.gitkeep
+.vercel

@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { apiUrl } from '../utils/apiBase';
+import { apiMutationHeaders } from '../utils/apiClientContext';
 
 export type PushRegistrationResult =
   | { platform: 'web'; permission: NotificationPermission; token?: string }
@@ -166,11 +167,11 @@ export function initPushNotificationBridge(ctx: PushBridgeContext): () => void {
 export async function sendTestPush(uid?: string): Promise<string> {
   const res = await fetch(apiUrl('/api/push/test'), {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: await apiMutationHeaders(),
     body: JSON.stringify({ uid }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) return data.error || 'Test push failed';
+  if (!res.ok) return data.error || data.message || 'Test push failed';
   if (data.simulated) return 'Token saved; FCM will deliver when service account is configured.';
   return 'Test notification sent.';
 }

@@ -154,7 +154,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
             </h1>
 
             <p className="text-xs sm:text-sm text-stone-300 leading-relaxed">
-              Every occasion your family celebrates or remembers — entered once, and reminded on WhatsApp to each person in their own language.
+              Every occasion your family celebrates or remembers — entered once, then reminded by email (and optional push). Share on WhatsApp yourself from Reminders when you want.
             </p>
 
             <div className="text-[10px] text-amber-200/90 font-medium">
@@ -399,7 +399,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
               No occasions recorded yet for {family.name}
             </h4>
             <p className="text-xs text-stone-500 max-w-md mx-auto">
-              Record your family's annual Shraddha tithis, birthdays, or festivals. Each date is accurately matched to your local sunrise and notified on WhatsApp.
+              Record your family's annual Shraddha tithis, birthdays, or festivals. Each date is accurately matched to your local sunrise and reminded by email (optional push); share on WhatsApp when you choose.
             </p>
             <button
               onClick={onOpenAddModal}
@@ -631,7 +631,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-stone-500 mt-0.5">
-              Not a panchang app · WhatsApp-first · Real Sunrise Maths · Defensible family heritage service
+              Not a panchang app · Email + optional push · WhatsApp share-yourself · Real sunrise maths
             </p>
           </div>
 

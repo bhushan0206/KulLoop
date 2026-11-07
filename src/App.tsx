@@ -458,7 +458,7 @@ export default function App() {
       return;
     }
     const target = members.find((m) => m.id === id);
-    if (confirm(`Remove ${target?.name} from WhatsApp reminders?`)) {
+    if (confirm(`Remove ${target?.name} from the family reminder loop?`)) {
       setMembers((prev) => prev.filter((m) => m.id !== id));
       showToast('Member removed from loop (saved to disk)');
       await apiDeleteMember(id);

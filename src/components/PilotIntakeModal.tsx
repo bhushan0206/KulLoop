@@ -108,7 +108,7 @@ export const PilotIntakeModal: React.FC<PilotIntakeModalProps> = ({
           {currentStep === 1 && (
             <div className="space-y-4">
               <div className="text-xs text-stone-600 bg-amber-50/60 p-3 rounded-lg border border-amber-200/60">
-                You tell us your family's occasions once. We calculate each date for your home location and tradition, check the tithi dates with a reviewer, and send WhatsApp reminders to your chosen members in their language.
+                You tell us your family's occasions once. We calculate each date for your home location and tradition, check the tithi dates with a reviewer, and send automated email (plus optional push) reminders. WhatsApp is share-yourself from the Reminders hub — no Business API broadcasts yet.
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

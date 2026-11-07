@@ -115,7 +115,7 @@ export const CalmPricingView: React.FC<CalmPricingViewProps> = ({ onOpenIntakeMo
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                <span>WhatsApp reminders in Marathi, Hindi, English</span>
+                <span>Email reminders + WhatsApp share drafts (Marathi, Hindi, English)</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -314,7 +314,7 @@ export const CalmPricingView: React.FC<CalmPricingViewProps> = ({ onOpenIntakeMo
             "Namaskar — I’m from Family Tithi Loop, a new service launching with MyDharohar as our partner. In most families, one person carries every tithi, birthday and anniversary and works out the tithi dates each year. Is that someone in your family?"
           </p>
           <p className="italic text-stone-700">
-            "You tell us your family’s occasions once — by tithi or by date. Each year we work out the right dates for your home town and tradition, a person checks them, and everyone you choose gets a WhatsApp reminder a week before and two days before — in Marathi, Hindi or English."
+            "You tell us your family’s occasions once — by tithi or by date. Each year we work out the right dates for your home town and tradition, a person checks them, and everyone you choose gets an email reminder a week before and two days before — with optional push. WhatsApp drafts you can send yourself in Marathi, Hindi or English."
           </p>
         </div>
 

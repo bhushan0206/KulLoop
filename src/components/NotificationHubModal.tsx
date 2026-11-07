@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { apiUrl } from '../utils/apiBase';
+import { apiMutationHeaders } from '../utils/apiClientContext';
 import { 
   X, 
   MessageSquare, 
@@ -161,7 +162,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
     try {
       const res = await fetch(apiUrl('/api/reminders/send-email'), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: await apiMutationHeaders(),
         body: JSON.stringify({
           to: targetEmail,
           familyName: familyDisplayName,
@@ -200,7 +201,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
                 KulLoop Reminder Hub
               </h2>
               <p className="text-xs text-stone-300">
-                100% Free & Independent: No per-message WhatsApp API fees
+                Automated: email + optional push · WhatsApp: you send (no API fees)
               </p>
             </div>
           </div>

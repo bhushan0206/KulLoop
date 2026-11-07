@@ -484,7 +484,7 @@ export const OccasionSlideOver: React.FC<OccasionSlideOverProps> = ({
                     className="w-full px-3 py-2 text-xs bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-stone-900 leading-relaxed"
                   />
                   <p className="text-[10px] text-stone-500">
-                    These notes automatically inform WhatsApp reminder messages sent to family members.
+                    These notes appear in email reminders and in WhatsApp share drafts you open from Reminders.
                   </p>
                 </div>
 

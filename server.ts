@@ -120,7 +120,7 @@ app.post('/api/push/register', (req, res) => {
   res.json({ success: true, deviceId });
 });
 
-app.post('/api/push/test', async (req, res) => {
+app.post('/api/push/test', ...gate('canManageMembers'), async (req, res) => {
   const { token, title, body, uid } = req.body || {};
   let targetToken = token as string | undefined;
   if (!targetToken && uid) {
@@ -161,7 +161,7 @@ app.get('/api/invites/:code', (req, res) => {
   });
 });
 
-// Reminder Automation Endpoint
+// Reminder Automation Endpoint (configurator / co_karta)
 app.post('/api/reminders/trigger', ...gate('canManageMembers'), async (req, res) => {
   try {
     const logs = await runReminderWorker();
@@ -172,8 +172,27 @@ app.post('/api/reminders/trigger', ...gate('canManageMembers'), async (req, res)
   }
 });
 
+/**
+ * Vercel Cron (and manual ops) entry — no family session required.
+ * Requires Authorization: Bearer ${CRON_SECRET} (configure the same secret on the Vercel Cron job).
+ */
+app.get('/api/reminders/cron', async (req, res) => {
+  const secret = process.env.CRON_SECRET?.trim();
+  const auth = String(req.headers.authorization || '');
+  if (!secret || auth !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'Unauthorized cron invoke' });
+  }
+  try {
+    const logs = await runReminderWorker();
+    res.json({ success: true, source: 'bearer', logs });
+  } catch (error) {
+    console.error('Error in /api/reminders/cron:', error);
+    res.status(500).json({ error: 'Reminder cron failed.' });
+  }
+});
+
 // Single or Digest Email Dispatch Endpoint (Free Tier / SMTP)
-app.post('/api/reminders/send-email', async (req, res) => {
+app.post('/api/reminders/send-email', ...gate('canManageMembers'), async (req, res) => {
   const { to, subject, html, occasionTitle, familyName, dateStr, tithiName } = req.body;
   if (!to) {
     return res.status(400).json({ error: 'Recipient email is required' });
@@ -201,13 +220,12 @@ app.post('/api/reminders/send-email', async (req, res) => {
     if (sent) {
       res.json({ success: true, message: `Email reminder delivered to ${to}` });
     } else {
-      // In development if SMTP credentials aren't active, log and treat cleanly
-      console.log(`[SMTP simulated/queued] Email reminder to ${to}: ${emailSubject}`);
-      res.json({ success: true, simulated: true, message: `Email digest simulated & queued for ${to}` });
+      console.log(`[SMTP failed] Email reminder to ${to}: ${emailSubject}`);
+      res.status(502).json({ success: false, message: `Email could not be delivered to ${to}. Check SMTP settings.` });
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error in /api/reminders/send-email:', err);
-    res.json({ success: true, simulated: true, message: `Email queued for ${to}` });
+    res.status(500).json({ success: false, message: `Email send failed for ${to}` });
   }
 });
 
@@ -770,7 +788,7 @@ Key principles:
   });
 });
 
-// Vite middleware in dev or static serving in production
+// Vite middleware in dev or static serving in production (local / long-running Node hosts)
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const { createServer } = await import('vite');
@@ -786,6 +804,7 @@ async function startServer() {
     });
   }
 
+  // In-process interval cron — Vercel uses /api/reminders/cron instead (see vercel.json)
   startReminderCron();
 
   app.listen(port, '0.0.0.0', () => {
@@ -793,4 +812,9 @@ async function startServer() {
   });
 }
 
-startServer();
+export default app;
+
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+if (!isServerless) {
+  startServer();
+}
