@@ -19,6 +19,7 @@ import { UserProfile, signInWithGoogle, checkRedirectSignInResult } from '../ser
 import { apiValidateInviteCode } from '../services/api';
 import { Family, LanguageCode } from '../types';
 import { normalizeInviteCode } from '../utils/inviteCode';
+import { LandingWelcome } from './LandingWelcome';
 
 interface OnboardingFlowProps {
   onComplete: (
@@ -27,15 +28,22 @@ interface OnboardingFlowProps {
     options?: { intent: 'create' | 'join' }
   ) => void;
   onExploreDemo: () => void;
+  /** Returning member — Google sign-in then load their saved family loop (optional profile after OAuth redirect) */
+  onReturningSignIn: (existingProfile?: UserProfile) => Promise<void>;
 }
 
-export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onExploreDemo }) => {
+export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
+  onComplete,
+  onExploreDemo,
+  onReturningSignIn,
+}) => {
   // Ordered Funnel:
+  // 0. Marketing landing (About / Vision / How it works)
   // 1. Family Lineage Setup (Create new or Join via Family Code)
-  // 2. Sign-In / Account Link Gate (Mandatory to tie and persist details to authenticated user)
+  // 2. Sign-In / Account Link Gate
   // 3. Reminders & Traditions Launch
   const [mode, setMode] = useState<'create' | 'join'>('create');
-  const [step, setStep] = useState<'family' | 'auth' | 'tradition'>('family');
+  const [step, setStep] = useState<'welcome' | 'family' | 'auth' | 'tradition'>('welcome');
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -64,12 +72,23 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
 
   // Check if returning from a full-page OAuth redirect
   useEffect(() => {
-    checkRedirectSignInResult().then((profile) => {
-      if (profile) {
-        setUserProfile(profile);
-        setStep('tradition');
+    checkRedirectSignInResult().then(async (profile) => {
+      if (!profile) return;
+      const intent = localStorage.getItem('kulloop_auth_intent');
+      localStorage.removeItem('kulloop_auth_intent');
+      if (intent === 'returning') {
+        try {
+          await onReturningSignIn(profile);
+        } catch (err) {
+          console.error('Returning redirect sign-in failed:', err);
+        }
+        return;
       }
+      setUserProfile(profile);
+      setStep('tradition');
     });
+    // Intentionally once on mount for OAuth redirect resume
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Step 1: Proceed to mandatory authentication
@@ -100,13 +119,16 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
     setIsLoadingAuth(true);
     setAuthError(null);
     try {
+      localStorage.setItem('kulloop_auth_intent', 'onboarding');
       const profile = await signInWithGoogle();
       if (profile) {
+        localStorage.removeItem('kulloop_auth_intent');
         setUserProfile(profile);
-        // Advance to tradition confirmation
         setStep('tradition');
       }
+      // null → popup blocked, redirect in progress; resume via checkRedirectSignInResult
     } catch (err: any) {
+      localStorage.removeItem('kulloop_auth_intent');
       console.error('Sign in error:', err);
       setAuthError(err?.message || 'Authentication failed. Please retry.');
     } finally {
@@ -160,7 +182,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
           href="/"
           onClick={(e) => {
             e.preventDefault();
-            setStep('family');
+            setStep('welcome');
             setMode('create');
           }}
           className="flex items-center gap-2.5 group cursor-pointer transition-opacity hover:opacity-90 focus:outline-none"
@@ -169,23 +191,43 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
           <span className="text-2xl font-bold tracking-tight text-amber-300 font-serif-display group-hover:text-amber-200 transition-colors">
             KulLoop
           </span>
-          <span className="text-xs text-stone-400 font-medium">
+          <span className="text-xs text-stone-400 font-medium hidden sm:inline">
             · Family Tithi Loop (कुललूप)
           </span>
         </a>
 
-        <button
-          onClick={onExploreDemo}
-          className="text-xs text-stone-400 hover:text-amber-200 transition-colors py-1.5 px-3 rounded-lg border border-stone-800 hover:border-amber-500/40 cursor-pointer flex items-center gap-1.5"
-        >
-          <span>Explore Demo (The Joshi Family)</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {step !== 'welcome' && (
+            <button
+              type="button"
+              onClick={() => setStep('welcome')}
+              className="text-xs text-stone-400 hover:text-amber-200 transition-colors py-1.5 px-2 cursor-pointer"
+            >
+              About
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onExploreDemo}
+            className="text-xs text-stone-400 hover:text-amber-200 transition-colors py-1.5 px-3 rounded-lg border border-stone-800 hover:border-amber-500/40 cursor-pointer flex items-center gap-1.5"
+          >
+            <span className="hidden sm:inline">Explore Demo</span>
+            <span className="sm:hidden">Demo</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </header>
 
-      {/* Main Interactive Onboarding Card */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 z-10">
-        <div className="max-w-xl w-full bg-stone-900/90 border border-stone-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md space-y-6">
+      {/* Landing marketing OR onboarding card */}
+      <main className="flex-1 flex items-start sm:items-center justify-center p-4 sm:p-6 z-10 overflow-y-auto">
+        {step === 'welcome' ? (
+          <LandingWelcome
+            onGetStarted={() => setStep('family')}
+            onExploreDemo={onExploreDemo}
+            onReturningSignIn={onReturningSignIn}
+          />
+        ) : (
+        <div className="max-w-xl w-full bg-stone-900/90 border border-stone-800 rounded-2xl p-6 sm:p-8 shadow-2xl backdrop-blur-md space-y-6 my-4">
           
           {/* STEP 1: FAMILY SETUP FIRST OR JOIN EXISTING */}
           {step === 'family' && (
@@ -353,7 +395,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
                   </div>
                 )}
 
-                <div className="pt-2">
+                <div className="pt-2 space-y-3">
                   <button
                     type="submit"
                     disabled={isValidatingJoin}
@@ -367,6 +409,14 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
                           : 'Continue to Sign In & Link Family'}
                     </span>
                     <ArrowRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep('welcome')}
+                    className="w-full text-xs text-stone-400 hover:text-amber-200 transition-colors cursor-pointer flex items-center justify-center gap-1.5 py-1"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to About KulLoop</span>
                   </button>
                 </div>
               </form>
@@ -568,11 +618,20 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
           )}
 
         </div>
+        )}
       </main>
 
       {/* Footer Info */}
-      <footer className="border-t border-stone-900 py-3 text-center text-[11px] text-stone-500">
-        KulLoop · Partnered with MyDharohar · Designed with reverence for ancestral traditions
+      <footer className="border-t border-stone-900 py-3 text-center text-[11px] text-stone-500 space-x-3">
+        <button type="button" onClick={() => setStep('welcome')} className="hover:text-amber-300 transition-colors">
+          About KulLoop
+        </button>
+        <span aria-hidden>·</span>
+        <a href="/privacy" className="hover:text-amber-300 transition-colors">
+          Privacy
+        </a>
+        <span aria-hidden>·</span>
+        <span>Partnered with MyDharohar</span>
       </footer>
     </div>
   );

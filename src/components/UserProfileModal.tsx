@@ -33,6 +33,8 @@ interface UserProfileModalProps {
   currentUser: UserProfile;
   onUpdateCurrentUser: (profile: UserProfile) => void;
   onOpenAssistantWithTopic?: (topic: string) => void;
+  /** Full sign-out: leave the family app and return to landing */
+  onSignOut?: () => void | Promise<void>;
 }
 
 export const UserProfileModal: React.FC<UserProfileModalProps> = ({
@@ -41,6 +43,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   currentUser,
   onUpdateCurrentUser,
   onOpenAssistantWithTopic,
+  onSignOut,
 }) => {
   const [activeTab, setActiveTab] = useState<'profile' | 'community'>('profile');
   
@@ -208,8 +211,14 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 onClick={async () => {
                   try {
                     if (currentUser.email) {
-                      const guestUser = await signOutGoogle();
-                      onUpdateCurrentUser(guestUser);
+                      if (onSignOut) {
+                        await onSignOut();
+                        return;
+                      }
+                      const result = await signOutGoogle();
+                      if (result.ok) {
+                        onUpdateCurrentUser(result.user);
+                      }
                     } else {
                       const userP = await signInWithGoogle();
                       if (userP) {
@@ -218,8 +227,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                         setTimeout(() => setSavedSuccess(false), 3000);
                       }
                     }
-                  } catch (err: any) {
-                    console.info('[Google Sign-in status]:', err?.message || err);
+                  } catch (err: unknown) {
+                    console.info('[Google Sign-in status]:', err instanceof Error ? err.message : err);
                   }
                 }}
                 className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 text-xs font-semibold text-stone-900 bg-white hover:bg-stone-100 border border-stone-300 rounded-lg shadow-2xs transition-colors cursor-pointer shrink-0"

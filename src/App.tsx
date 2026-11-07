@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useMemo, useRef } from 'react';
 import { 
   Family, 
   FamilyOccasion, 
@@ -125,6 +125,7 @@ export default function App() {
   const [simpleLayout, setSimpleLayout] = useState<boolean>(() => readSimpleLayout());
 
   const isDemoMode = localStorage.getItem('kulloop_is_demo') === 'true';
+  const hadFirebaseSessionRef = useRef(false);
 
   const displayMembers = useMemo(
     () =>
@@ -203,10 +204,17 @@ export default function App() {
   };
 
   useEffect(() => {
-    loadDatabaseData();
+    // Avoid hydrating private family data while on the marketing landing
+    if (
+      sessionStorage.getItem('kulloop_session_active') === 'true' &&
+      localStorage.getItem('kulloop_has_onboarded') === 'true'
+    ) {
+      loadDatabaseData();
+    }
 
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
       if (fbUser) {
+        hadFirebaseSessionRef.current = true;
         const p = await fetchUserProfile(fbUser.uid);
         if (p) {
           setCurrentUser(p);
@@ -231,6 +239,23 @@ export default function App() {
         }
       } else {
         setCurrentUser(GUEST_USER_PROFILE);
+        // Live session ended (sign-out / expiry) → marketing landing, not a guest family dashboard
+        if (
+          hadFirebaseSessionRef.current &&
+          localStorage.getItem('kulloop_is_demo') !== 'true'
+        ) {
+          hadFirebaseSessionRef.current = false;
+          sessionStorage.removeItem('kulloop_session_active');
+          localStorage.removeItem('kulloop_has_onboarded');
+          setFamily(DEFAULT_CLEAN_FAMILY);
+          setOccasions([]);
+          setMembers([]);
+          setPeople([]);
+          setLineageMembers([]);
+          setIsProfileModalOpen(false);
+          setActiveTab('overview');
+          setHasCompletedOnboarding(false);
+        }
       }
     });
 
@@ -573,18 +598,109 @@ export default function App() {
     showToast('Viewing The Joshi Family demonstration record.');
   };
 
-  const handleSwitchToOnboarding = () => {
-    sessionStorage.clear();
-    localStorage.clear();
+  const resetToLanding = () => {
+    sessionStorage.removeItem('kulloop_session_active');
+    localStorage.removeItem('kulloop_has_onboarded');
+    localStorage.removeItem('kulloop_is_demo');
+    setFamily(DEFAULT_CLEAN_FAMILY);
+    setOccasions([]);
+    setMembers([]);
+    setPeople([]);
+    setLineageMembers([]);
+    setCurrentUser(GUEST_USER_PROFILE);
+    setIsProfileModalOpen(false);
+    setActiveTab('overview');
     setHasCompletedOnboarding(false);
   };
 
-  // Screen 0: First-time Sign-in & Onboarding Gate
+  const handleSignOut = async () => {
+    const result = await signOutGoogle();
+    if (!result.ok) {
+      showToast(result.error);
+      return;
+    }
+    hadFirebaseSessionRef.current = false;
+    resetToLanding();
+    showToast('Signed out. Welcome back anytime.');
+  };
+
+  const completeReturningSession = async (profile: UserProfile) => {
+    localStorage.removeItem('kulloop_auth_intent');
+    setApiClientContext({
+      uid: profile.uid,
+      email: profile.email || '',
+      displayName: profile.displayName || '',
+      isDemoMode: false,
+    });
+    setCurrentUser(profile);
+
+    let loadedFamily = false;
+    try {
+      const bundle = await fetchInitialDatabase();
+      if (bundle?.family) {
+        setFamily(bundle.family);
+        setOccasions(bundle.occasions || []);
+        setMembers(
+          dedupeMembers(bundle.members || [], {
+            currentUid: profile.uid,
+            currentEmail: profile.email,
+            familyId: bundle.family.id,
+          })
+        );
+        setPeople(bundle.people || []);
+        setLineageMembers(bundle.lineageMembers || []);
+        loadedFamily = true;
+      } else {
+        setFamily(DEFAULT_CLEAN_FAMILY);
+        setOccasions([]);
+        setMembers([]);
+        setPeople([]);
+        setLineageMembers([]);
+      }
+    } catch (err) {
+      console.warn('Returning sign-in data load failed:', err);
+      throw new Error('Signed in, but your family loop could not be loaded. Please try again.');
+    }
+
+    sessionStorage.setItem('kulloop_session_active', 'true');
+    localStorage.setItem('kulloop_has_onboarded', 'true');
+    localStorage.removeItem('kulloop_is_demo');
+    setHasCompletedOnboarding(true);
+    showToast(
+      loadedFamily
+        ? `Welcome back, ${profile.displayName.split(' ')[0]}`
+        : 'Signed in — create or join a family to continue.'
+    );
+  };
+
+  const handleReturningSignIn = async (existingProfile?: UserProfile) => {
+    let profile = existingProfile;
+    if (!profile) {
+      localStorage.setItem('kulloop_auth_intent', 'returning');
+      profile = (await signInWithGoogle()) ?? undefined;
+      if (!profile) {
+        // Popup blocked → full-page redirect in progress; OnboardingFlow resumes via intent flag
+        return;
+      }
+    }
+    await completeReturningSession(profile);
+  };
+
+  const handleSwitchToOnboarding = async () => {
+    const result = await signOutGoogle();
+    if (result.ok) {
+      hadFirebaseSessionRef.current = false;
+    }
+    resetToLanding();
+  };
+
+  // Screen 0: Landing + Sign-in & Onboarding Gate
   if (!hasCompletedOnboarding) {
     return (
       <OnboardingFlow
         onComplete={handleCompleteOnboarding}
         onExploreDemo={handleExploreDemo}
+        onReturningSignIn={handleReturningSignIn}
       />
     );
   }
@@ -861,6 +977,7 @@ export default function App() {
           showToast('Profile updated successfully');
         }}
         onOpenAssistantWithTopic={handleOpenAssistantWithTopic}
+        onSignOut={handleSignOut}
       />
 
       {/* Gemini Heritage Chatbot */}

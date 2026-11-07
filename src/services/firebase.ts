@@ -275,14 +275,22 @@ export const GUEST_USER_PROFILE: UserProfile = {
   language: 'mr',
 };
 
-export async function signOutGoogle(): Promise<UserProfile> {
+/** Signs out of Firebase Auth. Returns guest profile only when sign-out succeeded. */
+export async function signOutGoogle(): Promise<{ ok: true; user: UserProfile } | { ok: false; error: string }> {
   try {
     await fbSignOut(auth);
     localStorage.removeItem(LOCAL_STORAGE_KEY);
+    if (auth.currentUser) {
+      return { ok: false, error: 'Still signed in after sign-out. Please try again.' };
+    }
+    return { ok: true, user: GUEST_USER_PROFILE };
   } catch (err) {
     console.error('Sign out error:', err);
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : 'Sign-out failed. Please try again.',
+    };
   }
-  return GUEST_USER_PROFILE;
 }
 
 export async function fetchCommunityProfiles(): Promise<UserProfile[]> {
