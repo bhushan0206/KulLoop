@@ -13,6 +13,7 @@
     "lint": "tsc --noEmit",
     "check:ops": "node scripts/check-operator-setup.mjs",
     "sync:vercel-env": "node scripts/sync-vercel-env.mjs",
+    "migrate:firestore": "node scripts/migrate-json-to-firestore.mjs",
     "cap:sync": "npm run build && npx cap sync android",
     "android:open": "npx cap open android",
     "android:run": "npm run cap:sync && npx cap run android"

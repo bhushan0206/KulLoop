@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { dbStore } from './storage';
 import { AccessIdentity, FamilyPermission, resolveServerAccess } from './familyAccess';
 import { Member } from '../src/types';
 import { verifyFirebaseIdToken, isFirebaseAdminReady } from './firebaseAdmin';
+import { getBundle } from './kulloopStore';
 
 const SELF_EDIT_KEYS = new Set([
   'reminderPreferences',
@@ -16,6 +16,7 @@ const SELF_EDIT_KEYS = new Set([
 export type AuthenticatedRequest = Request & {
   kulloopIdentity?: AccessIdentity;
   kulloopAccess?: ReturnType<typeof resolveServerAccess>;
+  kulloopFamilyId?: string;
 };
 
 function headerIdentity(req: Request): AccessIdentity {
@@ -69,7 +70,6 @@ export async function resolveRequestIdentity(req: Request): Promise<AccessIdenti
     throw err;
   }
 
-  // Development / pilot fallback: trust signed-in client headers
   return headers;
 }
 
@@ -93,20 +93,29 @@ export async function attachIdentity(req: Request, res: Response, next: NextFunc
 }
 
 export function requireFamilyPermission(permission: FamilyPermission) {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const data = dbStore.getData();
-    const access = resolveServerAccess(data.members, data.family, readAccessIdentity(req));
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await getBundle(req);
+      (req as AuthenticatedRequest).kulloopFamilyId = data.family.id;
+      const access = resolveServerAccess(data.members, data.family, readAccessIdentity(req));
 
-    if (!access[permission]) {
-      return res.status(403).json({
-        error: 'Forbidden',
-        message: `Your family role (${access.role}) cannot perform this action.`,
-        role: access.role,
+      if (!access[permission]) {
+        return res.status(403).json({
+          error: 'Forbidden',
+          message: `Your family role (${access.role}) cannot perform this action.`,
+          role: access.role,
+        });
+      }
+
+      (req as AuthenticatedRequest).kulloopAccess = access;
+      next();
+    } catch (err: unknown) {
+      console.error('[access] permission check failed:', err);
+      return res.status(500).json({
+        error: 'Storage error',
+        message: err instanceof Error ? err.message : 'Failed to load family',
       });
     }
-
-    (req as AuthenticatedRequest).kulloopAccess = access;
-    next();
   };
 }
 
@@ -120,48 +129,57 @@ export function gateMemberUpdate() {
 }
 
 /** Member PUT: managers may edit anyone; others only self reminder prefs. */
-export function requireMemberUpdatePermission(req: Request, res: Response, next: NextFunction) {
-  const data = dbStore.getData();
-  const identity = readAccessIdentity(req);
-  const access = resolveServerAccess(data.members, data.family, identity);
-  const id = req.params.id;
-  const updates = req.body || {};
+export async function requireMemberUpdatePermission(req: Request, res: Response, next: NextFunction) {
+  try {
+    const data = await getBundle(req);
+    (req as AuthenticatedRequest).kulloopFamilyId = data.family.id;
+    const identity = readAccessIdentity(req);
+    const access = resolveServerAccess(data.members, data.family, identity);
+    const id = req.params.id;
+    const updates = req.body || {};
 
-  if (access.canManageMembers) {
+    if (access.canManageMembers) {
+      (req as AuthenticatedRequest).kulloopAccess = access;
+      return next();
+    }
+
+    const existing = data.members.find((m) => m.id === id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+
+    const isSelf =
+      (access.memberId && access.memberId === id) ||
+      (identity.uid && existing.authUid === identity.uid) ||
+      (identity.email &&
+        existing.email &&
+        existing.email.toLowerCase() === identity.email.toLowerCase());
+
+    if (!isSelf) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'You may only update your own reminder settings.',
+      });
+    }
+
+    const updateKeys = Object.keys(updates).filter((k) => k !== 'id');
+    const onlySelfFields = updateKeys.every((k) => SELF_EDIT_KEYS.has(k));
+    if (!onlySelfFields) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'View-only members may only change reminder preferences.',
+      });
+    }
+
     (req as AuthenticatedRequest).kulloopAccess = access;
-    return next();
-  }
-
-  const existing = data.members.find((m) => m.id === id);
-  if (!existing) {
-    return res.status(404).json({ error: 'Member not found' });
-  }
-
-  const isSelf =
-    (access.memberId && access.memberId === id) ||
-    (identity.uid && existing.authUid === identity.uid) ||
-    (identity.email &&
-      existing.email &&
-      existing.email.toLowerCase() === identity.email.toLowerCase());
-
-  if (!isSelf) {
-    return res.status(403).json({
-      error: 'Forbidden',
-      message: 'You may only update your own reminder settings.',
+    next();
+  } catch (err: unknown) {
+    console.error('[access] member update check failed:', err);
+    return res.status(500).json({
+      error: 'Storage error',
+      message: err instanceof Error ? err.message : 'Failed to load family',
     });
   }
-
-  const updateKeys = Object.keys(updates).filter((k) => k !== 'id');
-  const onlySelfFields = updateKeys.every((k) => SELF_EDIT_KEYS.has(k));
-  if (!onlySelfFields) {
-    return res.status(403).json({
-      error: 'Forbidden',
-      message: 'View-only members may only change reminder preferences.',
-    });
-  }
-
-  (req as AuthenticatedRequest).kulloopAccess = access;
-  next();
 }
 
 export function memberMatchesIdentity(member: Member, identity: AccessIdentity): boolean {

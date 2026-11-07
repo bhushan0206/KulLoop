@@ -1,4 +1,4 @@
-import { getFirebaseAdminApp, tryInitFirebaseAdmin } from './firebaseAdmin';
+import { getFirebaseAdminApp, tryInitFirebaseAdmin, getFirebaseAdminModule } from './firebaseAdmin';
 
 export interface PushDeviceRecord {
   id: string;
@@ -30,8 +30,7 @@ export async function sendFcmToToken(
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const admin = require('firebase-admin');
+    const admin = getFirebaseAdminModule();
     await admin.messaging().send({
       token,
       notification: { title: payload.title, body: payload.body },

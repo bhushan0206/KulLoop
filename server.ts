@@ -13,68 +13,99 @@ const port = parseInt(process.env.PORT || '3000', 10);
 
 app.use(express.json({ limit: '10mb' }));
 
-import { dbStore } from './server/storage';
+import {
+  getBundle,
+  mutateBundle,
+  resetActiveFamily,
+  saveUser,
+  fetchUser,
+  fetchUsers,
+  isFirestoreCanonical,
+} from './server/kulloopStore';
+import { resolveFamilyId } from './server/firestoreStore';
 import { runReminderWorker, startReminderCron } from './server/reminderWorker';
 import { sendEmail } from './server/mailer';
 import { sendFcmToToken } from './server/pushMessaging';
 import { gate, gateMemberUpdate } from './server/accessMiddleware';
 
 // ============================================================================
-// Persistent Database & SQLite Export Endpoints
+// Persistent Database (Firestore canonical) & Export Endpoints
 // ============================================================================
 
 // Database engine status and stats
-app.get('/api/db/status', (req, res) => {
-  const data = dbStore.getData();
-  res.json({
-    status: 'connected',
-    driver: data.meta.driver,
-    version: data.meta.version,
-    persistenceFile: data.meta.persistenceFile,
-    createdAt: data.meta.createdAt,
-    lastSavedAt: data.meta.lastSavedAt,
-    recordsCount: data.meta.recordsCount,
-    auditLogCount: data.auditLogs.length,
-  });
+app.get('/api/db/status', async (req, res) => {
+  try {
+    const data = await getBundle(req);
+    res.json({
+      status: 'connected',
+      driver: data.meta.driver,
+      canonical: isFirestoreCanonical() ? 'firestore' : 'memory',
+      version: data.meta.version,
+      persistenceFile: data.meta.persistenceFile,
+      createdAt: data.meta.createdAt,
+      lastSavedAt: data.meta.lastSavedAt,
+      recordsCount: data.meta.recordsCount,
+      auditLogCount: data.auditLogs.length,
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'db status failed' });
+  }
 });
 
 // Fetch all database records in a single payload for fast boot
-app.get('/api/db/all', (req, res) => {
-  const data = dbStore.getData();
-  res.json({
-    family: data.family,
-    occasions: data.occasions,
-    members: data.members,
-    people: data.people,
-    lineageMembers: data.lineageMembers,
-    users: Object.values(data.users),
-    currentUser: null,
-    meta: data.meta,
-  });
+app.get('/api/db/all', async (req, res) => {
+  try {
+    const data = await getBundle(req);
+    res.json({
+      family: data.family,
+      occasions: data.occasions,
+      members: data.members,
+      people: data.people,
+      lineageMembers: data.lineageMembers,
+      users: Object.values(data.users),
+      currentUser: null,
+      meta: data.meta,
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'db load failed' });
+  }
 });
 
 // Reset database to initial seed data
-app.post('/api/db/reset', ...gate('canEditFamily'), (req, res) => {
-  const refreshed = dbStore.resetToDefaults();
-  res.json({
-    success: true,
-    message: 'Database reset to default seed records successfully',
-    recordsCount: refreshed.meta.recordsCount,
-  });
+app.post('/api/db/reset', ...gate('canEditFamily'), async (req, res) => {
+  try {
+    const refreshed = await resetActiveFamily(req);
+    res.json({
+      success: true,
+      message: 'Family ledger reset successfully',
+      recordsCount: refreshed.meta.recordsCount,
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'reset failed' });
+  }
 });
 
 // SQLite SQL Dump / DDL export
-app.get('/api/db/export/sqlite-sql', (req, res) => {
-  const sqlContent = dbStore.generateSqliteDump();
-  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Content-Disposition', 'attachment; filename="kulloop_database_sqlite.sql"');
-  res.send(sqlContent);
+app.get('/api/db/export/sqlite-sql', async (req, res) => {
+  try {
+    const data = await getBundle(req);
+    const sqlContent = `-- KulLoop export ${new Date().toISOString()}\n-- Family ${data.family.name} (${data.family.id})\n-- Occasions ${data.occasions.length} Members ${data.members.length}\n`;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename="kulloop_database_sqlite.sql"');
+    res.send(sqlContent);
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'export failed' });
+  }
 });
 
 // Family Profile Endpoints
-app.get('/api/family', (req, res) => {
-  const data = dbStore.getData();
-  res.json(data.family);
+app.get('/api/family', async (req, res) => {
+  try {
+    const data = await getBundle(req);
+    res.json(data.family);
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'family load failed' });
+  }
 });
 
 function normalizeInviteCode(raw: string): string {
@@ -93,38 +124,48 @@ function generateInviteCode(): string {
   return `KUL-${suffix}`;
 }
 
-app.post('/api/push/register', (req, res) => {
-  const { token, platform, uid, memberId, familyId } = req.body || {};
-  if (!token || typeof token !== 'string') {
-    return res.status(400).json({ error: 'FCM device token required' });
-  }
-  const deviceId = `push_${uid || memberId || 'anon'}_${token.slice(-8)}`;
-  const record = {
-    id: deviceId,
-    token,
-    platform: platform === 'android' || platform === 'ios' || platform === 'web' ? platform : 'android',
-    uid: uid || undefined,
-    memberId: memberId || undefined,
-    familyId: familyId || undefined,
-    updatedAt: new Date().toISOString(),
-  };
-  dbStore.save((draft) => {
-    if (!draft.pushDevices) draft.pushDevices = [];
-    const idx = draft.pushDevices.findIndex((d) => d.token === token);
-    if (idx >= 0) {
-      draft.pushDevices[idx] = { ...draft.pushDevices[idx], ...record };
-    } else {
-      draft.pushDevices.push(record);
+app.post('/api/push/register', async (req, res) => {
+  try {
+    const { token, platform, uid, memberId, familyId } = req.body || {};
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ error: 'FCM device token required' });
     }
-  }, 'REGISTER_PUSH', 'DEVICE', deviceId);
-  res.json({ success: true, deviceId });
+    const deviceId = `push_${uid || memberId || 'anon'}_${token.slice(-8)}`;
+    const record = {
+      id: deviceId,
+      token,
+      platform: platform === 'android' || platform === 'ios' || platform === 'web' ? platform : 'android',
+      uid: uid || undefined,
+      memberId: memberId || undefined,
+      familyId: familyId || undefined,
+      updatedAt: new Date().toISOString(),
+    };
+    await mutateBundle(
+      req,
+      (draft) => {
+        if (!draft.pushDevices) draft.pushDevices = [];
+        const idx = draft.pushDevices.findIndex((d) => d.token === token);
+        if (idx >= 0) {
+          draft.pushDevices[idx] = { ...draft.pushDevices[idx], ...record };
+        } else {
+          draft.pushDevices.push(record);
+        }
+      },
+      'REGISTER_PUSH',
+      'DEVICE',
+      deviceId
+    );
+    res.json({ success: true, deviceId });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'push register failed' });
+  }
 });
 
 app.post('/api/push/test', ...gate('canManageMembers'), async (req, res) => {
   const { token, title, body, uid } = req.body || {};
   let targetToken = token as string | undefined;
   if (!targetToken && uid) {
-    const data = dbStore.getData();
+    const data = await getBundle(req);
     const device = data.pushDevices?.find((d) => d.uid === uid);
     targetToken = device?.token;
   }
@@ -139,26 +180,47 @@ app.post('/api/push/test', ...gate('canManageMembers'), async (req, res) => {
   res.json(result);
 });
 
-app.get('/api/invites/:code', (req, res) => {
-  const code = normalizeInviteCode(req.params.code || '');
-  const data = dbStore.getData();
-  const fam = data.family;
-  const famCode = fam.inviteCode ? normalizeInviteCode(fam.inviteCode) : '';
-  const matches = Boolean(famCode && famCode === code);
+app.get('/api/invites/:code', async (req, res) => {
+  try {
+    const code = normalizeInviteCode(req.params.code || '');
+    if (isFirestoreCanonical()) {
+      const familyId = await resolveFamilyId({ inviteCode: code });
+      if (!familyId) {
+        return res.status(404).json({ valid: false, message: 'Invite code not found.' });
+      }
+      const data = await getBundle(undefined, familyId);
+      return res.json({
+        valid: true,
+        family: {
+          id: data.family.id,
+          name: data.family.name,
+          homeLocation: data.family.homeLocation,
+          convention: data.family.convention,
+          inviteCode: data.family.inviteCode,
+        },
+      });
+    }
 
-  if (!matches) {
-    return res.status(404).json({ valid: false, message: 'Invite code not found.' });
+    const data = await getBundle(req);
+    const fam = data.family;
+    const famCode = fam.inviteCode ? normalizeInviteCode(fam.inviteCode) : '';
+    const matches = Boolean(famCode && famCode === code);
+    if (!matches) {
+      return res.status(404).json({ valid: false, message: 'Invite code not found.' });
+    }
+    res.json({
+      valid: true,
+      family: {
+        id: fam.id,
+        name: fam.name,
+        homeLocation: fam.homeLocation,
+        convention: fam.convention,
+        inviteCode: fam.inviteCode,
+      },
+    });
+  } catch (err: unknown) {
+    res.status(500).json({ valid: false, message: err instanceof Error ? err.message : 'invite lookup failed' });
   }
-  res.json({
-    valid: true,
-    family: {
-      id: fam.id,
-      name: fam.name,
-      homeLocation: fam.homeLocation,
-      convention: fam.convention,
-      inviteCode: fam.inviteCode,
-    },
-  });
 });
 
 // Reminder Automation Endpoint (configurator / co_karta)
@@ -270,29 +332,52 @@ app.post('/api/gemini/tts', async (req, res) => {
   }
 });
 
-app.put('/api/family', ...gate('canEditFamily'), (req, res) => {
+app.put('/api/family', ...gate('canEditFamily'), async (req, res) => {
   const updatedFamily = req.body;
   if (!updatedFamily || !updatedFamily.name) {
     return res.status(400).json({ error: 'Valid family object required' });
   }
-  const updated = dbStore.save((draft) => {
-    const next = { ...draft.family, ...updatedFamily };
-    if (!next.inviteCode) {
-      next.inviteCode = generateInviteCode();
-    }
-    draft.family = next;
-  }, 'UPDATE_FAMILY', 'FAMILY', updatedFamily.id || 'fam_default');
-
-  res.json({ success: true, family: updated.family });
+  try {
+    const updated = await mutateBundle(
+      req,
+      (draft) => {
+        const lockedId = draft.family.id;
+        const emptyShell =
+          lockedId === 'fam_default' &&
+          draft.members.length === 0 &&
+          draft.occasions.length === 0;
+        // New onboarding may mint fam_<ts>; only allow id change from empty default shell
+        const nextId =
+          emptyShell && updatedFamily.id && updatedFamily.id !== lockedId
+            ? updatedFamily.id
+            : lockedId;
+        const next = { ...draft.family, ...updatedFamily, id: nextId };
+        if (!next.inviteCode) {
+          next.inviteCode = generateInviteCode();
+        }
+        draft.family = next;
+      },
+      'UPDATE_FAMILY',
+      'FAMILY',
+      updatedFamily.id || 'family'
+    );
+    res.json({ success: true, family: updated.family });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'family update failed' });
+  }
 });
 
 // Occasions Endpoints
-app.get('/api/occasions', (req, res) => {
-  const data = dbStore.getData();
-  res.json(data.occasions);
+app.get('/api/occasions', async (req, res) => {
+  try {
+    const data = await getBundle(req);
+    res.json(data.occasions);
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'occasions load failed' });
+  }
 });
 
-app.post('/api/occasions', ...gate('canCreateOccasions'), (req, res) => {
+app.post('/api/occasions', ...gate('canCreateOccasions'), async (req, res) => {
   const newOccasion = req.body;
   if (!newOccasion || !newOccasion.title) {
     return res.status(400).json({ error: 'Occasion title is required' });
@@ -300,317 +385,433 @@ app.post('/api/occasions', ...gate('canCreateOccasions'), (req, res) => {
   if (!newOccasion.id) {
     newOccasion.id = `occ_${Date.now()}`;
   }
-  dbStore.save((draft) => {
-    draft.occasions.unshift(newOccasion);
-  }, 'ADD_OCCASION', 'OCCASION', newOccasion.id);
-
-  res.status(201).json({ success: true, occasion: newOccasion });
+  try {
+    const data = await getBundle(req);
+    if (!newOccasion.familyId) newOccasion.familyId = data.family.id;
+    await mutateBundle(
+      req,
+      (draft) => {
+        draft.occasions.unshift(newOccasion);
+      },
+      'ADD_OCCASION',
+      'OCCASION',
+      newOccasion.id
+    );
+    res.status(201).json({ success: true, occasion: newOccasion });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'create occasion failed' });
+  }
 });
 
-app.put('/api/occasions/:id', ...gate('canEditOccasions'), (req, res) => {
+app.put('/api/occasions/:id', ...gate('canEditOccasions'), async (req, res) => {
   const id = req.params.id;
   const updates = req.body;
   let updatedOccasion: any = null;
-
-  dbStore.save((draft) => {
-    const idx = draft.occasions.findIndex((o) => o.id === id);
-    if (idx !== -1) {
-      draft.occasions[idx] = { ...draft.occasions[idx], ...updates, id };
-      updatedOccasion = draft.occasions[idx];
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        const idx = draft.occasions.findIndex((o) => o.id === id);
+        if (idx !== -1) {
+          draft.occasions[idx] = { ...draft.occasions[idx], ...updates, id };
+          updatedOccasion = draft.occasions[idx];
+        }
+      },
+      'UPDATE_OCCASION',
+      'OCCASION',
+      id
+    );
+    if (!updatedOccasion) {
+      return res.status(404).json({ error: 'Occasion not found' });
     }
-  }, 'UPDATE_OCCASION', 'OCCASION', id);
-
-  if (!updatedOccasion) {
-    return res.status(404).json({ error: 'Occasion not found' });
+    res.json({ success: true, occasion: updatedOccasion });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'update occasion failed' });
   }
-  res.json({ success: true, occasion: updatedOccasion });
 });
 
-app.delete('/api/occasions/:id', ...gate('canDeleteOccasions'), (req, res) => {
+app.delete('/api/occasions/:id', ...gate('canDeleteOccasions'), async (req, res) => {
   const id = req.params.id;
-  dbStore.save((draft) => {
-    draft.occasions = draft.occasions.filter((o) => o.id !== id);
-  }, 'DELETE_OCCASION', 'OCCASION', id);
-
-  res.json({ success: true, message: `Occasion ${id} deleted` });
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        draft.occasions = draft.occasions.filter((o) => o.id !== id);
+      },
+      'DELETE_OCCASION',
+      'OCCASION',
+      id
+    );
+    res.json({ success: true, message: `Occasion ${id} deleted` });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'delete occasion failed' });
+  }
 });
 
-app.patch('/api/occasions/:id/toggle-confirm', ...gate('canEditOccasions'), (req, res) => {
+app.patch('/api/occasions/:id/toggle-confirm', ...gate('canEditOccasions'), async (req, res) => {
   const id = req.params.id;
   let updatedOccasion: any = null;
-
-  dbStore.save((draft) => {
-    const occ = draft.occasions.find((o) => o.id === id);
-    if (occ) {
-      occ.isConfirmed = !occ.isConfirmed;
-      if (occ.occurrence2027) {
-        occ.occurrence2027.isVerified = occ.isConfirmed;
-      }
-      updatedOccasion = occ;
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        const occ = draft.occasions.find((o) => o.id === id);
+        if (occ) {
+          occ.isConfirmed = !occ.isConfirmed;
+          if (occ.occurrence2027) {
+            occ.occurrence2027.isVerified = occ.isConfirmed;
+          }
+          updatedOccasion = occ;
+        }
+      },
+      'TOGGLE_CONFIRM_OCCASION',
+      'OCCASION',
+      id
+    );
+    if (!updatedOccasion) {
+      return res.status(404).json({ error: 'Occasion not found' });
     }
-  }, 'TOGGLE_CONFIRM_OCCASION', 'OCCASION', id);
-
-  if (!updatedOccasion) {
-    return res.status(404).json({ error: 'Occasion not found' });
+    res.json({ success: true, occasion: updatedOccasion });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'toggle confirm failed' });
   }
-  res.json({ success: true, occasion: updatedOccasion });
 });
 
-app.patch('/api/occasions/:id/performed', ...gate('canMarkPerformed'), (req, res) => {
+app.patch('/api/occasions/:id/performed', ...gate('canMarkPerformed'), async (req, res) => {
   const id = req.params.id;
   const { notes, performedBy } = req.body || {};
   let updatedOccasion: any = null;
-
-  dbStore.save((draft) => {
-    const occ = draft.occasions.find((o) => o.id === id);
-    if (occ) {
-      const nextState = !occ.isPerformed;
-      occ.isPerformed = nextState;
-      if (nextState) {
-        occ.performedAt = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        occ.performedBy = performedBy || draft.family?.name || 'Family';
-        occ.performedNotes = notes;
-      } else {
-        occ.performedAt = undefined;
-        occ.performedBy = undefined;
-        occ.performedNotes = undefined;
-      }
-      updatedOccasion = occ;
-    }
-  }, 'TOGGLE_PERFORMED_OCCASION', 'OCCASION', id);
-
-  if (!updatedOccasion) {
-    return res.status(404).json({ error: 'Occasion not found' });
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        const occ = draft.occasions.find((o) => o.id === id);
+        if (occ) {
+          const nextState = !occ.isPerformed;
+          occ.isPerformed = nextState;
+          if (nextState) {
+            occ.performedAt =
+              new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) +
+              ', ' +
+              new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            occ.performedBy = performedBy || draft.family?.name || 'Family';
+            occ.performedNotes = notes;
+          } else {
+            occ.performedAt = undefined;
+            occ.performedBy = undefined;
+            occ.performedNotes = undefined;
+          }
+          updatedOccasion = occ;
+        }
+      },
+      'TOGGLE_PERFORMED_OCCASION',
+      'OCCASION',
+      id
+    );
+    if (!updatedOccasion) return res.status(404).json({ error: 'Occasion not found' });
+    res.json({ success: true, occasion: updatedOccasion });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'performed toggle failed' });
   }
-  res.json({ success: true, occasion: updatedOccasion });
 });
 
-// Memory Photo Endpoints
-app.post('/api/occasions/:id/photos', ...gate('canEditOccasions'), (req, res) => {
+app.post('/api/occasions/:id/photos', ...gate('canEditOccasions'), async (req, res) => {
   const id = req.params.id;
   const photo = req.body;
   if (!photo || !photo.url) {
     return res.status(400).json({ error: 'Photo URL is required' });
   }
-  if (!photo.id) {
-    photo.id = `photo_${Date.now()}`;
-  }
+  if (!photo.id) photo.id = `photo_${Date.now()}`;
   if (!photo.uploadedAt) {
     photo.uploadedAt = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   }
-
   let updatedOccasion: any = null;
-  dbStore.save((draft) => {
-    const occ = draft.occasions.find((o) => o.id === id);
-    if (occ) {
-      if (!occ.memoryPhotos) occ.memoryPhotos = [];
-      occ.memoryPhotos.push(photo);
-      updatedOccasion = occ;
-    }
-  }, 'ADD_MEMORY_PHOTO', 'OCCASION', id);
-
-  if (!updatedOccasion) {
-    return res.status(404).json({ error: 'Occasion not found' });
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        const occ = draft.occasions.find((o) => o.id === id);
+        if (occ) {
+          if (!occ.memoryPhotos) occ.memoryPhotos = [];
+          occ.memoryPhotos.push(photo);
+          updatedOccasion = occ;
+        }
+      },
+      'ADD_MEMORY_PHOTO',
+      'OCCASION',
+      id
+    );
+    if (!updatedOccasion) return res.status(404).json({ error: 'Occasion not found' });
+    res.json({ success: true, occasion: updatedOccasion, photo });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'add photo failed' });
   }
-  res.json({ success: true, occasion: updatedOccasion, photo });
 });
 
-app.delete('/api/occasions/:id/photos/:photoId', ...gate('canEditOccasions'), (req, res) => {
+app.delete('/api/occasions/:id/photos/:photoId', ...gate('canEditOccasions'), async (req, res) => {
   const { id, photoId } = req.params;
   let updatedOccasion: any = null;
-
-  dbStore.save((draft) => {
-    const occ = draft.occasions.find((o) => o.id === id);
-    if (occ && occ.memoryPhotos) {
-      occ.memoryPhotos = occ.memoryPhotos.filter((p) => p.id !== photoId);
-      updatedOccasion = occ;
-    }
-  }, 'DELETE_MEMORY_PHOTO', 'OCCASION', id);
-
-  if (!updatedOccasion) {
-    return res.status(404).json({ error: 'Occasion not found' });
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        const occ = draft.occasions.find((o) => o.id === id);
+        if (occ && occ.memoryPhotos) {
+          occ.memoryPhotos = occ.memoryPhotos.filter((p) => p.id !== photoId);
+          updatedOccasion = occ;
+        }
+      },
+      'DELETE_MEMORY_PHOTO',
+      'OCCASION',
+      id
+    );
+    if (!updatedOccasion) return res.status(404).json({ error: 'Occasion not found' });
+    res.json({ success: true, occasion: updatedOccasion });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'delete photo failed' });
   }
-  res.json({ success: true, occasion: updatedOccasion });
 });
 
-// Members Endpoints
-app.get('/api/members', (req, res) => {
-  const data = dbStore.getData();
-  res.json(data.members);
+app.get('/api/members', async (req, res) => {
+  try {
+    const data = await getBundle(req);
+    res.json(data.members);
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'members load failed' });
+  }
 });
 
-app.post('/api/members', ...gate('canManageMembers'), (req, res) => {
+app.post('/api/members', ...gate('canManageMembers'), async (req, res) => {
   const member = req.body;
   if (!member || !member.name) {
     return res.status(400).json({ error: 'Member name is required' });
   }
-  if (!member.id) {
-    member.id = `mem_${Date.now()}`;
+  if (!member.id) member.id = `mem_${Date.now()}`;
+  try {
+    const data = await getBundle(req);
+    if (!member.familyId) member.familyId = data.family.id;
+    let saved = member;
+    await mutateBundle(
+      req,
+      (draft) => {
+        const idx = draft.members.findIndex((m) => m.id === member.id);
+        if (idx >= 0) {
+          draft.members[idx] = { ...draft.members[idx], ...member, id: member.id };
+          saved = draft.members[idx];
+        } else if (member.authUid) {
+          const byUid = draft.members.findIndex((m) => m.authUid === member.authUid);
+          if (byUid >= 0) {
+            draft.members[byUid] = { ...draft.members[byUid], ...member, id: draft.members[byUid].id };
+            saved = draft.members[byUid];
+          } else {
+            draft.members.push(member);
+          }
+        } else {
+          draft.members.push(member);
+        }
+      },
+      'ADD_MEMBER',
+      'MEMBER',
+      member.id
+    );
+    res.status(201).json({ success: true, member: saved });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'add member failed' });
   }
-
-  dbStore.save((draft) => {
-    const idx = draft.members.findIndex((m) => m.id === member.id);
-    if (idx >= 0) {
-      draft.members[idx] = { ...draft.members[idx], ...member, id: member.id };
-    } else if (member.authUid) {
-      const byUid = draft.members.findIndex((m) => m.authUid === member.authUid);
-      if (byUid >= 0) {
-        draft.members[byUid] = { ...draft.members[byUid], ...member, id: draft.members[byUid].id };
-      } else {
-        draft.members.push(member);
-      }
-    } else {
-      draft.members.push(member);
-    }
-  }, 'ADD_MEMBER', 'MEMBER', member.id);
-
-  res.status(201).json({ success: true, member });
 });
 
-app.put('/api/members/:id', ...gateMemberUpdate(), (req, res) => {
+app.put('/api/members/:id', ...gateMemberUpdate(), async (req, res) => {
   const id = req.params.id;
   const updates = req.body;
   let updatedMember: any = null;
-
-  dbStore.save((draft) => {
-    const idx = draft.members.findIndex((m) => m.id === id);
-    if (idx !== -1) {
-      draft.members[idx] = { ...draft.members[idx], ...updates, id };
-      updatedMember = draft.members[idx];
-    }
-  }, 'UPDATE_MEMBER', 'MEMBER', id);
-
-  if (!updatedMember) {
-    return res.status(404).json({ error: 'Member not found' });
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        const idx = draft.members.findIndex((m) => m.id === id);
+        if (idx !== -1) {
+          draft.members[idx] = { ...draft.members[idx], ...updates, id };
+          updatedMember = draft.members[idx];
+        }
+      },
+      'UPDATE_MEMBER',
+      'MEMBER',
+      id
+    );
+    if (!updatedMember) return res.status(404).json({ error: 'Member not found' });
+    res.json({ success: true, member: updatedMember });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'update member failed' });
   }
-  res.json({ success: true, member: updatedMember });
 });
 
-app.delete('/api/members/:id', ...gate('canManageMembers'), (req, res) => {
+app.delete('/api/members/:id', ...gate('canManageMembers'), async (req, res) => {
   const id = req.params.id;
-  dbStore.save((draft) => {
-    draft.members = draft.members.filter((m) => m.id !== id);
-  }, 'DELETE_MEMBER', 'MEMBER', id);
-
-  res.json({ success: true, message: `Member ${id} removed` });
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        draft.members = draft.members.filter((m) => m.id !== id);
+      },
+      'DELETE_MEMBER',
+      'MEMBER',
+      id
+    );
+    res.json({ success: true, message: `Member ${id} removed` });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'delete member failed' });
+  }
 });
 
-// Lineage Endpoints
-app.get('/api/lineage', (req, res) => {
-  const data = dbStore.getData();
-  res.json(data.lineageMembers);
+app.get('/api/lineage', async (req, res) => {
+  try {
+    const data = await getBundle(req);
+    res.json(data.lineageMembers);
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'lineage load failed' });
+  }
 });
 
-app.put('/api/lineage/:id', ...gate('canEditLineage'), (req, res) => {
+app.put('/api/lineage/:id', ...gate('canEditLineage'), async (req, res) => {
   const id = req.params.id;
   const updates = req.body;
   let updatedLineageMember: any = null;
-
-  dbStore.save((draft) => {
-    const idx = draft.lineageMembers.findIndex((m) => m.id === id);
-    if (idx !== -1) {
-      draft.lineageMembers[idx] = { ...draft.lineageMembers[idx], ...updates, id };
-      updatedLineageMember = draft.lineageMembers[idx];
-    }
-  }, 'UPDATE_LINEAGE', 'LINEAGE', id);
-
-  if (!updatedLineageMember) {
-    return res.status(404).json({ error: 'Lineage member not found' });
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        const idx = draft.lineageMembers.findIndex((m) => m.id === id);
+        if (idx !== -1) {
+          draft.lineageMembers[idx] = { ...draft.lineageMembers[idx], ...updates, id };
+          updatedLineageMember = draft.lineageMembers[idx];
+        }
+      },
+      'UPDATE_LINEAGE',
+      'LINEAGE',
+      id
+    );
+    if (!updatedLineageMember) return res.status(404).json({ error: 'Lineage member not found' });
+    res.json({ success: true, member: updatedLineageMember });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'update lineage failed' });
   }
-  res.json({ success: true, member: updatedLineageMember });
 });
 
-// People (ancestors / named persons linked to occasions)
-app.get('/api/people', (req, res) => {
-  const data = dbStore.getData();
-  res.json(data.people);
+app.get('/api/people', async (req, res) => {
+  try {
+    const data = await getBundle(req);
+    res.json(data.people);
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'people load failed' });
+  }
 });
 
-app.post('/api/people', ...gate('canCreateOccasions'), (req, res) => {
+app.post('/api/people', ...gate('canCreateOccasions'), async (req, res) => {
   const person = req.body;
   if (!person || !person.name) {
     return res.status(400).json({ error: 'Person name is required' });
   }
-  if (!person.id) {
-    person.id = `per_${Date.now()}`;
+  if (!person.id) person.id = `per_${Date.now()}`;
+  try {
+    const data = await getBundle(req);
+    if (!person.familyId) person.familyId = data.family.id;
+    await mutateBundle(
+      req,
+      (draft) => {
+        const idx = draft.people.findIndex((p) => p.id === person.id);
+        if (idx >= 0) {
+          draft.people[idx] = { ...draft.people[idx], ...person, id: person.id };
+        } else {
+          draft.people.push(person);
+        }
+      },
+      'ADD_PERSON',
+      'PERSON',
+      person.id
+    );
+    res.status(201).json({ success: true, person });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'add person failed' });
   }
-  const data = dbStore.getData();
-  if (!person.familyId) {
-    person.familyId = data.family.id;
-  }
-
-  dbStore.save((draft) => {
-    const idx = draft.people.findIndex((p) => p.id === person.id);
-    if (idx >= 0) {
-      draft.people[idx] = { ...draft.people[idx], ...person, id: person.id };
-    } else {
-      draft.people.push(person);
-    }
-  }, 'ADD_PERSON', 'PERSON', person.id);
-
-  res.status(201).json({ success: true, person });
 });
 
-app.put('/api/people/:id', ...gate('canEditOccasions'), (req, res) => {
+app.put('/api/people/:id', ...gate('canEditOccasions'), async (req, res) => {
   const id = req.params.id;
   const updates = req.body;
   let updated: any = null;
-
-  dbStore.save((draft) => {
-    const idx = draft.people.findIndex((p) => p.id === id);
-    if (idx !== -1) {
-      draft.people[idx] = { ...draft.people[idx], ...updates, id };
-      updated = draft.people[idx];
-    }
-  }, 'UPDATE_PERSON', 'PERSON', id);
-
-  if (!updated) {
-    return res.status(404).json({ error: 'Person not found' });
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        const idx = draft.people.findIndex((p) => p.id === id);
+        if (idx !== -1) {
+          draft.people[idx] = { ...draft.people[idx], ...updates, id };
+          updated = draft.people[idx];
+        }
+      },
+      'UPDATE_PERSON',
+      'PERSON',
+      id
+    );
+    if (!updated) return res.status(404).json({ error: 'Person not found' });
+    res.json({ success: true, person: updated });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'update person failed' });
   }
-  res.json({ success: true, person: updated });
 });
 
-app.delete('/api/people/:id', ...gate('canDeleteOccasions'), (req, res) => {
+app.delete('/api/people/:id', ...gate('canDeleteOccasions'), async (req, res) => {
   const id = req.params.id;
-  dbStore.save((draft) => {
-    draft.people = draft.people.filter((p) => p.id !== id);
-  }, 'DELETE_PERSON', 'PERSON', id);
-  res.json({ success: true, message: `Person ${id} removed` });
-});
-
-// User Profiles (Persistent in storage file)
-app.get('/api/users', (req, res) => {
-  const data = dbStore.getData();
-  res.json(Object.values(data.users));
-});
-
-app.get('/api/users/:uid', (req, res) => {
-  const data = dbStore.getData();
-  const profile = data.users[req.params.uid];
-  if (!profile) {
-    return res.status(404).json({ error: 'User not found' });
+  try {
+    await mutateBundle(
+      req,
+      (draft) => {
+        draft.people = draft.people.filter((p) => p.id !== id);
+      },
+      'DELETE_PERSON',
+      'PERSON',
+      id
+    );
+    res.json({ success: true, message: `Person ${id} removed` });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'delete person failed' });
   }
-  res.json(profile);
 });
 
-app.post('/api/users', (req, res) => {
+app.get('/api/users', async (_req, res) => {
+  try {
+    res.json(await fetchUsers());
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'users load failed' });
+  }
+});
+
+app.get('/api/users/:uid', async (req, res) => {
+  try {
+    const profile = await fetchUser(req.params.uid);
+    if (!profile) return res.status(404).json({ error: 'User not found' });
+    res.json(profile);
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'user load failed' });
+  }
+});
+
+app.post('/api/users', async (req, res) => {
   const profileData = req.body;
   if (!profileData || !profileData.uid || !profileData.username) {
     return res.status(400).json({ error: 'Missing required profile fields (uid, username)' });
   }
-
-  let savedProfile: any = null;
-  dbStore.save((draft) => {
-    const existing = draft.users[profileData.uid] || {};
-    draft.users[profileData.uid] = {
+  try {
+    const existing = (await fetchUser(profileData.uid)) || {};
+    const savedProfile = await saveUser({
       ...existing,
       ...profileData,
       updatedAt: new Date().toISOString(),
-    };
-    savedProfile = draft.users[profileData.uid];
-  }, 'SAVE_USER_PROFILE', 'USER', profileData.uid);
-
-  res.json({ success: true, profile: savedProfile });
+    });
+    res.json({ success: true, profile: savedProfile });
+  } catch (err: unknown) {
+    res.status(500).json({ error: err instanceof Error ? err.message : 'save user failed' });
+  }
 });
 
 // Helper to wait

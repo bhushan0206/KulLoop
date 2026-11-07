@@ -70,7 +70,7 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
   };
 
   const handleReset = async () => {
-    if (confirm('Reset the database to an empty family template? Your saved occasions and members in the JSON store will be cleared.')) {
+    if (confirm('Reset the active family ledger to an empty template? Occasions and members in Firestore (or memory fallback) will be cleared.')) {
       setResetting(true);
       const ok = await resetDatabaseToDefaults();
       setResetting(false);
@@ -120,20 +120,20 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
             <div className="flex items-center justify-between text-xs text-stone-600 font-medium">
               <div className="flex items-center gap-1.5">
                 <HardDrive className="w-4 h-4 text-amber-600" />
-                <span>Backend File System Path</span>
+                <span>Persistence target</span>
               </div>
               <span className="font-mono text-stone-500 bg-stone-200/60 px-2 py-0.5 rounded text-[11px]">
-                Node / Express / Linux FS
+                Firestore Admin / Express
               </span>
             </div>
 
             <div className="bg-stone-900 text-stone-100 font-mono text-xs p-3 rounded-lg flex items-center justify-between overflow-x-auto">
               <span className="text-amber-300 select-all">
-                {status?.persistenceFile || '/data/kulloop_store.json'}
+                {status?.persistenceFile || 'firestore:families/…'}
               </span>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(status?.persistenceFile || '/data/kulloop_store.json');
+                  navigator.clipboard.writeText(status?.persistenceFile || 'firestore');
                   setCopySuccess(true);
                   setTimeout(() => setCopySuccess(false), 2000);
                 }}
@@ -179,7 +179,7 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
                 Storage Driver:
               </span>
               <span className="font-semibold text-stone-800">
-                {status?.driver || 'file-json-persistent-engine'}
+                {status?.driver || 'firestore-admin'}
               </span>
             </div>
 

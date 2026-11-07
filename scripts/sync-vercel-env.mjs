@@ -80,6 +80,7 @@ const KEYS = [
   'GEMINI_API_KEY',
   'FIREBASE_PROJECT_ID',
   'FIREBASE_SERVICE_ACCOUNT_JSON',
+  'FIRESTORE_DATABASE_ID',
   'VITE_FIREBASE_PROJECT_ID',
   'VITE_FIREBASE_API_KEY',
   'VITE_FIREBASE_AUTH_DOMAIN',
@@ -110,6 +111,9 @@ if (!local.CRON_SECRET) {
   console.log('Generated CRON_SECRET → local .env');
 }
 if (!local.FIREBASE_PROJECT_ID) local.FIREBASE_PROJECT_ID = local.VITE_FIREBASE_PROJECT_ID;
+if (!local.FIRESTORE_DATABASE_ID && local.VITE_FIREBASE_DATABASE_ID) {
+  local.FIRESTORE_DATABASE_ID = local.VITE_FIREBASE_DATABASE_ID;
+}
 if (!local.APP_URL || local.APP_URL.includes('localhost')) {
   local.APP_URL = 'https://kulloop.vercel.app';
 }

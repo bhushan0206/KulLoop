@@ -52,7 +52,7 @@ export interface DbStatusResponse {
   auditLogCount: number;
 }
 
-// Fetch all family data from the server JSON store (canonical). Optional Firestore mirror is write-only.
+// Fetch all family data from the server (Firestore-backed when Admin credentials are set).
 export async function fetchInitialDatabase(): Promise<DatabaseAllResponse | null> {
   try {
     const res = await fetch(apiUrl('/api/db/all'));

@@ -1,7 +1,8 @@
-import { dbStore } from './storage';
+import { getAllBundlesForCron, mutateBundle, isFirestoreCanonical } from './kulloopStore';
 import { sendEmail } from './mailer';
 import { sendFcmToToken } from './pushMessaging';
 import { FamilyOccasion, Member, RitualReminderCategory } from '../src/types';
+import type { DatabaseSchema } from './storage';
 
 /** WhatsApp Cloud / Business API is intentionally off — click-to-chat only in the product UI. */
 const ENABLE_WHATSAPP_BUSINESS_API = process.env.ENABLE_WHATSAPP === 'true';
@@ -52,7 +53,6 @@ function memberEmail(member: Member): string | undefined {
 }
 
 function isRealPushToken(token: string): boolean {
-  // Web “pseudo” tokens are permission markers, not FCM device tokens
   return Boolean(token) && !token.startsWith('web_');
 }
 
@@ -84,17 +84,12 @@ function buildReminderHtml(opts: {
   `;
 }
 
-export async function runReminderWorker(): Promise<string[]> {
-  const logs: string[] = [];
-  logs.push('Running reminder worker (email + FCM; WhatsApp auto-send off)…');
-
+async function processFamilyBundle(data: DatabaseSchema, logs: string[]): Promise<void> {
   const now = new Date();
-  const data = dbStore.getData();
-  const allOccasions = data.occasions;
   const members = data.members.filter((m) => m.status === 'active');
   const pushDevices = data.pushDevices || [];
-
   const dispatchLog = [...(data.reminderDispatchLog || [])];
+  const initialLen = dispatchLog.length;
 
   for (const member of members) {
     const windows = leadWindowsForMember(member);
@@ -107,7 +102,7 @@ export async function runReminderWorker(): Promise<string[]> {
           (member.email && d.uid === member.email))
     );
 
-    for (const occ of allOccasions) {
+    for (const occ of data.occasions) {
       const days = daysUntil(occ, now);
       if (days === null || days < 0) continue;
       if (!windows.includes(days)) continue;
@@ -117,7 +112,7 @@ export async function runReminderWorker(): Promise<string[]> {
 
       const key = dispatchKey(member.id, occ.id, days);
       if (wasAlreadySent(dispatchLog, key)) {
-        logs.push(`Skip duplicate ${key}`);
+        logs.push(`Skip duplicate ${data.family.id}/${key}`);
         continue;
       }
 
@@ -174,13 +169,12 @@ export async function runReminderWorker(): Promise<string[]> {
       }
 
       if (ENABLE_WHATSAPP_BUSINESS_API && prefs.whatsapp && member.phone) {
-        // Reserved for a future Business API / SMS phase — never marks the window as delivered alone.
         logs.push(`[WhatsApp Business API stub] ${member.phone} ${occ.title} ${leadLabel}`);
       }
 
       if (!attempted) {
         logs.push(
-          `No automated channel for ${key} (email/push off or missing; WhatsApp is share-yourself only)`
+          `No automated channel for ${data.family.id}/${key} (email/push off or missing; WhatsApp is share-yourself only)`
         );
         continue;
       }
@@ -188,18 +182,43 @@ export async function runReminderWorker(): Promise<string[]> {
       if (succeeded) {
         dispatchLog.push(key);
       } else {
-        logs.push(`Delivery failed for ${key} — will retry next cron`);
+        logs.push(`Delivery failed for ${data.family.id}/${key} — will retry next cron`);
       }
     }
   }
 
-  if (dispatchLog.length !== (data.reminderDispatchLog || []).length) {
-    dbStore.save((draft) => {
-      draft.reminderDispatchLog = dispatchLog.slice(-5000);
-    }, 'REMINDER_DISPATCH', 'SYSTEM', 'worker');
+  if (dispatchLog.length !== initialLen) {
+    await mutateBundle(
+      undefined,
+      (draft) => {
+        draft.reminderDispatchLog = dispatchLog.slice(-5000);
+      },
+      'REMINDER_DISPATCH',
+      'SYSTEM',
+      'worker',
+      data.family.id
+    );
+  }
+}
+
+export async function runReminderWorker(): Promise<string[]> {
+  const logs: string[] = [];
+  logs.push(
+    `Running reminder worker (email + FCM; store=${isFirestoreCanonical() ? 'firestore' : 'memory'}; WhatsApp auto-send off)…`
+  );
+
+  const bundles = await getAllBundlesForCron();
+  if (bundles.length === 0) {
+    logs.push('No families in store — nothing to remind.');
+    return logs;
   }
 
-  logs.push(`Done. Members=${members.length}, occasions=${allOccasions.length}`);
+  for (const data of bundles) {
+    logs.push(`Family ${data.family.name} (${data.family.id}) members=${data.members.length} occasions=${data.occasions.length}`);
+    await processFamilyBundle(data, logs);
+  }
+
+  logs.push(`Done. Families=${bundles.length}`);
   return logs;
 }
 

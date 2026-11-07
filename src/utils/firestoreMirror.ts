@@ -1,4 +1,4 @@
-/** Optional Firestore mirror — off by default; server JSON store is canonical. */
+/** Optional client-side Firestore writes — off by default. Server Admin SDK is canonical; keep mirror off unless rules allow. */
 export function isFirestoreMirrorEnabled(): boolean {
   return import.meta.env.VITE_FIRESTORE_MIRROR === 'true';
 }

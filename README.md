@@ -97,7 +97,7 @@ Mutations on `/api/family`, `/api/occasions`, `/api/members`, and `/api/lineage`
 
 ### Scheduled reminders (email + FCM)
 
-The server runs `runReminderWorker` on an interval (`REMINDER_CRON_MS`, default 6h). It matches each member's `leadTime` (7+2, 7, 2, day_of) to upcoming occasions and sends **email and/or FCM** when category prefs allow. Failed deliveries are **not** deduped so the next tick can retry. WhatsApp preferences do **not** trigger automated Business API sends. Dedup keys live in `reminderDispatchLog` in `data/kulloop_store.json`. Manual run: `POST /api/reminders/trigger` (configurator / co_karta).
+The server runs `runReminderWorker` on an interval (`REMINDER_CRON_MS`, default 6h). It matches each member's `leadTime` (7+2, 7, 2, day_of) to upcoming occasions and sends **email and/or FCM** when category prefs allow. Failed deliveries are **not** deduped so the next tick can retry. WhatsApp preferences do **not** trigger automated Business API sends. Dedup keys live in Firestore `families/{id}/meta/reminderDispatch`. Manual run: `POST /api/reminders/trigger` (configurator / co_karta).
 
 ---
 
@@ -106,10 +106,10 @@ The server runs `runReminderWorker` on an interval (`REMINDER_CRON_MS`, default 
 - **Frontend**: React 19, TypeScript, Tailwind CSS v4, Lucide Icons, Motion
 - **Backend**: Node.js, Express, tsx
 - **AI / LLM**: Google Gemini API (`@google/genai`)
-- **Database / Auth**: Server JSON store (`data/kulloop_store.json`, created on boot), Google Auth; optional Firestore mirror via `VITE_FIRESTORE_MIRROR=true`
+- **Database / Auth**: **Cloud Firestore** (Admin SDK, canonical family ledger) + Google Auth; in-memory fallback only when no service account is configured
 - **Communications**: Nodemailer, WhatsApp Web Link generator, FCM (optional)
 
-Copy `data/kulloop_store.example.json` only if you need a starter file; the server creates an empty store automatically. Do not commit live `kulloop_store.json` (it may contain family PII).
+Migrate a legacy local JSON backup once with `npm run migrate:firestore`. Do not commit service accounts or live family PII.
 
 ---
 

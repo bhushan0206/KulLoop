@@ -1,5 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let adminApp: any = null;
@@ -14,7 +17,12 @@ function projectIdFromEnv(): string | undefined {
   );
 }
 
-/** Shared firebase-admin bootstrap for FCM + ID token verification. */
+function loadAdmin() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('firebase-admin');
+}
+
+/** Shared firebase-admin bootstrap for FCM + Firestore + ID token verification. */
 export function tryInitFirebaseAdmin(): boolean {
   if (adminApp) return true;
   if (initAttempted) return false;
@@ -25,8 +33,7 @@ export function tryInitFirebaseAdmin(): boolean {
   const projectId = projectIdFromEnv();
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const admin = require('firebase-admin');
+    const admin = loadAdmin();
 
     // Prefer inline JSON on Vercel/serverless (no durable filesystem for secrets/)
     if (jsonRaw) {
@@ -47,6 +54,9 @@ export function tryInitFirebaseAdmin(): boolean {
         credential: admin.credential.cert(serviceAccount),
         projectId: serviceAccount.project_id || projectId,
       });
+      console.info(
+        `[firebase-admin] Initialized with service account file (${serviceAccount.client_email || jsonPath})`
+      );
       return true;
     }
 
@@ -58,6 +68,7 @@ export function tryInitFirebaseAdmin(): boolean {
     }
   } catch (err) {
     console.warn('[firebase-admin] init failed:', err);
+    initAttempted = false;
   }
   return false;
 }
@@ -72,8 +83,7 @@ export async function verifyFirebaseIdToken(
 ): Promise<{ uid: string; email?: string; name?: string } | null> {
   if (!tryInitFirebaseAdmin() || !adminApp) return null;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const admin = require('firebase-admin');
+    const admin = loadAdmin();
     const decoded = await admin.auth().verifyIdToken(idToken);
     return {
       uid: decoded.uid as string,
@@ -88,4 +98,8 @@ export async function verifyFirebaseIdToken(
 
 export function isFirebaseAdminReady(): boolean {
   return tryInitFirebaseAdmin();
+}
+
+export function getFirebaseAdminModule() {
+  return loadAdmin();
 }
