@@ -186,12 +186,19 @@ export async function resolveFamilyId(opts: {
     }
   }
 
+  const familyIdFromMemberDoc = (doc: { ref: { parent?: { parent?: { id?: string; path?: string } }; path?: string } }) => {
+    // Prefer nested families/{familyId}/members/{id} — ignore legacy top-level members/*
+    const familyRef = doc.ref.parent?.parent;
+    if (familyRef?.path?.startsWith('families/')) return familyRef.id;
+    return null;
+  };
+
   if (opts.uid) {
     try {
-      const byUid = await db.collectionGroup('members').where('authUid', '==', opts.uid).limit(1).get();
-      if (!byUid.empty) {
-        const parent = byUid.docs[0].ref.parent.parent;
-        if (parent) return parent.id;
+      const byUid = await db.collectionGroup('members').where('authUid', '==', opts.uid).limit(10).get();
+      for (const doc of byUid.docs) {
+        const fid = familyIdFromMemberDoc(doc);
+        if (fid) return fid;
       }
     } catch (err) {
       console.warn('[firestore] members.authUid collectionGroup query failed (index?):', err);
@@ -201,10 +208,10 @@ export async function resolveFamilyId(opts: {
   if (opts.email) {
     const email = opts.email.trim().toLowerCase();
     try {
-      const byEmail = await db.collectionGroup('members').where('email', '==', email).limit(1).get();
-      if (!byEmail.empty) {
-        const parent = byEmail.docs[0].ref.parent.parent;
-        if (parent) return parent.id;
+      const byEmail = await db.collectionGroup('members').where('email', '==', email).limit(10).get();
+      for (const doc of byEmail.docs) {
+        const fid = familyIdFromMemberDoc(doc);
+        if (fid) return fid;
       }
     } catch (err) {
       console.warn('[firestore] members.email collectionGroup query failed (index?):', err);
