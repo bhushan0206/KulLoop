@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { apiUrl } from '../utils/apiBase';
 import { Mic, Square, Volume2, Loader2 } from 'lucide-react';
 
 interface VoiceAssistantProps {
@@ -40,7 +41,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ onTranscript, on
     reader.onloadend = async () => {
       const base64Audio = reader.result?.toString().split(',')[1];
       try {
-        const response = await fetch('/api/gemini/transcribe', {
+        const response = await fetch(apiUrl('/api/gemini/transcribe'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ audioBase64: base64Audio, mimeType: 'audio/webm' }),

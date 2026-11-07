@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { apiUrl } from '../utils/apiBase';
 import { 
   X, 
   MessageSquare, 
@@ -14,7 +15,10 @@ import {
   ShieldCheck,
   CalendarCheck
 } from 'lucide-react';
-import { FamilyOccasion, Family } from '../types';
+import { FamilyOccasion, Family, LanguageCode } from '../types';
+import { formatTithiLabel } from '../utils/occasionDisplay';
+import { registerForPushAlerts, sendTestPush } from '../services/pushNotifications';
+import type { PushBridgeContext } from '../services/pushNotifications';
 import { exportFamilyRecordToICS, downloadFile } from '../utils/tithiCalculator';
 import { cleanPhoneNumber, openWhatsAppDirect } from '../utils/whatsapp';
 
@@ -25,6 +29,7 @@ interface NotificationHubModalProps {
   family: Family;
   members?: import('../types').Member[];
   activeOccasion?: FamilyOccasion | null;
+  pushContext?: PushBridgeContext;
 }
 
 export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
@@ -34,6 +39,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
   family,
   members = [],
   activeOccasion,
+  pushContext,
 }) => {
   const [activeTab, setActiveTab] = useState<'whatsapp' | 'calendar' | 'email' | 'push'>('whatsapp');
   const [selectedOccasionId, setSelectedOccasionId] = useState<string>(
@@ -41,7 +47,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
   );
   const [targetPhone, setTargetPhone] = useState<string>(family.configuratorPhone || '');
   const [targetEmail, setTargetEmail] = useState<string>('');
-  const [selectedLang, setSelectedLang] = useState<'marathi' | 'hindi' | 'english'>('marathi');
+  const [selectedLang, setSelectedLang] = useState<LanguageCode>('mr');
   const [copied, setCopied] = useState<boolean>(false);
   const [pushStatus, setPushStatus] = useState<'default' | 'granted' | 'denied'>(
     typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
@@ -61,18 +67,18 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
     }
 
     const dateStr = occ.occurrence2027?.gregorianDateStr || 'Upcoming';
-    const dayStr = occ.occurrence2027?.dayOfWeek || '';
-    const tithiName = occ.tithiDefinition?.name || occ.title;
+    const dayStr = occ.occurrence2027?.weekday || '';
+    const tithiName = formatTithiLabel(occ);
     const sunrise = occ.occurrence2027?.sunriseTime || '06:50 AM';
 
-    if (selectedLang === 'marathi') {
+    if (selectedLang === 'mr') {
       return `🙏 *${familyDisplayName} परिवार स्मरण पत्र*\n\n` +
         `*कार्य*: ${occ.title}\n` +
         `*दिनांक*: ${dateStr} (${dayStr})\n` +
         `*तिथी*: ${tithiName}\n` +
         `*वेळ / सूर्योदय*: ${sunrise} (${family.homeLocation || 'पुणे'})\n\n` +
         `कृपया सर्वांनी नोंद घ्यावी. अधिक माहिती व संकल्पासाठी KulLoop वर पहा.`;
-    } else if (selectedLang === 'hindi') {
+    } else if (selectedLang === 'hi') {
       return `🙏 *${familyDisplayName} परिवार स्मरण पत्र*\n\n` +
         `*कार्य*: ${occ.title}\n` +
         `*तारीख*: ${dateStr} (${dayStr})\n` +
@@ -117,7 +123,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
     const dateFormatted = dateStr.replace(/-/g, '');
     const title = encodeURIComponent(`${familyDisplayName}: ${currentOccasion.title}`);
     const details = encodeURIComponent(
-      `Tithi: ${currentOccasion.tithiDefinition?.name}\nLocation: ${family.homeLocation}\nSunrise: ${currentOccasion.occurrence2027?.sunriseTime}\nRitual Notes: ${currentOccasion.ritualNotes || 'Family ritual observance'}`
+      `Tithi: ${formatTithiLabel(currentOccasion)}\nLocation: ${family.homeLocation}\nSunrise: ${currentOccasion.occurrence2027?.sunriseTime}\nRitual Notes: ${currentOccasion.practiceNotes || 'Family ritual observance'}`
     );
     const location = encodeURIComponent(family.homeLocation || 'India');
     const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${dateFormatted}/${dateFormatted}&details=${details}&location=${location}`;
@@ -125,17 +131,26 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
   };
 
   const handleRequestPushPermission = async () => {
-    if (!('Notification' in window)) {
-      alert('This browser does not support desktop notifications.');
+    const result = await registerForPushAlerts(pushContext || {});
+    if (result.platform === 'web') {
+      setPushStatus(result.permission);
+      if (result.permission === 'granted') {
+        new Notification(`KulLoop: ${familyDisplayName} Connected!`, {
+          body: 'You will receive timely ritual and tithi alerts directly on this device with zero fee.',
+          icon: '/favicon.ico',
+        });
+        const testMsg = await sendTestPush(pushContext?.uid);
+        if (testMsg) alert(testMsg);
+      }
       return;
     }
-    const permission = await Notification.requestPermission();
-    setPushStatus(permission);
-    if (permission === 'granted') {
-      new Notification(`KulLoop: ${familyDisplayName} Connected!`, {
-        body: 'You will receive timely ritual and tithi alerts directly on this device with zero fee.',
-        icon: '/favicon.ico',
-      });
+    if (result.registered) {
+      setPushStatus('granted');
+      const testMsg = await sendTestPush(pushContext?.uid);
+      alert([result.message, testMsg].filter(Boolean).join(' '));
+    } else {
+      setPushStatus('denied');
+      alert(result.message || 'Could not enable push on this device.');
     }
   };
 
@@ -144,7 +159,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
     if (!targetEmail) return;
     setEmailStatus('Connecting to email dispatch service...');
     try {
-      const res = await fetch('/api/reminders/send-email', {
+      const res = await fetch(apiUrl('/api/reminders/send-email'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -152,7 +167,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
           familyName: familyDisplayName,
           occasionTitle: currentOccasion?.title,
           dateStr: currentOccasion?.occurrence2027?.gregorianDateStr,
-          tithiName: currentOccasion?.tithiDefinition?.name,
+          tithiName: currentOccasion ? formatTithiLabel(currentOccasion) : undefined,
         }),
       });
       const data = await res.json();
@@ -285,17 +300,23 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
               {/* Language Selector */}
               <div className="flex items-center gap-2">
                 <span className="text-xs font-medium text-stone-600">Language:</span>
-                {(['marathi', 'hindi', 'english'] as const).map((lang) => (
+                {(
+                  [
+                    { code: 'mr' as const, label: 'Marathi' },
+                    { code: 'hi' as const, label: 'Hindi' },
+                    { code: 'en' as const, label: 'English' },
+                  ] as const
+                ).map(({ code, label }) => (
                   <button
-                    key={lang}
-                    onClick={() => setSelectedLang(lang)}
-                    className={`px-2.5 py-1 text-xs rounded-lg font-medium capitalize transition-colors ${
-                      selectedLang === lang
+                    key={code}
+                    onClick={() => setSelectedLang(code)}
+                    className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors ${
+                      selectedLang === code
                         ? 'bg-emerald-600 text-white'
                         : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                     }`}
                   >
-                    {lang}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -327,7 +348,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
                             type="button"
                             onClick={() => {
                               setTargetPhone(m.phone);
-                              if (m.language === 'marathi' || m.language === 'hindi' || m.language === 'english') {
+                              if (m.language === 'mr' || m.language === 'hi' || m.language === 'en') {
                                 setSelectedLang(m.language);
                               }
                             }}
@@ -498,7 +519,7 @@ export const NotificationHubModal: React.FC<NotificationHubModalProps> = ({
                       <div className="border border-stone-200 rounded-lg p-3 space-y-1">
                         <div className="text-xs font-bold text-amber-900">{currentOccasion?.title}</div>
                         <div className="text-[11px] text-stone-600"><strong>Date:</strong> {currentOccasion?.occurrence2027?.gregorianDateStr || '2027'}</div>
-                        <div className="text-[11px] text-stone-600"><strong>Tithi:</strong> {currentOccasion?.tithiDefinition?.name || 'Traditional Timing'}</div>
+                        <div className="text-[11px] text-stone-600"><strong>Tithi:</strong> {currentOccasion ? formatTithiLabel(currentOccasion) : 'Traditional Timing'}</div>
                         <div className="text-[11px] text-stone-600"><strong>Sunrise:</strong> {currentOccasion?.occurrence2027?.sunriseTime || '06:50 AM'} ({family.homeLocation})</div>
                         <div className="text-[10px] text-stone-500 pt-1 italic">Sent with zero charges via your configured KulLoop Notification Hub.</div>
                       </div>

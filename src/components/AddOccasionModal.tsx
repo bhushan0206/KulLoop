@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   OccasionType, 
   RecurrenceType, 
@@ -10,7 +10,7 @@ import {
   TITHI_NAMES, 
   AVAILABLE_FESTIVALS, 
   AVAILABLE_VRATS 
-} from '../data/mockData';
+} from '../data/referenceCatalog';
 import { estimateTithiFromDate } from '../utils/tithiCalculator';
 import { X, Sparkles, AlertCircle, CheckCircle } from 'lucide-react';
 
@@ -57,9 +57,17 @@ export const AddOccasionModal: React.FC<AddOccasionModalProps> = ({
 
   // Confirmation & Notes
   const [isConfirmed, setIsConfirmed] = useState(true);
-  const [confirmedSource, setConfirmedSource] = useState('Aaji (Grandmother) & Printed Almanan');
+  const [confirmedSource, setConfirmedSource] = useState('');
   const [practiceNotes, setPracticeNotes] = useState('');
   const [establishedYear, setEstablishedYear] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      setConfirmedSource(
+        family.consultedEntity || family.validationSource || 'Family elder or printed panchang'
+      );
+    }
+  }, [isOpen, family.consultedEntity, family.validationSource]);
 
   if (!isOpen) return null;
 
@@ -239,7 +247,13 @@ export const AddOccasionModal: React.FC<AddOccasionModalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder={occasionType === 'shraddha' ? 'e.g. Late Vasant Joshi (कै. वसंत जोशी)' : occasionType === 'custom' ? 'e.g. Annual Family Pilgrimage' : 'e.g. Malati Joshi'}
+                  placeholder={
+                    occasionType === 'shraddha'
+                      ? 'e.g. Late [Name] (दिवंगत आजोबा / आजी)'
+                      : occasionType === 'custom'
+                        ? 'e.g. Annual family pilgrimage'
+                        : 'e.g. Family member name'
+                  }
                   value={personName}
                   onChange={(e) => setPersonName(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500"
@@ -506,7 +520,7 @@ export const AddOccasionModal: React.FC<AddOccasionModalProps> = ({
                 type="text"
                 value={confirmedSource}
                 onChange={(e) => setConfirmedSource(e.target.value)}
-                placeholder="e.g. Aaji, Family Priest Pt. Joshi, Datar Panchang"
+                placeholder="e.g. Family elder, pandit, or panchang name"
                 className="w-full px-3 py-1.5 text-xs bg-white border border-stone-300 rounded-lg"
               />
             </div>

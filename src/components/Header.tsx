@@ -15,7 +15,9 @@ import {
   Users,
   GitBranch,
   ShieldCheck,
-  Tag
+  Tag,
+  Accessibility,
+  LayoutGrid
 } from 'lucide-react';
 import { UserProfile } from '../services/firebase';
 
@@ -31,6 +33,12 @@ interface HeaderProps {
   onExitDemo?: () => void;
   isDemoMode?: boolean;
   currentUser: UserProfile;
+  elderMode?: boolean;
+  onToggleElderMode?: () => void;
+  canCreateOccasions?: boolean;
+  canShareInvite?: boolean;
+  simpleLayout?: boolean;
+  onToggleSimpleLayout?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -45,10 +53,16 @@ export const Header: React.FC<HeaderProps> = ({
   onExitDemo,
   isDemoMode,
   currentUser,
+  elderMode,
+  onToggleElderMode,
+  canCreateOccasions = true,
+  canShareInvite = true,
+  simpleLayout,
+  onToggleSimpleLayout,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const navItems = [
+  const allNavItems = [
     { key: 'overview' as const, label: 'Home', icon: Home },
     { key: 'occasions' as const, label: 'Occasions', icon: Calendar },
     { key: 'whatsapp' as const, label: 'WhatsApp', icon: MessageSquare },
@@ -57,6 +71,12 @@ export const Header: React.FC<HeaderProps> = ({
     { key: 'calendar' as const, label: 'Annual Calendar', icon: Calendar },
     { key: 'pricing' as const, label: 'Pricing (Pilot)', icon: Tag },
   ];
+
+  const navItems = simpleLayout
+    ? allNavItems.filter((i) =>
+        ['overview', 'occasions', 'tree', 'members'].includes(i.key)
+      )
+    : allNavItems;
 
   const handleSelectNav = (tab: typeof activeTab) => {
     setActiveTab(tab);
@@ -126,7 +146,42 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
+            {onToggleSimpleLayout && (
+              <button
+                type="button"
+                onClick={onToggleSimpleLayout}
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[36px] ${
+                  simpleLayout
+                    ? 'bg-stone-100 text-stone-900 border-stone-300'
+                    : 'text-stone-300 bg-stone-800/90 hover:bg-stone-700/90 border-stone-700'
+                }`}
+                title="Fewer buttons — easier for all ages"
+                aria-pressed={simpleLayout}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" aria-hidden />
+                <span className="hidden lg:inline">Simple</span>
+              </button>
+            )}
+
+            {onToggleElderMode && (
+              <button
+                type="button"
+                onClick={onToggleElderMode}
+                className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg border transition-colors whitespace-nowrap shrink-0 cursor-pointer min-h-[36px] ${
+                  elderMode
+                    ? 'bg-amber-400 text-stone-950 border-amber-300'
+                    : 'text-stone-300 bg-stone-800/90 hover:bg-stone-700/90 border-stone-700'
+                }`}
+                title="Larger text and simpler home screen for elders"
+                aria-pressed={elderMode}
+              >
+                <Accessibility className="w-3.5 h-3.5" aria-hidden />
+                <span className="hidden lg:inline">Elder mode</span>
+              </button>
+            )}
+
             {/* Share Family Calendar on WhatsApp */}
+            {canShareInvite && (
             <button
               onClick={onOpenShareModal}
               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-emerald-300 bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer shadow-2xs"
@@ -135,6 +190,7 @@ export const Header: React.FC<HeaderProps> = ({
               <Share2 className="w-3.5 h-3.5 text-emerald-400" />
               <span className="hidden md:inline">Share</span>
             </button>
+            )}
 
             {/* Zero-Cost Notification & Reminder Hub */}
             {onOpenRemindersModal && (
@@ -180,7 +236,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </button>
 
-            {/* Primary Action Button */}
+            {canCreateOccasions && (
             <button
               onClick={onOpenAddModal}
               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors whitespace-nowrap shrink-0 shadow-sm cursor-pointer"
@@ -188,25 +244,28 @@ export const Header: React.FC<HeaderProps> = ({
               <PlusCircle className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Add</span>
             </button>
+            )}
           </div>
         </div>
 
-        {/* Secondary navigation strip (visible below xl breakpoint) */}
-        <div className="flex xl:hidden items-center overflow-x-auto py-2 text-xs border-t border-stone-800 gap-1.5 no-scrollbar">
-          {navItems.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => handleSelectNav(item.key)}
-              className={`whitespace-nowrap px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
-                activeTab === item.key 
-                  ? 'bg-amber-400 text-stone-950 font-semibold shadow-xs' 
-                  : 'text-stone-300 hover:text-white hover:bg-stone-800'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        {/* Secondary navigation — hidden in Simple layout (use bottom nav + More) */}
+        {!simpleLayout && (
+          <div className="flex xl:hidden items-center overflow-x-auto py-2 text-xs border-t border-stone-800 gap-1.5 no-scrollbar">
+            {navItems.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => handleSelectNav(item.key)}
+                className={`whitespace-nowrap px-2.5 py-1 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
+                  activeTab === item.key
+                    ? 'bg-amber-400 text-stone-950 font-semibold shadow-xs'
+                    : 'text-stone-300 hover:text-white hover:bg-stone-800'
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Slide-out Mobile Navigation Drawer Modal */}

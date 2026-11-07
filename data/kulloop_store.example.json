@@ -1,0 +1,39 @@
+{
+  "meta": {
+    "driver": "file-json-persistent-engine",
+    "version": 1,
+    "createdAt": "2026-01-01T00:00:00.000Z",
+    "lastSavedAt": "2026-01-01T00:00:00.000Z",
+    "persistenceFile": "data/kulloop_store.json",
+    "recordsCount": {
+      "occasions": 0,
+      "members": 0,
+      "people": 0,
+      "lineageMembers": 0,
+      "users": 0
+    }
+  },
+  "family": {
+    "id": "fam_default",
+    "name": "My Family Lineage",
+    "homeLocation": "Pune, Maharashtra",
+    "secondLocation": "",
+    "region": "Maharashtra",
+    "convention": "Amanta",
+    "validationSource": "Datar Panchang (Amanta) — verified by family pandit",
+    "plan": "pilot_founding",
+    "payer": "configurator",
+    "configuratorName": "Family Configurator",
+    "configuratorPhone": "",
+    "traditionNotes": "Amanta tradition calendar. Computed for local sunrise.",
+    "consultedEntity": "An elder"
+  },
+  "occasions": [],
+  "members": [],
+  "people": [],
+  "lineageMembers": [],
+  "users": {},
+  "pushDevices": [],
+  "reminderDispatchLog": [],
+  "auditLogs": []
+}

@@ -1,3 +1,10 @@
+# Capacitor / Android local build artifacts (keep android/ project in git)
+android/.gradle/
+android/app/build/
+android/build/
+android/local.properties
+android/app/google-services.json
+
 node_modules/
 build/
 dist/
@@ -8,4 +15,12 @@ coverage/
 !.env.example
 .antigravity
 .agents
+.impeccable/
 pnpm-lock.yaml
+
+# Runtime family DB (local PII) — recreate from example on first boot
+data/kulloop_store.json
+data/*.tmp
+secrets/*
+!secrets/*.example.json
+!secrets/.gitkeep

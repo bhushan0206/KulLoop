@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
 import { 
   Family, 
   FamilyOccasion, 
@@ -37,39 +37,43 @@ import {
   apiCreateMember, 
   apiUpdateMember, 
   apiDeleteMember, 
-  apiUpdateLineageMember 
+  apiUpdateLineageMember,
+  apiCreatePerson,
 } from './services/api';
 import { Header } from './components/Header';
 import { FamilyDashboard } from './components/FamilyDashboard';
 import { OccasionList } from './components/OccasionList';
 import { WhatsAppSimulator } from './components/WhatsAppSimulator';
 import { MembersManager } from './components/MembersManager';
-import { VisualFamilyTree } from './components/VisualFamilyTree';
 import { AnnualCalendarView } from './components/AnnualCalendarView';
 import { CalmPricingView } from './components/CalmPricingView';
 import { AddOccasionModal } from './components/AddOccasionModal';
 import { PriestReadyNoteModal } from './components/PriestReadyNoteModal';
 import { PilotIntakeModal } from './components/PilotIntakeModal';
 import { UserProfileModal } from './components/UserProfileModal';
-import { GeminiChatbot } from './components/GeminiChatbot';
 import { ShareFamilyModal } from './components/ShareFamilyModal';
 import { NotificationHubModal } from './components/NotificationHubModal';
 import { OnboardingFlow } from './components/OnboardingFlow';
-import { Check, ShieldCheck, Sparkles, User, Users, RefreshCw } from 'lucide-react';
+import { MobileBottomNav } from './components/MobileBottomNav';
+import { MobileMoreSheet } from './components/MobileMoreSheet';
+import { PrivacyPolicyModal } from './components/PrivacyPolicyModal';
+import { Check, ShieldCheck, Sparkles, User, Users, RefreshCw, Loader2 } from 'lucide-react';
+import { generateInviteCode } from './utils/inviteCode';
+import { readElderMode, writeElderMode } from './utils/elderMode';
+import { readSimpleLayout, writeSimpleLayout, isReducedChrome } from './utils/calmExperience';
+import { getFamilyAccess } from './utils/familyPermissions';
+import { FamilyAccessBanner } from './components/FamilyAccessBanner';
+import { initPushNotificationBridge } from './services/pushNotifications';
+import { setApiClientContext } from './utils/apiClientContext';
+import { buildHeritageAiFamilyContext } from './utils/heritageAiContext';
+import { dedupeMembers } from './utils/memberDedupe';
 
-const DEFAULT_USER_PROFILE: UserProfile = {
-  uid: 'user_configurator_init',
-  username: 'family_lead',
-  displayName: 'Family Configurator',
-  email: '',
-  photoURL: '/assets/images/kulloop_avatar_elder_1793303629841.jpg',
-  bio: 'Family ritual configurator preserving our ancestral traditions.',
-  interests: ['Ancestral Rites (श्राद्ध)', 'Panchang & Astronomy', 'Family Heritage', 'Marathi Traditions'],
-  homeLocation: 'Pune, Maharashtra',
-  tradition: 'Amanta (Maharashtra)',
-  createdAt: new Date().toISOString(),
-  language: 'mr',
-};
+const GeminiChatbot = lazy(() =>
+  import('./components/GeminiChatbot').then((m) => ({ default: m.GeminiChatbot }))
+);
+const VisualFamilyTree = lazy(() =>
+  import('./components/VisualFamilyTree').then((m) => ({ default: m.VisualFamilyTree }))
+);
 
 const DEFAULT_CLEAN_FAMILY: Family = {
   id: 'fam_default',
@@ -98,7 +102,7 @@ export default function App() {
   const [lineageMembers, setLineageMembers] = useState<LineageMember[]>([]);
 
   // User Profile & Onboarding state
-  const [currentUser, setCurrentUser] = useState<UserProfile>(DEFAULT_USER_PROFILE);
+  const [currentUser, setCurrentUser] = useState<UserProfile>(GUEST_USER_PROFILE);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
     // Look at session/local state: ONLY true if user actively finished onboarding in THIS browser session
     return sessionStorage.getItem('kulloop_session_active') === 'true' && localStorage.getItem('kulloop_has_onboarded') === 'true';
@@ -115,6 +119,53 @@ export default function App() {
   const [chatbotInitialPrompt, setChatbotInitialPrompt] = useState<string>('');
   const [priestModalOccasion, setPriestModalOccasion] = useState<FamilyOccasion | null>(null);
   const [activeWhatsAppOccasion, setActiveWhatsAppOccasion] = useState<FamilyOccasion | undefined>(undefined);
+  const [isMoreSheetOpen, setIsMoreSheetOpen] = useState(false);
+  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
+  const [elderMode, setElderMode] = useState<boolean>(() => readElderMode());
+  const [simpleLayout, setSimpleLayout] = useState<boolean>(() => readSimpleLayout());
+
+  const isDemoMode = localStorage.getItem('kulloop_is_demo') === 'true';
+
+  const displayMembers = useMemo(
+    () =>
+      dedupeMembers(members, {
+        currentUid: currentUser.uid,
+        currentEmail: currentUser.email,
+        familyId: family.id,
+      }),
+    [members, currentUser.uid, currentUser.email, family.id]
+  );
+
+  const familyAccess = useMemo(
+    () => getFamilyAccess(displayMembers, currentUser, family, isDemoMode),
+    [displayMembers, currentUser, family, isDemoMode]
+  );
+
+  const reducedChrome = isReducedChrome(elderMode, simpleLayout);
+
+  const heritageAiContext = useMemo(
+    () => buildHeritageAiFamilyContext(family, occasions),
+    [family, occasions]
+  );
+
+  useEffect(() => {
+    setApiClientContext({
+      uid: currentUser.uid,
+      email: currentUser.email || '',
+      displayName: currentUser.displayName || '',
+      isDemoMode,
+    });
+  }, [currentUser.uid, currentUser.email, currentUser.displayName, isDemoMode]);
+
+  const activeMember = useMemo(
+    () =>
+      displayMembers.find(
+        (m) =>
+          (m.authUid && m.authUid === currentUser.uid) ||
+          (m.email && currentUser.email && m.email.toLowerCase() === currentUser.email.toLowerCase())
+      ),
+    [displayMembers, currentUser]
+  );
 
   // Toast feedback
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -133,30 +184,18 @@ export default function App() {
 
     try {
       const bundle = await fetchInitialDatabase();
-      if (bundle) {
-        if (bundle.family && bundle.family.name !== 'The Joshi Family (जोशी परिवार)') {
-          setFamily(bundle.family);
-        }
-        // Do not bleed mock Joshi occasions into a newly configured custom family
-        if (bundle.occasions && bundle.occasions.length > 0) {
-          const nonMockOccasions = bundle.occasions.filter(o => o.familyId !== 'fam_joshi_01');
-          setOccasions(nonMockOccasions);
-        }
-        if (bundle.members && bundle.members.length > 0) {
-          const nonMockMembers = bundle.members.filter(m => m.familyId !== 'fam_joshi_01');
-          setMembers(nonMockMembers);
-        }
-        if (bundle.people && bundle.people.length > 0) {
-          const nonMockPeople = bundle.people.filter(p => p.familyId !== 'fam_joshi_01');
-          setPeople(nonMockPeople);
-        }
-        if (bundle.lineageMembers && bundle.lineageMembers.length > 0) {
-          const nonMockLineage = bundle.lineageMembers.filter(lm => lm.familyId !== 'fam_joshi_01');
-          setLineageMembers(nonMockLineage);
-        }
-        if (bundle.currentUser && bundle.currentUser.displayName !== 'Bhushan Joshi') {
-          setCurrentUser(bundle.currentUser);
-        }
+      if (bundle?.family) {
+        setFamily(bundle.family);
+        setOccasions(bundle.occasions || []);
+        setMembers(
+          dedupeMembers(bundle.members || [], {
+            currentUid: currentUser.uid,
+            currentEmail: currentUser.email,
+            familyId: bundle.family.id,
+          })
+        );
+        setPeople(bundle.people || []);
+        setLineageMembers(bundle.lineageMembers || []);
       }
     } catch (err) {
       console.warn('Backend file load error, using initial defaults:', err);
@@ -198,18 +237,54 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!hasCompletedOnboarding) return;
+    return initPushNotificationBridge({
+      uid: currentUser.uid,
+      familyId: family.id,
+      memberId: activeMember?.id,
+    });
+  }, [hasCompletedOnboarding, currentUser.uid, family.id, activeMember?.id]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
   const handleAddOccasion = async (newOcc: FamilyOccasion) => {
+    if (!familyAccess.canCreateOccasions) {
+      showToast('View-only access — ask your family configurator to add occasions.');
+      return;
+    }
     setOccasions((prev) => [newOcc, ...prev]);
     showToast(`Added "${newOcc.title}" (saved to server disk)`);
     await apiCreateOccasion(newOcc);
+
+    const personId = newOcc.personIds?.[0];
+    if (personId && newOcc.personNameDisplay) {
+      const person: Person = {
+        id: personId,
+        familyId: newOcc.familyId || family.id,
+        name: newOcc.personNameDisplay,
+        relationship: newOcc.relationshipDisplay || '',
+        isAncestor: newOcc.occasionType === 'shraddha' || newOcc.occasionType === 'mahalaya',
+        confirmedBy: newOcc.confirmedSource || 'Unconfirmed',
+      };
+      const saved = await apiCreatePerson(person);
+      if (saved) {
+        setPeople((prev) => {
+          const without = prev.filter((p) => p.id !== saved.id);
+          return [...without, saved];
+        });
+      }
+    }
   };
 
   const handleToggleConfirm = async (id: string) => {
+    if (!familyAccess.canEditOccasions) {
+      showToast('Your role cannot confirm tithi dates.');
+      return;
+    }
     setOccasions((prev) =>
       prev.map((occ) => {
         if (occ.id === id) {
@@ -231,6 +306,10 @@ export default function App() {
   };
 
   const handleTogglePerformed = async (id: string, notes?: string, performedBy?: string) => {
+    if (!familyAccess.canMarkPerformed) {
+      showToast('View-only access — you can still read and share reminders.');
+      return;
+    }
     setOccasions((prev) =>
       prev.map((occ) => {
         if (occ.id === id) {
@@ -293,6 +372,10 @@ export default function App() {
   };
 
   const handleUpdateOccasion = async (id: string, updates: Partial<FamilyOccasion>) => {
+    if (!familyAccess.canEditOccasions) {
+      showToast('Your role cannot edit occasion details.');
+      return;
+    }
     setOccasions((prev) =>
       prev.map((occ) => {
         if (occ.id === id) {
@@ -306,6 +389,10 @@ export default function App() {
   };
 
   const handleDeleteOccasion = async (id: string) => {
+    if (!familyAccess.canDeleteOccasions) {
+      showToast('Only the family configurator can remove occasions.');
+      return;
+    }
     const target = occasions.find((o) => o.id === id);
     if (confirm(`Remove "${target?.title}" from the family record?`)) {
       setOccasions((prev) => prev.filter((o) => o.id !== id));
@@ -315,18 +402,36 @@ export default function App() {
   };
 
   const handleAddMember = async (member: Member) => {
-    setMembers((prev) => [...prev, member]);
+    if (!familyAccess.canManageMembers) {
+      showToast('Ask your configurator to invite family members.');
+      return;
+    }
+    setMembers((prev) =>
+      dedupeMembers([...prev, member], {
+        currentUid: currentUser.uid,
+        currentEmail: currentUser.email,
+        familyId: family.id,
+      })
+    );
     showToast(`Added ${member.name} to the family loop (saved to disk)`);
     await apiCreateMember(member);
   };
 
   const handleUpdateMember = async (member: Member) => {
+    if (!familyAccess.canManageMembers && member.id !== activeMember?.id) {
+      showToast('You can only update your own reminder settings.');
+      return;
+    }
     setMembers((prev) => prev.map((m) => (m.id === member.id ? member : m)));
     showToast(`Updated preferences for ${member.name} (saved to disk)`);
     await apiUpdateMember(member);
   };
 
   const handleDeleteMember = async (id: string) => {
+    if (!familyAccess.canManageMembers) {
+      showToast('Only configurator or co-karta can remove members.');
+      return;
+    }
     const target = members.find((m) => m.id === id);
     if (confirm(`Remove ${target?.name} from WhatsApp reminders?`)) {
       setMembers((prev) => prev.filter((m) => m.id !== id));
@@ -365,12 +470,20 @@ export default function App() {
   };
 
   const handleUpdateLineageMember = async (updated: LineageMember) => {
+    if (!familyAccess.canEditLineage) {
+      showToast('Your role cannot edit lineage duties.');
+      return;
+    }
     setLineageMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
     showToast(`Updated ritual responsibilities for ${updated.name} (saved to disk)`);
     await apiUpdateLineageMember(updated);
   };
 
-  const handleCompleteOnboarding = async (user: UserProfile, newFamily: Partial<Family>) => {
+  const handleCompleteOnboarding = async (
+    user: UserProfile,
+    newFamily: Partial<Family>,
+    options?: { intent: 'create' | 'join' }
+  ) => {
     sessionStorage.setItem('kulloop_session_active', 'true');
     localStorage.setItem('kulloop_has_onboarded', 'true');
     localStorage.removeItem('kulloop_is_demo');
@@ -378,6 +491,7 @@ export default function App() {
     setCurrentUser(user);
     await saveUserProfile(user);
 
+    const isJoin = options?.intent === 'join';
     const famId = newFamily.id || `fam_${Date.now()}`;
     const updatedFamily: Family = {
       ...family,
@@ -386,18 +500,25 @@ export default function App() {
       name: newFamily.name || 'My Family Lineage',
       homeLocation: newFamily.homeLocation || 'Pune, Maharashtra',
       convention: newFamily.convention || 'Amanta',
-      configuratorName: user.displayName,
+      inviteCode: newFamily.inviteCode || family.inviteCode || generateInviteCode(),
+      region: newFamily.region || family.region || 'Maharashtra',
+      validationSource: newFamily.validationSource || family.validationSource,
+      plan: newFamily.plan || family.plan || 'pilot_founding',
+      payer: newFamily.payer || family.payer || 'configurator',
+      consultedEntity: newFamily.consultedEntity || family.consultedEntity || 'An elder',
+      configuratorName: isJoin ? family.configuratorName : user.displayName,
       configuratorPhone: newFamily.configuratorPhone || family.configuratorPhone,
     };
     setFamily(updatedFamily);
     await apiUpdateFamily(updatedFamily);
 
-    // Initial clean slate for new family: configurator is member #1
-    const configuratorMember: Member = {
-      id: `mem_${Date.now()}`,
+    const newMember: Member = {
+      id: `mem_${user.uid}`,
       familyId: famId,
+      familyRole: isJoin ? 'member' : 'configurator',
+      authUid: user.uid,
       name: user.displayName,
-      relationship: 'Family Configurator (Self)',
+      relationship: isJoin ? 'Family Member (Joined via invite)' : 'Family Configurator (Self)',
       phone: updatedFamily.configuratorPhone || '+91 98000 00000',
       email: user.email,
       language: user.language || 'mr',
@@ -423,15 +544,20 @@ export default function App() {
       },
     };
 
-    // Set clean slate for occasions & members belonging to this new family
+    if (isJoin) {
+      setMembers((prev) => [...prev, newMember]);
+      await apiCreateMember(newMember);
+      await loadDatabaseData();
+      showToast(`You joined ${updatedFamily.name} on KulLoop`);
+      return;
+    }
+
     setOccasions([]);
-    setMembers([configuratorMember]);
+    setMembers([newMember]);
     setPeople([]);
     setLineageMembers([]);
-
-    // Persist configurator member
-    await apiCreateMember(configuratorMember);
-
+    await apiCreateMember(newMember);
+    await loadDatabaseData();
     showToast(`Welcome to KulLoop! Configured for ${updatedFamily.name}`);
   };
 
@@ -464,7 +590,17 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900">
+    <div
+      className={`min-h-screen bg-stone-50 text-stone-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900 ${
+        elderMode ? 'elder-mode' : ''
+      }`}
+    >
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-amber-400 focus:text-amber-950 focus:rounded-lg focus:text-sm focus:font-semibold"
+      >
+        Skip to main content
+      </a>
       {/* Top Bar Header */}
       <Header
         activeTab={activeTab}
@@ -482,21 +618,49 @@ export default function App() {
           setIsChatbotOpen(true);
         }}
         onExitDemo={handleSwitchToOnboarding}
-        isDemoMode={localStorage.getItem('kulloop_is_demo') === 'true' || family.id === 'joshi_family_01'}
+        isDemoMode={isDemoMode}
         currentUser={currentUser}
+        elderMode={elderMode}
+        onToggleElderMode={() => {
+          const next = !elderMode;
+          setElderMode(next);
+          writeElderMode(next);
+          showToast(next ? 'Elder-friendly mode on' : 'Standard layout restored');
+        }}
+        simpleLayout={simpleLayout}
+        onToggleSimpleLayout={() => {
+          const next = !simpleLayout;
+          setSimpleLayout(next);
+          writeSimpleLayout(next);
+          showToast(next ? 'Simple layout on — fewer buttons' : 'Full layout restored');
+        }}
+        canCreateOccasions={familyAccess.canCreateOccasions}
+        canShareInvite={familyAccess.canShareInvite}
       />
 
       {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 text-amber-300 text-xs px-4 py-2.5 rounded-xl shadow-xl border border-stone-800 flex items-center gap-2 animate-fade-in">
-          <Check className="w-4 h-4 text-emerald-400" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      <div
+        className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-50 pointer-events-none"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {toastMessage && (
+          <div className="pointer-events-auto bg-stone-900 text-amber-300 text-sm px-4 py-3 rounded-xl shadow-xl border border-stone-800 flex items-center gap-2 max-w-[min(100vw-2rem,20rem)]">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" aria-hidden />
+            <span>{toastMessage}</span>
+          </div>
+        )}
+      </div>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* User Profile & Community Banner Strip */}
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24 xl:pb-8 space-y-6"
+      >
+        <FamilyAccessBanner access={familyAccess} />
+
+        {!reducedChrome && (
         <div className="bg-white rounded-2xl border border-stone-200/90 p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className="relative w-12 h-12 rounded-full bg-amber-100 border border-amber-300 overflow-hidden flex items-center justify-center shrink-0">
@@ -557,19 +721,29 @@ export default function App() {
             </button>
           </div>
         </div>
+        )}
 
         {/* Tab Views */}
         {activeTab === 'overview' && (
           <FamilyDashboard
+            elderMode={elderMode}
+            simpleLayout={simpleLayout}
+            familyAccess={familyAccess}
             family={family}
             occasions={occasions}
-            members={members}
+            members={displayMembers}
             onSelectOccasion={(occ) => handlePreviewWhatsApp(occ)}
             onPreviewWhatsApp={handlePreviewWhatsApp}
             onGeneratePriestNote={handleGeneratePriestNote}
             onNavigateTab={(tab) => setActiveTab(tab)}
             onOpenAddModal={() => setIsAddModalOpen(true)}
-            onOpenShareModal={() => setIsShareModalOpen(true)}
+            onOpenShareModal={() => {
+              if (!familyAccess.canShareInvite) {
+                showToast('Ask your configurator to share the family invite.');
+                return;
+              }
+              setIsShareModalOpen(true);
+            }}
             onOpenRemindersModal={(occ) => {
               setNotificationHubOccasion(occ || null);
               setIsNotificationHubOpen(true);
@@ -585,7 +759,7 @@ export default function App() {
           <OccasionList
             occasions={occasions}
             family={family}
-            members={members}
+            members={displayMembers}
             people={people}
             onOpenAddModal={() => setIsAddModalOpen(true)}
             onPreviewWhatsApp={handlePreviewWhatsApp}
@@ -596,6 +770,7 @@ export default function App() {
             onGeneratePriestNote={handleGeneratePriestNote}
             onToggleConfirm={handleToggleConfirm}
             onDeleteOccasion={handleDeleteOccasion}
+            familyAccess={familyAccess}
           />
         )}
 
@@ -603,7 +778,7 @@ export default function App() {
           <WhatsAppSimulator
             family={family}
             occasions={occasions}
-            members={members}
+            members={displayMembers}
             initialOccasion={activeWhatsAppOccasion}
             onOpenAddModal={() => setIsAddModalOpen(true)}
             onOpenRemindersModal={(occ) => {
@@ -616,16 +791,25 @@ export default function App() {
 
         {activeTab === 'members' && (
           <MembersManager
-            members={members}
+            members={displayMembers}
             family={family}
             onAddMember={handleAddMember}
             onUpdateMember={handleUpdateMember}
             onDeleteMember={handleDeleteMember}
+            familyAccess={familyAccess}
             onNavigateToTree={() => setActiveTab('tree')}
           />
         )}
 
         {activeTab === 'tree' && (
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center py-20 text-stone-500 gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" aria-hidden />
+                Loading lineage tree…
+              </div>
+            }
+          >
           <VisualFamilyTree
             family={family}
             lineageMembers={lineageMembers}
@@ -643,6 +827,7 @@ export default function App() {
               setActiveTab('whatsapp');
             }}
           />
+          </Suspense>
         )}
 
         {activeTab === 'calendar' && (
@@ -679,12 +864,16 @@ export default function App() {
       />
 
       {/* Gemini Heritage Chatbot */}
-      <GeminiChatbot
-        isOpen={isChatbotOpen}
-        onClose={() => setIsChatbotOpen(false)}
-        currentUser={currentUser}
-        initialPrompt={chatbotInitialPrompt}
-      />
+      <Suspense fallback={null}>
+        <GeminiChatbot
+          isOpen={isChatbotOpen}
+          onClose={() => setIsChatbotOpen(false)}
+          currentUser={currentUser}
+          initialPrompt={chatbotInitialPrompt}
+          simpleUi={reducedChrome}
+          familyContext={heritageAiContext}
+        />
+      </Suspense>
 
       {/* Add Occasion Modal */}
       <AddOccasionModal
@@ -723,12 +912,42 @@ export default function App() {
         onClose={() => setIsNotificationHubOpen(false)}
         occasions={occasions}
         family={family}
-        members={members}
+        members={displayMembers}
         activeOccasion={notificationHubOccasion}
+        pushContext={{
+          uid: currentUser.uid,
+          familyId: family.id,
+          memberId: activeMember?.id,
+        }}
+      />
+
+      <PrivacyPolicyModal isOpen={isPrivacyPolicyOpen} onClose={() => setIsPrivacyPolicyOpen(false)} />
+
+      <MobileMoreSheet
+        isOpen={isMoreSheetOpen}
+        onClose={() => setIsMoreSheetOpen(false)}
+        onSelectTab={setActiveTab}
+        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onOpenChatbot={() => {
+          setChatbotInitialPrompt('');
+          setIsChatbotOpen(true);
+        }}
+        onOpenPrivacy={() => setIsPrivacyPolicyOpen(true)}
+        simpleLayout={simpleLayout}
+      />
+
+      <MobileBottomNav
+        activeTab={activeTab}
+        onSelectTab={setActiveTab}
+        onOpenReminders={() => {
+          setNotificationHubOccasion(null);
+          setIsNotificationHubOpen(true);
+        }}
+        onOpenMore={() => setIsMoreSheetOpen(true)}
       />
 
       {/* Calm Footer */}
-      <footer className="bg-stone-900 text-stone-400 text-xs border-t border-stone-800 py-10 no-print">
+      <footer className="bg-stone-900 text-stone-400 text-xs border-t border-stone-800 py-10 pb-28 xl:pb-10 no-print">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
@@ -746,6 +965,16 @@ export default function App() {
               <button onClick={() => setIsProfileModalOpen(true)} className="hover:text-amber-300 cursor-pointer">Profile & Community</button>
               <button onClick={() => setIsChatbotOpen(true)} className="hover:text-amber-300 cursor-pointer">Heritage AI</button>
               <button onClick={() => setActiveTab('pricing')} className="hover:text-stone-200 cursor-pointer">Pilot (₹299)</button>
+              <a href="/privacy" className="hover:text-amber-300 underline-offset-2 hover:underline">
+                Privacy
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsPrivacyPolicyOpen(true)}
+                className="hover:text-amber-300 cursor-pointer underline-offset-2 hover:underline"
+              >
+                Privacy (in-app)
+              </button>
             </div>
           </div>
 

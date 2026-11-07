@@ -14,8 +14,10 @@ const port = parseInt(process.env.PORT || '3000', 10);
 app.use(express.json({ limit: '10mb' }));
 
 import { dbStore } from './server/storage';
-import { runReminderWorker } from './server/reminderWorker';
+import { runReminderWorker, startReminderCron } from './server/reminderWorker';
 import { sendEmail } from './server/mailer';
+import { sendFcmToToken } from './server/pushMessaging';
+import { gate, gateMemberUpdate } from './server/accessMiddleware';
 
 // ============================================================================
 // Persistent Database & SQLite Export Endpoints
@@ -52,7 +54,7 @@ app.get('/api/db/all', (req, res) => {
 });
 
 // Reset database to initial seed data
-app.post('/api/db/reset', (req, res) => {
+app.post('/api/db/reset', ...gate('canEditFamily'), (req, res) => {
   const refreshed = dbStore.resetToDefaults();
   res.json({
     success: true,
@@ -75,8 +77,92 @@ app.get('/api/family', (req, res) => {
   res.json(data.family);
 });
 
+function normalizeInviteCode(raw: string): string {
+  const cleaned = raw.trim().toUpperCase().replace(/\s+/g, '');
+  if (cleaned.startsWith('KUL-')) return cleaned;
+  if (/^[A-Z0-9]{6}$/.test(cleaned)) return `KUL-${cleaned}`;
+  return cleaned;
+}
+
+function generateInviteCode(): string {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let suffix = '';
+  for (let i = 0; i < 6; i++) {
+    suffix += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return `KUL-${suffix}`;
+}
+
+app.post('/api/push/register', (req, res) => {
+  const { token, platform, uid, memberId, familyId } = req.body || {};
+  if (!token || typeof token !== 'string') {
+    return res.status(400).json({ error: 'FCM device token required' });
+  }
+  const deviceId = `push_${uid || memberId || 'anon'}_${token.slice(-8)}`;
+  const record = {
+    id: deviceId,
+    token,
+    platform: platform === 'android' || platform === 'ios' || platform === 'web' ? platform : 'android',
+    uid: uid || undefined,
+    memberId: memberId || undefined,
+    familyId: familyId || undefined,
+    updatedAt: new Date().toISOString(),
+  };
+  dbStore.save((draft) => {
+    if (!draft.pushDevices) draft.pushDevices = [];
+    const idx = draft.pushDevices.findIndex((d) => d.token === token);
+    if (idx >= 0) {
+      draft.pushDevices[idx] = { ...draft.pushDevices[idx], ...record };
+    } else {
+      draft.pushDevices.push(record);
+    }
+  }, 'REGISTER_PUSH', 'DEVICE', deviceId);
+  res.json({ success: true, deviceId });
+});
+
+app.post('/api/push/test', async (req, res) => {
+  const { token, title, body, uid } = req.body || {};
+  let targetToken = token as string | undefined;
+  if (!targetToken && uid) {
+    const data = dbStore.getData();
+    const device = data.pushDevices?.find((d) => d.uid === uid);
+    targetToken = device?.token;
+  }
+  if (!targetToken) {
+    return res.status(400).json({ error: 'No device token (register push first)' });
+  }
+  const result = await sendFcmToToken(targetToken, {
+    title: title || 'KulLoop · Family Tithi',
+    body: body || 'Your sacred tithi reminder channel is connected.',
+    data: { source: 'kulloop-test' },
+  });
+  res.json(result);
+});
+
+app.get('/api/invites/:code', (req, res) => {
+  const code = normalizeInviteCode(req.params.code || '');
+  const data = dbStore.getData();
+  const fam = data.family;
+  const famCode = fam.inviteCode ? normalizeInviteCode(fam.inviteCode) : '';
+  const matches = Boolean(famCode && famCode === code);
+
+  if (!matches) {
+    return res.status(404).json({ valid: false, message: 'Invite code not found.' });
+  }
+  res.json({
+    valid: true,
+    family: {
+      id: fam.id,
+      name: fam.name,
+      homeLocation: fam.homeLocation,
+      convention: fam.convention,
+      inviteCode: fam.inviteCode,
+    },
+  });
+});
+
 // Reminder Automation Endpoint
-app.post('/api/reminders/trigger', async (req, res) => {
+app.post('/api/reminders/trigger', ...gate('canManageMembers'), async (req, res) => {
   try {
     const logs = await runReminderWorker();
     res.json({ success: true, message: 'Reminder worker triggered successfully.', logs });
@@ -166,14 +252,18 @@ app.post('/api/gemini/tts', async (req, res) => {
   }
 });
 
-app.put('/api/family', (req, res) => {
+app.put('/api/family', ...gate('canEditFamily'), (req, res) => {
   const updatedFamily = req.body;
   if (!updatedFamily || !updatedFamily.name) {
     return res.status(400).json({ error: 'Valid family object required' });
   }
   const updated = dbStore.save((draft) => {
-    draft.family = { ...draft.family, ...updatedFamily };
-  }, 'UPDATE_FAMILY', 'FAMILY', updatedFamily.id || 'fam_joshi_01');
+    const next = { ...draft.family, ...updatedFamily };
+    if (!next.inviteCode) {
+      next.inviteCode = generateInviteCode();
+    }
+    draft.family = next;
+  }, 'UPDATE_FAMILY', 'FAMILY', updatedFamily.id || 'fam_default');
 
   res.json({ success: true, family: updated.family });
 });
@@ -184,7 +274,7 @@ app.get('/api/occasions', (req, res) => {
   res.json(data.occasions);
 });
 
-app.post('/api/occasions', (req, res) => {
+app.post('/api/occasions', ...gate('canCreateOccasions'), (req, res) => {
   const newOccasion = req.body;
   if (!newOccasion || !newOccasion.title) {
     return res.status(400).json({ error: 'Occasion title is required' });
@@ -199,7 +289,7 @@ app.post('/api/occasions', (req, res) => {
   res.status(201).json({ success: true, occasion: newOccasion });
 });
 
-app.put('/api/occasions/:id', (req, res) => {
+app.put('/api/occasions/:id', ...gate('canEditOccasions'), (req, res) => {
   const id = req.params.id;
   const updates = req.body;
   let updatedOccasion: any = null;
@@ -218,7 +308,7 @@ app.put('/api/occasions/:id', (req, res) => {
   res.json({ success: true, occasion: updatedOccasion });
 });
 
-app.delete('/api/occasions/:id', (req, res) => {
+app.delete('/api/occasions/:id', ...gate('canDeleteOccasions'), (req, res) => {
   const id = req.params.id;
   dbStore.save((draft) => {
     draft.occasions = draft.occasions.filter((o) => o.id !== id);
@@ -227,7 +317,7 @@ app.delete('/api/occasions/:id', (req, res) => {
   res.json({ success: true, message: `Occasion ${id} deleted` });
 });
 
-app.patch('/api/occasions/:id/toggle-confirm', (req, res) => {
+app.patch('/api/occasions/:id/toggle-confirm', ...gate('canEditOccasions'), (req, res) => {
   const id = req.params.id;
   let updatedOccasion: any = null;
 
@@ -248,7 +338,7 @@ app.patch('/api/occasions/:id/toggle-confirm', (req, res) => {
   res.json({ success: true, occasion: updatedOccasion });
 });
 
-app.patch('/api/occasions/:id/performed', (req, res) => {
+app.patch('/api/occasions/:id/performed', ...gate('canMarkPerformed'), (req, res) => {
   const id = req.params.id;
   const { notes, performedBy } = req.body || {};
   let updatedOccasion: any = null;
@@ -260,7 +350,7 @@ app.patch('/api/occasions/:id/performed', (req, res) => {
       occ.isPerformed = nextState;
       if (nextState) {
         occ.performedAt = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ', ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        occ.performedBy = performedBy || 'The Joshi Family';
+        occ.performedBy = performedBy || draft.family?.name || 'Family';
         occ.performedNotes = notes;
       } else {
         occ.performedAt = undefined;
@@ -278,7 +368,7 @@ app.patch('/api/occasions/:id/performed', (req, res) => {
 });
 
 // Memory Photo Endpoints
-app.post('/api/occasions/:id/photos', (req, res) => {
+app.post('/api/occasions/:id/photos', ...gate('canEditOccasions'), (req, res) => {
   const id = req.params.id;
   const photo = req.body;
   if (!photo || !photo.url) {
@@ -307,7 +397,7 @@ app.post('/api/occasions/:id/photos', (req, res) => {
   res.json({ success: true, occasion: updatedOccasion, photo });
 });
 
-app.delete('/api/occasions/:id/photos/:photoId', (req, res) => {
+app.delete('/api/occasions/:id/photos/:photoId', ...gate('canEditOccasions'), (req, res) => {
   const { id, photoId } = req.params;
   let updatedOccasion: any = null;
 
@@ -331,7 +421,7 @@ app.get('/api/members', (req, res) => {
   res.json(data.members);
 });
 
-app.post('/api/members', (req, res) => {
+app.post('/api/members', ...gate('canManageMembers'), (req, res) => {
   const member = req.body;
   if (!member || !member.name) {
     return res.status(400).json({ error: 'Member name is required' });
@@ -341,13 +431,25 @@ app.post('/api/members', (req, res) => {
   }
 
   dbStore.save((draft) => {
-    draft.members.push(member);
+    const idx = draft.members.findIndex((m) => m.id === member.id);
+    if (idx >= 0) {
+      draft.members[idx] = { ...draft.members[idx], ...member, id: member.id };
+    } else if (member.authUid) {
+      const byUid = draft.members.findIndex((m) => m.authUid === member.authUid);
+      if (byUid >= 0) {
+        draft.members[byUid] = { ...draft.members[byUid], ...member, id: draft.members[byUid].id };
+      } else {
+        draft.members.push(member);
+      }
+    } else {
+      draft.members.push(member);
+    }
   }, 'ADD_MEMBER', 'MEMBER', member.id);
 
   res.status(201).json({ success: true, member });
 });
 
-app.put('/api/members/:id', (req, res) => {
+app.put('/api/members/:id', ...gateMemberUpdate(), (req, res) => {
   const id = req.params.id;
   const updates = req.body;
   let updatedMember: any = null;
@@ -366,7 +468,7 @@ app.put('/api/members/:id', (req, res) => {
   res.json({ success: true, member: updatedMember });
 });
 
-app.delete('/api/members/:id', (req, res) => {
+app.delete('/api/members/:id', ...gate('canManageMembers'), (req, res) => {
   const id = req.params.id;
   dbStore.save((draft) => {
     draft.members = draft.members.filter((m) => m.id !== id);
@@ -381,7 +483,7 @@ app.get('/api/lineage', (req, res) => {
   res.json(data.lineageMembers);
 });
 
-app.put('/api/lineage/:id', (req, res) => {
+app.put('/api/lineage/:id', ...gate('canEditLineage'), (req, res) => {
   const id = req.params.id;
   const updates = req.body;
   let updatedLineageMember: any = null;
@@ -398,6 +500,64 @@ app.put('/api/lineage/:id', (req, res) => {
     return res.status(404).json({ error: 'Lineage member not found' });
   }
   res.json({ success: true, member: updatedLineageMember });
+});
+
+// People (ancestors / named persons linked to occasions)
+app.get('/api/people', (req, res) => {
+  const data = dbStore.getData();
+  res.json(data.people);
+});
+
+app.post('/api/people', ...gate('canCreateOccasions'), (req, res) => {
+  const person = req.body;
+  if (!person || !person.name) {
+    return res.status(400).json({ error: 'Person name is required' });
+  }
+  if (!person.id) {
+    person.id = `per_${Date.now()}`;
+  }
+  const data = dbStore.getData();
+  if (!person.familyId) {
+    person.familyId = data.family.id;
+  }
+
+  dbStore.save((draft) => {
+    const idx = draft.people.findIndex((p) => p.id === person.id);
+    if (idx >= 0) {
+      draft.people[idx] = { ...draft.people[idx], ...person, id: person.id };
+    } else {
+      draft.people.push(person);
+    }
+  }, 'ADD_PERSON', 'PERSON', person.id);
+
+  res.status(201).json({ success: true, person });
+});
+
+app.put('/api/people/:id', ...gate('canEditOccasions'), (req, res) => {
+  const id = req.params.id;
+  const updates = req.body;
+  let updated: any = null;
+
+  dbStore.save((draft) => {
+    const idx = draft.people.findIndex((p) => p.id === id);
+    if (idx !== -1) {
+      draft.people[idx] = { ...draft.people[idx], ...updates, id };
+      updated = draft.people[idx];
+    }
+  }, 'UPDATE_PERSON', 'PERSON', id);
+
+  if (!updated) {
+    return res.status(404).json({ error: 'Person not found' });
+  }
+  res.json({ success: true, person: updated });
+});
+
+app.delete('/api/people/:id', ...gate('canDeleteOccasions'), (req, res) => {
+  const id = req.params.id;
+  dbStore.save((draft) => {
+    draft.people = draft.people.filter((p) => p.id !== id);
+  }, 'DELETE_PERSON', 'PERSON', id);
+  res.json({ success: true, message: `Person ${id} removed` });
 });
 
 // User Profiles (Persistent in storage file)
@@ -509,7 +669,7 @@ function getVedicFallbackResponse(query: string, userInterests: string[] = []): 
 
 // Gemini Multi-Turn Heritage Assistant API with automatic retry and model fallback
 app.post('/api/gemini/chat', async (req, res) => {
-  const { messages, userInterests, model: requestedModel } = req.body;
+  const { messages, userInterests, model: requestedModel, familyContext, simpleUi } = req.body;
 
   if (!messages || !Array.isArray(messages) || messages.length === 0) {
     return res.status(400).json({ error: 'messages array is required' });
@@ -536,13 +696,22 @@ app.post('/api/gemini/chat', async (req, res) => {
     parts: [{ text: m.text || m.content || '' }],
   }));
 
+  const contextBlock = familyContext
+    ? `\nFamily calendar context (use for relevance; do not invent dates beyond this):\n${familyContext}`
+    : '';
+  const brevity = simpleUi
+    ? 'Keep answers under 120 words unless the user asks for detail. Offer at most 3 short bullets.'
+    : 'Prefer concise WhatsApp-shareable answers (under ~180 words unless detail is requested).';
+
   const systemInstruction = `You are the KulLoop Heritage & Tithi Assistant (संस्कार व कुलधर्म मार्गदर्शक), an expert, respectful, and calm guide for Indian family traditions, panchang calculations, ancestral shraddha rites, tithi birthdays, and festival observances.
 Key principles:
 1. Tone: Respectful, calm, dignified, culturally authentic. Never sell fear, avoid astrology predictions or dosha warnings.
 2. Tithi & Calendar: Explain the difference between Amanta (common in Maharashtra, Gujarat, South India) and Purnimanta (North India). Mention that tithis depend on local sunrise (उदयातिथि).
 3. Rituals & Shraddhas: Explain the significance of Mahalaya (Pitru Paksha), annual shraddha, Gau-grasa (cow offering), and practical items to keep ready (darbha grass, black sesame/til).
 4. Community & Passions: If the user has specific passions or interests (${userInterests ? userInterests.join(', ') : 'Family Heritage'}), highlight connections to relevant traditions and suggest meaningful ways to engage with family and community members.
-5. Language: You can respond in English, Hindi, or Marathi depending on what the user asks or uses.`;
+5. Language: You can respond in English, Hindi, or Marathi depending on what the user asks or uses.
+6. MyDharohar partner: For printable shraddha and festival preparation guides, recommend https://www.mydharohar.org/ — KulLoop handles family dates and reminders; MyDharohar hosts reviewed preparation content. Never imply MyDharohar receives private family records.
+7. Modern use: ${brevity} Mention voice/TTS only when helpful for elders. Do not invent muhurats — suggest verifying with family pandit or panchang.${contextBlock}`;
 
   const ai = new GoogleGenAI({ apiKey });
   let lastError: any = null;
@@ -616,6 +785,8 @@ async function startServer() {
       res.sendFile(path.join(__dirname, 'dist', 'index.html'));
     });
   }
+
+  startReminderCron();
 
   app.listen(port, '0.0.0.0', () => {
     console.log(`KulLoop server running on port ${port}`);

@@ -7,14 +7,8 @@ import {
   Person, 
   LineageMember 
 } from '../src/types';
-import { 
-  INITIAL_FAMILY, 
-  INITIAL_MEMBERS, 
-  INITIAL_PEOPLE, 
-  INITIAL_OCCASIONS 
-} from '../src/data/mockData';
-import { INITIAL_LINEAGE_MEMBERS } from '../src/data/mockLineageData';
 import { UserProfile } from '../src/services/firebase';
+import type { PushDeviceRecord } from './pushMessaging';
 
 export interface DatabaseSchema {
   meta: {
@@ -37,6 +31,9 @@ export interface DatabaseSchema {
   people: Person[];
   lineageMembers: LineageMember[];
   users: Record<string, UserProfile>;
+  pushDevices: PushDeviceRecord[];
+  /** Keys like memberId:occasionId:d7 to avoid duplicate reminder sends */
+  reminderDispatchLog?: string[];
   auditLogs: Array<{
     id: string;
     action: string;
@@ -50,74 +47,6 @@ export interface DatabaseSchema {
 // Locate or establish data directory in project root
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'kulloop_store.json');
-
-const INITIAL_USERS: Record<string, UserProfile> = {
-  user_bhushan_01: {
-    uid: 'user_bhushan_01',
-    username: 'bhushan_pune',
-    displayName: 'Bhushan Joshi',
-    email: 'bhushangavhale86@gmail.com',
-    photoURL: '/src/assets/images/kulloop_avatar_elder_1793303629841.jpg',
-    bio: 'Family ritual configurator. Preserving our ancestral Jejuri Khandoba traditions and shraddha tithis for the entire family.',
-    interests: ['Ancestral Rites (श्राद्ध)', 'Panchang & Astronomy', 'Family Heritage', 'Marathi Traditions'],
-    homeLocation: 'Pune, Maharashtra',
-    tradition: 'Amanta (Maharashtra)',
-    createdAt: new Date().toISOString(),
-    language: 'mr',
-  },
-  comm_meera_01: {
-    uid: 'comm_meera_01',
-    username: 'meera_pune',
-    displayName: 'Meera Kulkarni',
-    email: 'meera.k@example.com',
-    photoURL: '/src/assets/images/kulloop_avatar_elder_1793303629841.jpg',
-    bio: 'Preserving our family’s Rigvedic traditions, Ganpati sthapana rituals, and Aaji’s heirloom recipes in Pune.',
-    interests: ['Family Heritage', 'Ancestral Rites (श्राद्ध)', 'Marathi Traditions', 'Panchang & Astronomy'],
-    homeLocation: 'Pune, Maharashtra',
-    tradition: 'Amanta (Chitpavan)',
-    createdAt: new Date().toISOString(),
-    language: 'mr',
-  },
-  comm_arun_02: {
-    uid: 'comm_arun_02',
-    username: 'arun_diaspora',
-    displayName: 'Arun Deshpande',
-    email: 'arun.d@example.com',
-    photoURL: '',
-    bio: 'Living in Toronto, coordinating Pitru Paksha and tithi observances for parents back home in Nagpur.',
-    interests: ['Diaspora Connections', 'Ancestral Rites (श्राद्ध)', 'Genealogy & Gotra', 'Vrat & Fasting'],
-    homeLocation: 'Nagpur / Toronto',
-    tradition: 'Amanta (Deshastha)',
-    createdAt: new Date().toISOString(),
-    language: 'en',
-  },
-  comm_shrikant_03: {
-    uid: 'comm_shrikant_03',
-    username: 'pt_shrikant',
-    displayName: 'Pt. Shrikant Joshi',
-    email: 'shrikant.j@example.com',
-    photoURL: '',
-    bio: 'Vedic scholar and panchang consultant. Passionate about correct tithi calculations and helping families understand rituals.',
-    interests: ['Panchang & Astronomy', 'Ancestral Rites (श्राद्ध)', 'Temple Architecture', 'Devotional Music'],
-    homeLocation: 'Varanasi / Pune',
-    tradition: 'Vedic Panchang Reviewer',
-    createdAt: new Date().toISOString(),
-    language: 'hi',
-  },
-  comm_priya_04: {
-    uid: 'comm_priya_04',
-    username: 'priya_heritage',
-    displayName: 'Priya Sharma',
-    email: 'priya.s@example.com',
-    photoURL: '',
-    bio: 'Documenting our family history and Gotra roots across generations. Love learning about solar vs lunar celebrations.',
-    interests: ['Genealogy & Gotra', 'Family Heritage', 'Devotional Music', 'Festivals & Vrats'],
-    homeLocation: 'Jaipur, Rajasthan',
-    tradition: 'Purnimanta',
-    createdAt: new Date().toISOString(),
-    language: 'hi',
-  },
-};
 
 function buildInitialDatabase(): DatabaseSchema {
   const now = new Date().toISOString();
@@ -156,6 +85,8 @@ function buildInitialDatabase(): DatabaseSchema {
     people: [],
     lineageMembers: [],
     users: {},
+    pushDevices: [],
+    reminderDispatchLog: [],
     auditLogs: [
       {
         id: `log_init_${Date.now()}`,
@@ -194,6 +125,12 @@ class StorageEngine {
       try {
         const raw = fs.readFileSync(DB_FILE, 'utf8');
         this.cache = JSON.parse(raw);
+        if (!this.cache!.pushDevices) {
+          this.cache!.pushDevices = [];
+        }
+        if (!this.cache!.reminderDispatchLog) {
+          this.cache!.reminderDispatchLog = [];
+        }
         console.log(`[StorageEngine] Loaded database from: ${DB_FILE} (${this.cache?.occasions?.length || 0} occasions, ${this.cache?.members?.length || 0} members)`);
       } catch (err) {
         console.error(`[StorageEngine] Error reading database file, creating fresh initial store:`, err);
@@ -227,6 +164,12 @@ class StorageEngine {
   public getData(): DatabaseSchema {
     if (!this.cache) {
       this.ensureInitialized();
+    }
+    if (!this.cache!.pushDevices) {
+      this.cache!.pushDevices = [];
+    }
+    if (!this.cache!.reminderDispatchLog) {
+      this.cache!.reminderDispatchLog = [];
     }
     return this.cache!;
   }

@@ -13,6 +13,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { openWhatsAppDirect } from '../utils/whatsapp';
+import { buildInviteLink, normalizeInviteCode } from '../utils/inviteCode';
 
 interface ShareFamilyModalProps {
   family: Family;
@@ -34,6 +35,8 @@ export const ShareFamilyModal: React.FC<ShareFamilyModalProps> = ({
 
   // Use current site URL or fallback
   const shareUrl = typeof window !== 'undefined' ? window.location.origin : 'https://kulloop.in';
+  const inviteCode = family.inviteCode ? normalizeInviteCode(family.inviteCode) : undefined;
+  const inviteLink = inviteCode ? buildInviteLink(shareUrl, inviteCode) : shareUrl;
 
   // Upcoming 3 occasions summary
   const upcomingSummary = occasions.slice(0, 3).map(o => 
@@ -109,6 +112,20 @@ export const ShareFamilyModal: React.FC<ShareFamilyModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-5 space-y-4 text-xs">
+          {inviteCode && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 space-y-2">
+              <div className="text-[11px] font-semibold text-amber-900 uppercase tracking-wide">
+                Family invite code
+              </div>
+              <div className="font-mono text-lg font-bold text-stone-900 tracking-wider">{inviteCode}</div>
+              <p className="text-[11px] text-stone-600 leading-relaxed">
+                Relatives can join at onboarding with this code, or open:{' '}
+                <a href={inviteLink} className="text-amber-800 underline break-all">
+                  {inviteLink}
+                </a>
+              </p>
+            </div>
+          )}
           {/* Language Tabs */}
           <div>
             <label className="text-[11px] font-semibold text-stone-600 uppercase tracking-wider block mb-1.5">

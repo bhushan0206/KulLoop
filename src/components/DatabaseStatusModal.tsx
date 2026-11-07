@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { apiUrl } from '../utils/apiBase';
 import { 
   Database, 
   HardDrive, 
@@ -52,7 +53,7 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
 
   const handleDownloadJson = async () => {
     try {
-      const res = await fetch('/api/db/all');
+      const res = await fetch(apiUrl('/api/db/all'));
       const data = await res.json();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -69,7 +70,7 @@ export const DatabaseStatusModal: React.FC<DatabaseStatusModalProps> = ({
   };
 
   const handleReset = async () => {
-    if (confirm('Are you sure you want to reset the file database to default Joshi family seed records? Any custom additions will be reverted.')) {
+    if (confirm('Reset the database to an empty family template? Your saved occasions and members in the JSON store will be cleared.')) {
       setResetting(true);
       const ok = await resetDatabaseToDefaults();
       setResetting(false);

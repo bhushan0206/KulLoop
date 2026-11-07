@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FamilyOccasion, Family } from '../types';
 import { 
   Award, 
@@ -54,11 +54,13 @@ export const HeritageMilestoneTracker: React.FC<HeritageMilestoneTrackerProps> =
   }, [occasions, currentCalendarYear, nextObservanceYear]);
 
   // Selected occasion for focal milestone inspector
-  const [selectedOccasionId, setSelectedOccasionId] = useState<string>(() => {
-    // Default to Late Vasant Joshi's shraddha or the oldest occasion
-    const shraddha = occasionsWithMilestone.find((o) => o.id === 'occ_shraddha_vasant');
-    return shraddha ? shraddha.id : (occasionsWithMilestone[0]?.id || '');
-  });
+  const [selectedOccasionId, setSelectedOccasionId] = useState<string>('');
+
+  useEffect(() => {
+    if (selectedOccasionId) return;
+    const firstId = occasionsWithMilestone[0]?.id;
+    if (firstId) setSelectedOccasionId(firstId);
+  }, [occasionsWithMilestone, selectedOccasionId]);
 
   const selectedMilestone = useMemo(() => {
     return (

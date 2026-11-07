@@ -1,0 +1,9 @@
+{
+  "appId": "app.kulloop.family",
+  "appName": "KulLoop",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#fafaf9"
+  }
+}

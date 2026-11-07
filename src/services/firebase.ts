@@ -1,48 +1,61 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { 
-  getAuth, 
-  signInWithPopup, 
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import {
+  getAuth,
+  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
-  GoogleAuthProvider, 
-  signOut as fbSignOut, 
+  GoogleAuthProvider,
+  signOut as fbSignOut,
   onAuthStateChanged,
-  User as FirebaseUser
+  type User as FirebaseUser,
 } from 'firebase/auth';
-import { 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  getDocFromServer,
-  getDocs,
-  setDoc,
-  deleteDoc,
-  collection,
-  onSnapshot
-} from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
 import { LanguageCode } from '../types';
+import { apiUrl } from '../utils/apiBase';
+import { isFirestoreMirrorEnabled } from '../utils/firestoreMirror';
 import appletConfig from '../../firebase-applet-config.json';
 
 // Hydrate from firebase-applet-config.json or env variables, with fallback
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || appletConfig.apiKey || "AIzaSyDummyKeyForPreviewMode-12345",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || appletConfig.authDomain || "gen-lang-client-0572007240.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || appletConfig.projectId || "gen-lang-client-0572007240",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || appletConfig.storageBucket || "gen-lang-client-0572007240.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || appletConfig.messagingSenderId || "603461405029",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || appletConfig.appId || "1:603461405029:web:689b3f9b6a365ce095f98c"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || appletConfig.apiKey || 'AIzaSyDummyKeyForPreviewMode-12345',
+  authDomain:
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ||
+    appletConfig.authDomain ||
+    'gen-lang-client-0572007240.firebaseapp.com',
+  projectId:
+    import.meta.env.VITE_FIREBASE_PROJECT_ID || appletConfig.projectId || 'gen-lang-client-0572007240',
+  storageBucket:
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
+    appletConfig.storageBucket ||
+    'gen-lang-client-0572007240.firebasestorage.app',
+  messagingSenderId:
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || appletConfig.messagingSenderId || '603461405029',
+  appId:
+    import.meta.env.VITE_FIREBASE_APP_ID ||
+    appletConfig.appId ||
+    '1:603461405029:web:689b3f9b6a365ce095f98c',
 };
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+const app: FirebaseApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 
-// Use custom database instance if provided, otherwise default
-const databaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID || "ai-studio-kulloopfamilytit-7b0c965a-e838-4cef-afb2-a45a3a38dc75";
-export const db = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+const databaseId =
+  import.meta.env.VITE_FIREBASE_DATABASE_ID ||
+  'ai-studio-kulloopfamilytit-7b0c965a-e838-4cef-afb2-a45a3a38dc75';
+
+let firestoreDb: Firestore | null = null;
+
+/** Lazy Firestore — only loaded when mirror/profile cloud sync is needed. */
+export async function getFirestoreDb(): Promise<Firestore> {
+  if (firestoreDb) return firestoreDb;
+  const { getFirestore } = await import('firebase/firestore');
+  firestoreDb = databaseId ? getFirestore(app, databaseId) : getFirestore(app);
+  return firestoreDb;
+}
+
 export const googleProvider = new GoogleAuthProvider();
-// Force Google to show the account picker every single time
 googleProvider.setCustomParameters({
-  prompt: 'select_account'
+  prompt: 'select_account',
 });
 
 export enum OperationType {
@@ -78,23 +91,10 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
       tenantId: auth.currentUser?.tenantId,
     },
     operationType,
-    path
+    path,
   };
   console.warn('Firestore Operation Status:', errInfo.error);
 }
-
-// Test connection to Firestore on boot
-async function testFirestoreConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-  } catch (error: any) {
-    // If default Firestore database is not created yet or offline, silence noisy console spam
-    if (error?.message?.includes('Database \'(default)\' not found') || error?.message?.includes('offline')) {
-      console.info('KulLoop storage initialized (Local/REST sync ready). Firestore database creation pending in console.');
-    }
-  }
-}
-testFirestoreConnection();
 
 export interface UserProfile {
   uid: string;
@@ -132,30 +132,29 @@ export const CULTURAL_AVATARS = [
 
 const LOCAL_STORAGE_KEY = 'kulloop_current_user_profile';
 
-// Get local, server, or Firestore user profile
 export async function fetchUserProfile(uid: string): Promise<UserProfile | null> {
-  // 1. Try Firestore directly
-  try {
-    const userDocRef = doc(db, 'users', uid);
-    const snap = await getDoc(userDocRef);
-    if (snap.exists()) {
-      return snap.data() as UserProfile;
+  if (isFirestoreMirrorEnabled()) {
+    try {
+      const { doc, getDoc } = await import('firebase/firestore');
+      const db = await getFirestoreDb();
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (snap.exists()) {
+        return snap.data() as UserProfile;
+      }
+    } catch (err) {
+      handleFirestoreError(err, OperationType.GET, `users/${uid}`);
     }
-  } catch (err) {
-    handleFirestoreError(err, OperationType.GET, `users/${uid}`);
   }
 
-  // 2. Try server REST API
   try {
-    const res = await fetch(`/api/users/${uid}`);
+    const res = await fetch(apiUrl(`/api/users/${uid}`));
     if (res.ok) {
       return await res.json();
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
 
-  // 3. Fallback to localStorage
   const local = localStorage.getItem(`${LOCAL_STORAGE_KEY}_${uid}`);
   if (local) {
     try {
@@ -167,36 +166,36 @@ export async function fetchUserProfile(uid: string): Promise<UserProfile | null>
   return null;
 }
 
-// Save profile to Firestore, backend & localStorage
 export async function saveUserProfile(profile: UserProfile): Promise<boolean> {
-  // Save locally
   localStorage.setItem(`${LOCAL_STORAGE_KEY}_${profile.uid}`, JSON.stringify(profile));
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(profile));
 
-  // 1. Try Firestore (safe catch to prevent unhandled rejection spam if DB not yet created)
-  try {
-    await setDoc(doc(db, 'users', profile.uid), profile, { merge: true });
-  } catch (err: any) {
-    if (!err?.message?.includes('Database \'(default)\' not found')) {
-      handleFirestoreError(err, OperationType.WRITE, `users/${profile.uid}`);
+  if (isFirestoreMirrorEnabled()) {
+    try {
+      const { doc, setDoc } = await import('firebase/firestore');
+      const db = await getFirestoreDb();
+      await setDoc(doc(db, 'users', profile.uid), profile, { merge: true });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (!message.includes("Database '(default)' not found")) {
+        handleFirestoreError(err, OperationType.WRITE, `users/${profile.uid}`);
+      }
     }
   }
 
-  // 2. Sync with REST API
   try {
-    const res = await fetch('/api/users', {
+    const res = await fetch(apiUrl('/api/users'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile),
     });
     return res.ok;
-  } catch (err) {
-    console.warn('Backend REST sync failed, saved in local/firestore storage');
+  } catch {
+    console.warn('Backend REST sync failed, saved in local storage');
     return true;
   }
 }
 
-// Check for redirect result on app load
 export async function checkRedirectSignInResult(): Promise<UserProfile | null> {
   try {
     const result = await getRedirectResult(auth);
@@ -214,8 +213,8 @@ async function buildAndSaveProfile(user: FirebaseUser): Promise<UserProfile> {
     return existing;
   }
 
-  const cleanUsername = user.email 
-    ? user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '') 
+  const cleanUsername = user.email
+    ? user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '')
     : `user_${user.uid.slice(0, 6)}`;
 
   const newProfile: UserProfile = {
@@ -236,29 +235,25 @@ async function buildAndSaveProfile(user: FirebaseUser): Promise<UserProfile> {
   return newProfile;
 }
 
-// Google Auth Sign-In (Popup with automatic Redirect fallback)
 export async function signInWithGoogle(): Promise<UserProfile | null> {
   try {
-    // 1. Attempt Firebase Auth popup
     const result = await signInWithPopup(auth, googleProvider);
     return await buildAndSaveProfile(result.user);
-  } catch (err: any) {
-    console.error('[Google Auth Error]:', err?.code, err?.message);
+  } catch (err: unknown) {
+    const code = (err as { code?: string })?.code;
+    console.error('[Google Auth Error]:', code, err);
 
-    // If popup is blocked by the browser, seamlessly fall back to full-page redirect!
-    // This guarantees mobile browsers & strict pop-up blockers work with 0 manual steps.
-    if (err?.code === 'auth/popup-blocked') {
+    if (code === 'auth/popup-blocked') {
       console.info('[Google Auth] Popup blocked, initiating full-page OAuth redirect...');
       await signInWithRedirect(auth, googleProvider);
       return null;
     }
 
-    // If popup was closed by user or cancelled, surface clean message
-    if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
       throw new Error('Sign-in cancelled. Please click "Continue with Google Account" again.');
     }
 
-    if (err?.code === 'auth/unauthorized-domain') {
+    if (code === 'auth/unauthorized-domain') {
       throw new Error('Domain not authorized in Firebase Auth Settings. Please add your current domain.');
     }
 
@@ -280,7 +275,6 @@ export const GUEST_USER_PROFILE: UserProfile = {
   language: 'mr',
 };
 
-// Google Sign Out
 export async function signOutGoogle(): Promise<UserProfile> {
   try {
     await fbSignOut(auth);
@@ -291,19 +285,22 @@ export async function signOutGoogle(): Promise<UserProfile> {
   return GUEST_USER_PROFILE;
 }
 
-// Fetch all community profiles to connect over shared interests
 export async function fetchCommunityProfiles(): Promise<UserProfile[]> {
-  try {
-    const snap = await getDocs(collection(db, 'users'));
-    if (!snap.empty) {
-      return snap.docs.map((d) => d.data() as UserProfile);
+  if (isFirestoreMirrorEnabled()) {
+    try {
+      const { collection, getDocs } = await import('firebase/firestore');
+      const db = await getFirestoreDb();
+      const snap = await getDocs(collection(db, 'users'));
+      if (!snap.empty) {
+        return snap.docs.map((d) => d.data() as UserProfile);
+      }
+    } catch (err) {
+      handleFirestoreError(err, OperationType.LIST, 'users');
     }
-  } catch (err) {
-    handleFirestoreError(err, OperationType.LIST, 'users');
   }
 
   try {
-    const res = await fetch('/api/users');
+    const res = await fetch(apiUrl('/api/users'));
     if (res.ok) {
       return await res.json();
     }
@@ -312,3 +309,6 @@ export async function fetchCommunityProfiles(): Promise<UserProfile[]> {
   }
   return [];
 }
+
+// Re-export for App.tsx auth listener convenience
+export { onAuthStateChanged };

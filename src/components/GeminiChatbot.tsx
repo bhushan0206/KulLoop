@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { apiUrl } from '../utils/apiBase';
 import { 
   Send, 
   Sparkles, 
@@ -29,6 +30,8 @@ interface GeminiChatbotProps {
   onClose: () => void;
   currentUser: UserProfile;
   initialPrompt?: string;
+  simpleUi?: boolean;
+  familyContext?: string;
 }
 
 export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
@@ -36,12 +39,14 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
   onClose,
   currentUser,
   initialPrompt,
+  simpleUi,
+  familyContext,
 }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome_1',
       role: 'model',
-      text: `Namaskar ${currentUser.displayName.split(' ')[0]}! 🙏 I am your **KulLoop Heritage & Tithi Assistant** (संस्कार व कुलधर्म मार्गदर्शक).\n\nI can help you understand your family’s tithis, shraddha preparation checklists, the differences between Amanta and Purnimanta traditions, and how to preserve your family's sacred memories calmly. How may I assist your family today?`,
+      text: `Namaskar ${currentUser.displayName.split(' ')[0]}! 🙏 I am your KulLoop Heritage Assistant — calm guidance on tithis and family rituals.\n\nFor step-by-step prep guides, we point you to our partner MyDharohar (mydharohar.org). I explain timing and tradition; I do not predict astrology or sell fear.\n\nWhat would you like to ask?`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       modelUsed: 'gemini-3.8-flash',
     },
@@ -56,7 +61,7 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
   const playBotResponseTTS = async (text: string, msgId: string) => {
     setIsPlaying(msgId);
     try {
-      const response = await fetch('/api/gemini/tts', {
+      const response = await fetch(apiUrl('/api/gemini/tts'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
@@ -108,13 +113,15 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
         text: m.text,
       }));
 
-      const res = await fetch('/api/gemini/chat', {
+      const res = await fetch(apiUrl('/api/gemini/chat'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: validHistory,
           userInterests: currentUser.interests,
           model: activeModel,
+          familyContext,
+          simpleUi: !!simpleUi,
         }),
       });
 
@@ -157,12 +164,16 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
     }
   };
 
-  const samplePrompts = [
-    "Why do tithi dates shift on the English calendar each year?",
-    "What is the difference between Amanta and Purnimanta months?",
-    "What items should be kept ready for an ancestor's shraddha?",
-    "How does KulLoop calculate local sunrise for diaspora relatives?",
-  ];
+  const samplePrompts = simpleUi
+    ? [
+        'What should we prepare before the next shraddha on our calendar?',
+        'One calm WhatsApp message to remind elders about tithi birthdays',
+      ]
+    : [
+        'What should we prepare before shraddha? (and when to open MyDharohar guide)',
+        'Amanta vs Purnimanta — which does our Maharashtra family use?',
+        'How do I explain tithi birthdays to elders on WhatsApp?',
+      ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-stone-950/70 backdrop-blur-sm">
@@ -177,24 +188,24 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
               <div className="font-bold text-sm font-serif-display text-amber-200">
                 KulLoop Heritage Assistant
               </div>
-              <div className="text-[10px] text-stone-400 flex items-center gap-2">
-                <span>Multi-turn Gemini AI</span>
-                <span aria-hidden="true">·</span>
-                <span className="font-mono text-amber-300">{selectedModel}</span>
+              <div className="text-[10px] text-stone-400">
+                {simpleUi ? 'Short answers · no fear astrology' : `Heritage AI · ${selectedModel}`}
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {!simpleUi && (
             <select
               value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value as any)}
+              onChange={(e) => setSelectedModel(e.target.value as 'gemini-3.8-flash' | 'gemini-3.1-flash-lite')}
               className="text-[11px] bg-stone-800 text-stone-300 border border-stone-700 rounded-md px-2 py-1 focus:outline-none cursor-pointer"
               title="Select Gemini Model"
             >
               <option value="gemini-3.8-flash">gemini-3.8-flash (Standard)</option>
               <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Fast & Resilient)</option>
             </select>
+            )}
 
             <button
               onClick={() => {
@@ -223,6 +234,18 @@ export const GeminiChatbot: React.FC<GeminiChatbotProps> = ({
 
         {/* Scrollable Message Thread */}
         <div className="flex-1 p-4 overflow-y-auto space-y-3.5 bg-stone-50/70 text-xs leading-relaxed">
+          <div className="flex flex-wrap gap-2 pb-2">
+            {samplePrompts.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => handleSendMessage(prompt)}
+                className="text-left px-2.5 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-[11px] text-amber-950 hover:bg-amber-100 min-h-[36px]"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
           {messages.map((msg) => (
             <div key={msg.id} className={`flex items-start gap-2.5 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'model' && (

@@ -63,6 +63,42 @@
    pnpm start
    ```
 
+### Android app (Capacitor)
+
+1. Install [Android Studio](https://developer.android.com/studio) and JDK 17+.
+2. `npm install` then `npm run build && npx cap add android` (first time only).
+3. **Live WebView (recommended for dev):** set `CAPACITOR_SERVER_URL` to your Vercel URL, then `npx cap sync android && npm run android:open`.
+4. **Bundled static + remote API:** build with `VITE_API_BASE_URL=https://your-deployment` then `npm run cap:sync`.
+5. Run on device/emulator: `npm run android:run`.
+
+Privacy policy is available in-app under **Footer → Privacy** or **More → Privacy policy**.
+
+### Android push (FCM) & API auth
+
+See **[docs/OPERATOR_SETUP.md](docs/OPERATOR_SETUP.md)** and run `node scripts/check-operator-setup.mjs`.
+
+1. Add Firebase project → download `google-services.json` into `android/app/` (template: `android/app/google-services.json.example`).
+2. Set `FIREBASE_PROJECT_ID` + `FIREBASE_SERVICE_ACCOUNT_PATH` (template: `secrets/firebase-service-account.example.json`).
+3. Production: `REQUIRE_FIREBASE_AUTH=true` so mutations require a Firebase ID token.
+4. In app: **Reminders → Push** registers the device; tokens persist via `POST /api/push/register`.
+
+### Family roles
+
+| Role | Capabilities |
+|------|----------------|
+| **configurator** | Full family control |
+| **co_karta** | Edit occasions, invite members, no delete family data |
+| **member** | Add occasions, mark performed |
+| **viewer** | Read + reminders only |
+
+Assign roles when inviting members; link Google accounts via `authUid` on join.
+
+Mutations on `/api/family`, `/api/occasions`, `/api/members`, and `/api/lineage` enforce the same matrix server-side via headers `x-kulloop-uid`, `x-kulloop-email`, and `x-kulloop-demo` (the web app sets these automatically).
+
+### Scheduled reminders (email + FCM)
+
+The server runs `runReminderWorker` on a interval (`REMINDER_CRON_MS`, default 6h). It matches each member's `leadTime` (7+2, 7, 2, day_of) to upcoming occasions and sends email and/or FCM when category prefs allow. Dedup keys live in `reminderDispatchLog` in `data/kulloop_store.json`. Manual run: `POST /api/reminders/trigger` (configurator / co_karta).
+
 ---
 
 ## 🛠️ Tech Stack
@@ -70,8 +106,10 @@
 - **Frontend**: React 19, TypeScript, Tailwind CSS v4, Lucide Icons, Motion
 - **Backend**: Node.js, Express, tsx
 - **AI / LLM**: Google Gemini API (`@google/genai`)
-- **Database / Auth**: Embedded JSON store, Firebase Firestore & Google Auth
-- **Communications**: Nodemailer, WhatsApp Web Link generator
+- **Database / Auth**: Server JSON store (`data/kulloop_store.json`, created on boot), Google Auth; optional Firestore mirror via `VITE_FIRESTORE_MIRROR=true`
+- **Communications**: Nodemailer, WhatsApp Web Link generator, FCM (optional)
+
+Copy `data/kulloop_store.example.json` only if you need a starter file; the server creates an empty store automatically. Do not commit live `kulloop_store.json` (it may contain family PII).
 
 ---
 

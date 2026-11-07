@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Family, FamilyOccasion, Member } from '../types';
+import { FamilyAccess } from '../utils/familyPermissions';
+import { isReducedChrome } from '../utils/calmExperience';
 import { exportFamilyRecordToICS, downloadFile } from '../utils/tithiCalculator';
 import { 
   Compass, 
@@ -33,6 +35,9 @@ import { OccasionSlideOver, SlideOverTab } from './OccasionSlideOver';
 import { OccasionCardActionMenu } from './OccasionCardActionMenu';
 
 interface FamilyDashboardProps {
+  elderMode?: boolean;
+  simpleLayout?: boolean;
+  familyAccess?: FamilyAccess;
   family: Family;
   occasions: FamilyOccasion[];
   members: Member[];
@@ -50,6 +55,9 @@ interface FamilyDashboardProps {
 }
 
 export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
+  elderMode,
+  simpleLayout,
+  familyAccess,
   family,
   occasions,
   members,
@@ -119,6 +127,9 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
       .slice(0, 3);
   }, [occasions, dashboardFilter]);
 
+  const reducedChrome = isReducedChrome(!!elderMode, !!simpleLayout);
+  const canAdd = familyAccess?.canCreateOccasions !== false;
+
   return (
     <div className="space-y-6 pb-16">
       {/* GRID ROW 1: Hero Card + Next Ritual Countdown (Side-by-Side Grid) */}
@@ -127,10 +138,8 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
         <div className="lg:col-span-7 bg-stone-900 rounded-xl overflow-hidden border border-stone-800 shadow-sm text-white p-5 sm:p-6 flex flex-col justify-between space-y-4">
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 text-[10px] font-medium text-amber-300">
-                <span className="uppercase tracking-wider">Independent Family Ritual Service</span>
-                <span aria-hidden="true" className="text-stone-600">·</span>
-                <span className="text-stone-300">Partnered with MyDharohar</span>
+              <div className="text-[10px] font-medium text-amber-300 uppercase tracking-wider">
+                Independent Family Ritual Service
               </div>
 
               {/* Monthly Rate Pill */}
@@ -155,12 +164,14 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
 
           {/* Quick Actions Bar */}
           <div className="pt-2 flex flex-wrap items-center gap-2 border-t border-stone-800/80">
+            {canAdd && (
             <button
               onClick={onOpenAddModal}
-              className="px-3 py-1.5 text-[11px] font-semibold text-stone-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer shadow-sm"
+              className="px-3 py-1.5 text-[11px] font-semibold text-stone-950 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors cursor-pointer shadow-sm min-h-[40px]"
             >
               + Add Occasion
             </button>
+            )}
             {onOpenRemindersModal && (
               <button
                 onClick={() => onOpenRemindersModal()}
@@ -170,34 +181,40 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
                 <span>Free Reminders Hub</span>
               </button>
             )}
+            {!reducedChrome && (
             <button
               onClick={() => onNavigateTab('whatsapp')}
-              className="px-3 py-1.5 text-[11px] font-medium text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-[11px] font-medium text-stone-200 hover:text-white bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg transition-colors cursor-pointer min-h-[40px]"
             >
               Preview WhatsApp
             </button>
+            )}
+            {!reducedChrome && familyAccess?.canExportData && (
             <button
               onClick={handleExportAllICS}
-              className="px-3 py-1.5 text-[11px] font-medium text-amber-300 hover:text-amber-100 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5"
+              className="px-3 py-1.5 text-[11px] font-medium text-amber-300 hover:text-amber-100 bg-stone-800 hover:bg-stone-700 border border-stone-700 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5 min-h-[40px]"
               title="Export all family occasions to .ics file for Google or Apple Calendar"
             >
               <Calendar className="w-3.5 h-3.5 text-amber-400" />
               <span>Export .ics</span>
             </button>
+            )}
             <button
               onClick={onOpenShareModal}
-              className="px-3 py-1.5 text-[11px] font-semibold text-emerald-950 bg-emerald-400 hover:bg-emerald-300 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-sm"
+              className="px-3 py-1.5 text-[11px] font-semibold text-emerald-950 bg-emerald-400 hover:bg-emerald-300 rounded-lg transition-colors cursor-pointer inline-flex items-center gap-1.5 shadow-sm min-h-[40px]"
               title="Share this family calendar on WhatsApp or Mobile"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span>Share on WhatsApp</span>
             </button>
+            {!reducedChrome && (
             <button
               onClick={() => onNavigateTab('pricing')}
-              className="px-3 py-1.5 text-[11px] font-medium text-stone-400 hover:text-stone-200 transition-colors cursor-pointer"
+              className="px-3 py-1.5 text-[11px] font-medium text-stone-400 hover:text-stone-200 transition-colors cursor-pointer min-h-[40px]"
             >
               View Pilot Plan (₹299)
             </button>
+            )}
           </div>
         </div>
 
@@ -531,7 +548,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
         )}
       </div>
 
-      {/* GRID ROW 4: Deep Tracking Suite (Tabbed View Switcher) */}
+      {!reducedChrome && (
       <div className="space-y-4 pt-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-200 pb-3">
           <div>
@@ -596,8 +613,9 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           />
         )}
       </div>
+      )}
 
-      {/* GRID ROW 5: The Six Pillars of KulLoop (Collapsible to save screen space) */}
+      {!elderMode && (
       <div className="bg-stone-50 rounded-xl border border-stone-200/80 overflow-hidden shadow-2xs">
         <button
           onClick={() => setShowPillars(!showPillars)}
@@ -644,9 +662,9 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
 
               <div className="p-3.5 bg-white rounded-lg border border-stone-200 space-y-1">
                 <div className="text-[10px] font-bold text-amber-800">03. Standalone with Launch Partner</div>
-                <h4 className="text-xs font-semibold text-stone-900">MyDharohar Partnership</h4>
+                <h4 className="text-xs font-semibold text-stone-900">Preparation When You Need It</h4>
                 <p className="text-[11px] text-stone-600 leading-relaxed">
-                  Standalone brand, billing, and WhatsApp Business line. Licensed and reviewed festival & shraddha preparation content shared from launch partner MyDharohar.
+                  KulLoop is your family’s tithi loop and reminders. When an occasion has a prep checklist, we link out once — never mixed into your private family record.
                 </p>
               </div>
 
@@ -677,6 +695,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
           </div>
         )}
       </div>
+      )}
 
       {/* Occasion Quick Action Slide-Over */}
       <OccasionSlideOver
@@ -684,6 +703,7 @@ export const FamilyDashboard: React.FC<FamilyDashboardProps> = ({
         onClose={() => setIsSlideOverOpen(false)}
         occasion={activeSlideOverOccasion}
         family={family}
+        members={members}
         initialTab={slideOverTab}
         onUpdateOccasion={onUpdateOccasion}
         onTogglePerformed={onTogglePerformed}

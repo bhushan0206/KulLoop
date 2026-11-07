@@ -16,10 +16,16 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { UserProfile, signInWithGoogle, checkRedirectSignInResult } from '../services/firebase';
+import { apiValidateInviteCode } from '../services/api';
 import { Family, LanguageCode } from '../types';
+import { normalizeInviteCode } from '../utils/inviteCode';
 
 interface OnboardingFlowProps {
-  onComplete: (user: UserProfile, familyData: Partial<Family>) => void;
+  onComplete: (
+    user: UserProfile,
+    familyData: Partial<Family>,
+    options?: { intent: 'create' | 'join' }
+  ) => void;
   onExploreDemo: () => void;
 }
 
@@ -43,6 +49,18 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
   const [traditionNotes, setTraditionNotes] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [language, setLanguage] = useState<LanguageCode>('mr');
+  const [joinValidatedFamily, setJoinValidatedFamily] = useState<Partial<Family> | null>(null);
+  const [joinError, setJoinError] = useState<string | null>(null);
+  const [isValidatingJoin, setIsValidatingJoin] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const joinParam = params.get('join');
+    if (joinParam) {
+      setMode('join');
+      setFamilyCode(normalizeInviteCode(joinParam));
+    }
+  }, []);
 
   // Check if returning from a full-page OAuth redirect
   useEffect(() => {
@@ -55,10 +73,23 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
   }, []);
 
   // Step 1: Proceed to mandatory authentication
-  const handleProceedToAuth = (e: React.FormEvent) => {
+  const handleProceedToAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === 'create' && !familyName.trim()) return;
     if (mode === 'join' && !familyCode.trim()) return;
+
+    if (mode === 'join') {
+      setJoinError(null);
+      setIsValidatingJoin(true);
+      const result = await apiValidateInviteCode(normalizeInviteCode(familyCode));
+      setIsValidatingJoin(false);
+      if (!result.valid || !result.family) {
+        setJoinError(result.message || 'That invite code is not active. Ask your family configurator.');
+        return;
+      }
+      setJoinValidatedFamily(result.family);
+    }
+
     localStorage.setItem('kulloop_pending_family_name', familyName);
     localStorage.setItem('kulloop_pending_family_code', familyCode);
     setStep('auth');
@@ -87,18 +118,15 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
   const handleFinishOnboarding = () => {
     if (!userProfile) return;
 
-    if (mode === 'join') {
-      const joinedFamily: Partial<Family> = {
-        id: familyCode.trim().toLowerCase(),
-        name: `Joined Loop (${familyCode.trim().toUpperCase()})`,
-        homeLocation: 'Pune, Maharashtra',
-        convention: 'Amanta',
-        configuratorName: userProfile.displayName,
-        configuratorPhone: whatsappNumber.trim() || '+91 98000 00000',
-        traditionNotes: `Joined existing family ledger with invite code ${familyCode.trim().toUpperCase()}.`,
-        validationSource: 'Verified Family Ledger',
-      };
-      onComplete(userProfile, joinedFamily);
+    if (mode === 'join' && joinValidatedFamily) {
+      onComplete(
+        userProfile,
+        {
+          ...joinValidatedFamily,
+          configuratorPhone: whatsappNumber.trim() || '+91 98000 00000',
+        },
+        { intent: 'join' }
+      );
       return;
     }
 
@@ -117,7 +145,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
         : 'Varanasi Nirnaya Panchang (Purnimanta)',
     };
 
-    onComplete(userProfile, customFamily);
+    onComplete(userProfile, customFamily, { intent: 'create' });
   };
 
   return (
@@ -221,7 +249,14 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
                       />
                       <span className="text-[11px] text-stone-400 mt-1.5 block leading-relaxed">
                         Received an invite link or code from your family lead? Enter it here to attach your Google login directly to their shared family ledger.
+                        Demo code: <strong className="text-amber-300">KUL-JOSHI</strong> or your family&apos;s code from Share.
                       </span>
+                      {joinError && (
+                        <p className="text-xs text-red-300 bg-red-950/40 border border-red-800 rounded-lg px-3 py-2 mt-2 flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden />
+                          {joinError}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -321,9 +356,16 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete, onEx
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3 px-4 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-stone-950 font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+                    disabled={isValidatingJoin}
+                    className="w-full py-3 px-4 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 disabled:opacity-60 text-stone-950 font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    <span>{mode === 'join' ? 'Verify Code & Sign In with Google' : 'Continue to Sign In & Link Family'}</span>
+                    <span>
+                      {isValidatingJoin
+                        ? 'Verifying invite…'
+                        : mode === 'join'
+                          ? 'Verify Code & Sign In with Google'
+                          : 'Continue to Sign In & Link Family'}
+                    </span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>

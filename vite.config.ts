@@ -6,9 +6,31 @@ import {defineConfig} from 'vite';
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('GeminiChatbot')) return 'heritage-ai';
+            if (id.includes('VisualFamilyTree')) return 'lineage-tree';
+            if (id.includes('node_modules/firebase/auth') || id.includes('node_modules/@firebase/auth')) {
+              return 'firebase-auth';
+            }
+            if (
+              id.includes('node_modules/firebase/firestore') ||
+              id.includes('node_modules/@firebase/firestore')
+            ) {
+              return 'firebase-firestore';
+            }
+            if (id.includes('node_modules/firebase/') || id.includes('node_modules/@firebase/')) {
+              return 'firebase-core';
+            }
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': path.resolve(import.meta.dirname, '.'),
       },
     },
     server: {

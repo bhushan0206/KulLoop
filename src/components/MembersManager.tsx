@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   Member, 
   LanguageCode, 
-  Family, 
+  Family,
+  FamilyMemberRole,
   RitualReminderCategory, 
   MemberReminderPreferences,
   CategoryReminderConfig 
@@ -39,6 +40,7 @@ interface MembersManagerProps {
   onUpdateMember: (member: Member) => void;
   onDeleteMember: (id: string) => void;
   onNavigateToTree?: () => void;
+  familyAccess?: import('../utils/familyPermissions').FamilyAccess;
 }
 
 // Categories definition with descriptions
@@ -113,6 +115,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
   onUpdateMember,
   onDeleteMember,
   onNavigateToTree,
+  familyAccess,
 }) => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [viewMode, setViewMode] = useState<'cards' | 'matrix'>('cards');
@@ -126,6 +129,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
   // New member form state
   const [name, setName] = useState('');
   const [relationship, setRelationship] = useState('');
+  const [familyRole, setFamilyRole] = useState<FamilyMemberRole>('member');
   const [phone, setPhone] = useState('+91 ');
   const [email, setEmail] = useState('');
   const [language, setLanguage] = useState<LanguageCode>('mr');
@@ -160,6 +164,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
     const newMember: Member = {
       id: `mem_${Date.now()}`,
       familyId: family.id,
+      familyRole,
       name,
       relationship,
       phone,
@@ -392,6 +397,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
             </button>
           )}
 
+          {(familyAccess?.canManageMembers ?? true) && (
           <button
             onClick={() => setShowAddForm(!showAddForm)}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-stone-900 bg-amber-400 hover:bg-amber-300 rounded-lg transition-colors shadow-2xs cursor-pointer"
@@ -399,6 +405,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
             <UserPlus className="w-4 h-4" />
             <span>{showAddForm ? 'Close Form' : 'Invite Member'}</span>
           </button>
+          )}
         </div>
       </div>
 
@@ -418,7 +425,7 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
               <input
                 type="text"
                 required
-                placeholder="e.g. Sunita Joshi"
+                placeholder="e.g. Family member name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg"
@@ -435,6 +442,20 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                 onChange={(e) => setRelationship(e.target.value)}
                 className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg"
               />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-stone-700">Family role</label>
+              <select
+                value={familyRole}
+                onChange={(e) => setFamilyRole(e.target.value as FamilyMemberRole)}
+                className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg"
+              >
+                <option value="configurator">Configurator (full control)</option>
+                <option value="co_karta">Co-karta (rituals)</option>
+                <option value="member">Member (reminders)</option>
+                <option value="viewer">Viewer (read-only)</option>
+              </select>
             </div>
 
             <div className="space-y-1">
@@ -583,7 +604,14 @@ export const MembersManager: React.FC<MembersManagerProps> = ({
                     <tr key={member.id} className="hover:bg-stone-50/70 transition-colors">
                       <td className="py-3.5 px-4 font-medium text-stone-900">
                         <div className="font-bold text-xs">{member.name}</div>
-                        <div className="text-[11px] text-stone-500">{member.relationship}</div>
+                        <div className="text-[11px] text-stone-500 flex flex-wrap items-center gap-1.5">
+                          <span>{member.relationship}</span>
+                          {member.familyRole && (
+                            <span className="text-[10px] font-semibold text-amber-900 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                              {member.familyRole.replace('_', ' ')}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {RITUAL_CATEGORIES.map((cat) => {

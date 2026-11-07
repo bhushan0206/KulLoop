@@ -12,8 +12,12 @@ export type OccasionType =
 
 export type LanguageCode = 'mr' | 'hi' | 'en';
 
+export type FamilyMemberRole = 'configurator' | 'co_karta' | 'member' | 'viewer';
+
 export interface Family {
   id: string;
+  /** Shareable code, e.g. KUL-AB12CD */
+  inviteCode?: string;
   name: string;
   homeLocation: string; // e.g., "Pune, Maharashtra" (Sunrise reference)
   secondLocation?: string;
@@ -53,6 +57,9 @@ export interface MemberReminderPreferences {
 export interface Member {
   id: string;
   familyId: string;
+  familyRole?: FamilyMemberRole;
+  /** Links Firebase Auth uid for role resolution */
+  authUid?: string;
   name: string;
   relationship: string; // "Aaji (Grandmother)", "Sister", "Son", etc.
   phone: string;

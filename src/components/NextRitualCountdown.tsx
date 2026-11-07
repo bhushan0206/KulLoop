@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { OccasionCardActionMenu } from './OccasionCardActionMenu';
 import { SlideOverTab } from './OccasionSlideOver';
+import { MyDharoharPrepNudge } from './MyDharoharPrepNudge';
 
 interface NextRitualCountdownProps {
   occasions: FamilyOccasion[];
@@ -257,6 +258,14 @@ export const NextRitualCountdown: React.FC<NextRitualCountdownProps> = ({
             </div>
           )}
         </div>
+
+        {nextRitual.myDharoharGuideUrl && (
+          <MyDharoharPrepNudge
+            variant="on-dark"
+            guideUrl={nextRitual.myDharoharGuideUrl}
+            occasionTitle={nextRitual.title}
+          />
+        )}
 
         {/* Bottom: Actions in a clean flex row */}
         <div className="flex items-center gap-1.5 pt-2 border-t border-stone-800/80">

@@ -336,7 +336,7 @@ export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
                         </label>
                         <input
                           type="text"
-                          placeholder="e.g. Aaji & Bhushan, Whole Family"
+                          placeholder="e.g. Elders & family, Whole family"
                           value={performedByInput}
                           onChange={(e) => setPerformedByInput(e.target.value)}
                           className="w-full px-2.5 py-1.5 text-xs bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500"
@@ -549,7 +549,7 @@ export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
                       onClick={() => setNewPhotoURL('/assets/images/kulloop_avatar_elder_1793303629841.jpg')}
                       className="text-[10px] font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 px-2.5 py-1 rounded-md border border-stone-200 cursor-pointer"
                     >
-                      Aaji’s Blessings
+                      Elder’s blessings
                     </button>
                   </div>
                 </div>
@@ -562,7 +562,7 @@ export const MonthlyRitualTracker: React.FC<MonthlyRitualTrackerProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="e.g. Aaji lighting the samai deep during evening puja"
+                  placeholder="e.g. Elder lighting the samai during evening puja"
                   value={newPhotoCaption}
                   onChange={(e) => setNewPhotoCaption(e.target.value)}
                   className="w-full px-3 py-1.5 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500"

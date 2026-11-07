@@ -341,7 +341,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="Bhushan Joshi"
+                  placeholder="Your name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-stone-50 border border-stone-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 text-stone-900 font-medium"

@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { FamilyOccasion, OccasionType, Member, Person, Family } from '../types';
 import { exportFamilyRecordToICS, downloadFile } from '../utils/tithiCalculator';
+import { buildOccasionSearchSuggestions } from '../utils/occasionSearchSuggestions';
 import { 
   Search, 
-  Filter, 
   Calendar, 
   CheckCircle, 
   AlertCircle, 
@@ -35,6 +35,7 @@ interface OccasionListProps {
   onGeneratePriestNote: (occ: FamilyOccasion) => void;
   onToggleConfirm: (id: string) => void;
   onDeleteOccasion: (id: string) => void;
+  familyAccess?: import('../utils/familyPermissions').FamilyAccess;
 }
 
 // Map ritual types to synonyms and translations for smart search
@@ -60,6 +61,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
   onGeneratePriestNote,
   onToggleConfirm,
   onDeleteOccasion,
+  familyAccess,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | OccasionType>('all');
@@ -67,18 +69,18 @@ export const OccasionList: React.FC<OccasionListProps> = ({
   const [showSyncGuideModal, setShowSyncGuideModal] = useState(false);
 
   const activeFamily: Family = family || {
-    id: 'fam_01',
-    name: 'Joshi Family Record',
-    homeLocation: 'Pune, Maharashtra',
-    region: 'Maharashtra',
+    id: 'fam_local',
+    name: 'Your family record',
+    homeLocation: 'Your city',
+    region: '',
     convention: 'Amanta',
-    configuratorName: 'Bhushan Joshi',
-    configuratorPhone: '+91 98220 12345',
-    validationSource: 'Datar Panchang (Pune)',
-    traditionNotes: 'Jejuri Khandoba, Kuldevi Bhavani',
+    configuratorName: 'Family configurator',
+    configuratorPhone: '',
+    validationSource: 'Family validation source',
+    traditionNotes: '',
     plan: 'pilot_founding',
     payer: 'configurator',
-    consultedEntity: 'Printed almanac'
+    consultedEntity: 'An elder',
   };
 
   const showDownloadNotice = (msg: string) => {
@@ -181,14 +183,10 @@ export const OccasionList: React.FC<OccasionListProps> = ({
 
   const unconfirmedCount = occasions.filter((o) => !o.isConfirmed).length;
 
-  // Quick suggestions for easy one-click search testing
-  const quickSearchSuggestions = [
-    { label: 'Shraddha Rites', term: 'shraddha' },
-    { label: 'Aaji (Grandmother)', term: 'aaji' },
-    { label: 'Vrat & Kuldevta', term: 'kuldevta' },
-    { label: 'Birthdays', term: 'birthday' },
-    { label: 'Vasant Joshi', term: 'vasant' },
-  ];
+  const quickSearchSuggestions = useMemo(
+    () => buildOccasionSearchSuggestions(members, people, occasions),
+    [members, people, occasions]
+  );
 
   return (
     <div className="space-y-6">
@@ -260,7 +258,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
             <input
               id="occasion-search"
               type="text"
-              placeholder="Search occasions by title, ritual type (e.g. Shraddha, Birthday, Vrat), or family member (e.g. Aaji, Vasant)..."
+              placeholder="Search by occasion title, ritual type, or a family member name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-10 py-2.5 text-xs bg-stone-50 hover:bg-stone-50/80 focus:bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500 text-stone-800 transition-all placeholder:text-stone-400"
@@ -279,12 +277,11 @@ export const OccasionList: React.FC<OccasionListProps> = ({
           </div>
         </div>
 
-        {/* Quick Search Chips & Filter Bar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-1 border-t border-stone-100">
-          {/* Quick Suggestions */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            <span className="text-[11px] text-stone-400 font-medium shrink-0 flex items-center gap-1">
-              <span>Filter by:</span>
+        {/* Quick Search Chips & Filter Bar — stack + wrap so labels are never clipped */}
+        <div className="space-y-3 pt-1 border-t border-stone-100">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] text-stone-500 font-medium w-full sm:w-auto shrink-0">
+              Filter by:
             </span>
             {quickSearchSuggestions.map((item) => {
               const isActive = searchTerm.toLowerCase() === item.term.toLowerCase();
@@ -293,9 +290,9 @@ export const OccasionList: React.FC<OccasionListProps> = ({
                   key={item.term}
                   type="button"
                   onClick={() => setSearchTerm(isActive ? '' : item.term)}
-                  className={`px-2.5 py-1 text-[11px] rounded-lg transition-colors whitespace-nowrap cursor-pointer ${
-                    isActive 
-                      ? 'bg-amber-400 text-stone-950 font-semibold shadow-2xs' 
+                  className={`px-2.5 py-1.5 min-h-[36px] text-[11px] rounded-lg transition-colors text-left cursor-pointer max-w-full ${
+                    isActive
+                      ? 'bg-amber-400 text-stone-950 font-semibold shadow-2xs'
                       : 'bg-stone-100 hover:bg-stone-200/80 text-stone-600'
                   }`}
                 >
@@ -305,11 +302,13 @@ export const OccasionList: React.FC<OccasionListProps> = ({
             })}
           </div>
 
-          {/* Type Filter Tabs */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] text-stone-500 font-medium w-full sm:w-auto shrink-0 sm:mr-1">
+              Occasion type:
+            </span>
             <button
               onClick={() => setTypeFilter('all')}
-              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 min-h-[36px] text-[11px] font-medium rounded-lg transition-colors cursor-pointer ${
                 typeFilter === 'all'
                   ? 'bg-stone-900 text-white'
                   : 'text-stone-600 hover:bg-stone-100'
@@ -319,7 +318,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
             </button>
             <button
               onClick={() => setTypeFilter('shraddha')}
-              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 min-h-[36px] text-[11px] font-medium rounded-lg transition-colors cursor-pointer ${
                 typeFilter === 'shraddha'
                   ? 'bg-stone-900 text-white'
                   : 'text-stone-600 hover:bg-stone-100'
@@ -329,7 +328,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
             </button>
             <button
               onClick={() => setTypeFilter('birthday')}
-              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 min-h-[36px] text-[11px] font-medium rounded-lg transition-colors cursor-pointer ${
                 typeFilter === 'birthday'
                   ? 'bg-stone-900 text-white'
                   : 'text-stone-600 hover:bg-stone-100'
@@ -339,7 +338,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
             </button>
             <button
               onClick={() => setTypeFilter('vrat_kuldevta')}
-              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 min-h-[36px] text-[11px] font-medium rounded-lg transition-colors cursor-pointer ${
                 typeFilter === 'vrat_kuldevta'
                   ? 'bg-stone-900 text-white'
                   : 'text-stone-600 hover:bg-stone-100'
@@ -349,7 +348,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
             </button>
             <button
               onClick={() => setTypeFilter('festival')}
-              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 min-h-[36px] text-[11px] font-medium rounded-lg transition-colors cursor-pointer ${
                 typeFilter === 'festival'
                   ? 'bg-stone-900 text-white'
                   : 'text-stone-600 hover:bg-stone-100'
@@ -359,7 +358,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
             </button>
             <button
               onClick={() => setTypeFilter('milestone')}
-              className={`px-3 py-1 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 min-h-[36px] text-[11px] font-medium rounded-lg transition-colors cursor-pointer ${
                 typeFilter === 'milestone'
                   ? 'bg-stone-900 text-white'
                   : 'text-stone-600 hover:bg-stone-100'
@@ -561,6 +560,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
                     </button>
                   )}
 
+                  {familyAccess?.canDeleteOccasions && (
                   <button
                     onClick={() => onDeleteOccasion(occ.id)}
                     className="p-1.5 text-stone-400 hover:text-rose-600 rounded-md transition-colors cursor-pointer"
@@ -568,6 +568,7 @@ export const OccasionList: React.FC<OccasionListProps> = ({
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
+                  )}
                 </div>
               </div>
             );

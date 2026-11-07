@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { FamilyOccasion, Family, OccasionType } from '../types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { FamilyOccasion, Family, Member, OccasionType } from '../types';
+import { quickPerformedBySuggestions } from '../utils/occasionSearchSuggestions';
 import { 
   X, 
   Check, 
@@ -30,6 +31,7 @@ interface OccasionSlideOverProps {
   onClose: () => void;
   occasion: FamilyOccasion | null;
   family: Family;
+  members?: Member[];
   initialTab?: SlideOverTab;
   onUpdateOccasion: (id: string, updates: Partial<FamilyOccasion>) => void;
   onTogglePerformed: (id: string, notes?: string, performedBy?: string) => void;
@@ -44,6 +46,7 @@ export const OccasionSlideOver: React.FC<OccasionSlideOverProps> = ({
   onClose,
   occasion,
   family,
+  members = [],
   initialTab = 'edit',
   onUpdateOccasion,
   onTogglePerformed,
@@ -78,6 +81,11 @@ export const OccasionSlideOver: React.FC<OccasionSlideOverProps> = ({
   // Photo Tab State
   const [photoUrlInput, setPhotoUrlInput] = useState('');
   const [photoCaptionInput, setPhotoCaptionInput] = useState('');
+
+  const performedByQuickFill = useMemo(
+    () => quickPerformedBySuggestions(members, family.configuratorName),
+    [members, family.configuratorName]
+  );
   const [photoYearInput, setPhotoYearInput] = useState<number>(new Date().getFullYear());
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [selectedViewingPhoto, setSelectedViewingPhoto] = useState<string | null>(null);
@@ -264,6 +272,16 @@ export const OccasionSlideOver: React.FC<OccasionSlideOverProps> = ({
                   {occasion.title}
                 </h2>
 
+                {occasion.myDharoharGuideUrl && (
+                  <a
+                    href={occasion.myDharoharGuideUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[11px] font-semibold text-amber-800 hover:underline inline-block"
+                  >
+                    Optional prep guide (partner) →
+                  </a>
+                )}
                 <p className="text-xs text-stone-500 flex items-center gap-2">
                   <span>{occasion.occurrence2027?.formattedDisplay} ({occasion.occurrence2027?.weekday})</span>
                   {occasion.tithiFields && (
@@ -350,7 +368,7 @@ export const OccasionSlideOver: React.FC<OccasionSlideOverProps> = ({
                     required
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="e.g. Aaji's Annual Shraddha / Diwali Lakshmi Puja"
+                    placeholder="e.g. Grandfather's annual shraddha / Diwali Lakshmi puja"
                     className="w-full px-3 py-2 text-xs bg-white border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-stone-900 font-medium"
                   />
                 </div>
@@ -493,7 +511,7 @@ export const OccasionSlideOver: React.FC<OccasionSlideOverProps> = ({
                       type="text"
                       value={heritageNotes}
                       onChange={(e) => setHeritageNotes(e.target.value)}
-                      placeholder="e.g. Started by Dattatraya Joshi after retiring in Pune"
+                      placeholder="e.g. Started when the family moved to Pune in 1998"
                       className="w-full px-2.5 py-2 text-xs bg-white border border-stone-300 rounded-lg text-stone-800"
                     />
                   </div>
@@ -586,12 +604,12 @@ export const OccasionSlideOver: React.FC<OccasionSlideOverProps> = ({
                       type="text"
                       value={performedByInput}
                       onChange={(e) => setPerformedByInput(e.target.value)}
-                      placeholder="e.g. Bhushan Joshi, Kedar Joshi"
+                      placeholder="e.g. Name of karta or family lead"
                       className="w-full px-3 py-2 text-xs bg-white border border-stone-300 rounded-lg text-stone-900"
                     />
                     <div className="flex items-center gap-1.5 pt-1">
                       <span className="text-[10px] text-stone-400">Quick fill:</span>
-                      {['Bhushan Joshi', 'Kedar Joshi', 'Sunita Joshi', 'Family elders'].map((name) => (
+                      {performedByQuickFill.map((name) => (
                         <button
                           key={name}
                           type="button"
@@ -625,7 +643,7 @@ export const OccasionSlideOver: React.FC<OccasionSlideOverProps> = ({
                       rows={3}
                       value={performedNotesInput}
                       onChange={(e) => setPerformedNotesInput(e.target.value)}
-                      placeholder="e.g. Conducted with Pt. Shrikant Joshi. Tarpan and Til-Tarpana done. Annadana offered to cows."
+                      placeholder="e.g. Conducted with family pandit. Tarpan done. Annadana offered."
                       className="w-full px-3 py-2 text-xs bg-white border border-stone-300 rounded-lg text-stone-900 leading-relaxed"
                     />
                   </div>

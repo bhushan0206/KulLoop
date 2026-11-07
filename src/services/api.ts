@@ -5,8 +5,11 @@ import {
   Person, 
   LineageMember 
 } from '../types';
-import { UserProfile, db, handleFirestoreError, OperationType } from './firebase';
-import { doc, setDoc, deleteDoc, getDocs, collection } from 'firebase/firestore';
+import { apiUrl } from '../utils/apiBase';
+import { apiMutationHeaders } from '../utils/apiClientContext';
+import { scopeBundleToFamily } from '../utils/familyDataScope';
+import { mirrorDelete, mirrorSet } from '../utils/firestoreMirror';
+import { UserProfile } from './firebase';
 
 export interface DatabaseAllResponse {
   family: Family;
@@ -49,62 +52,16 @@ export interface DbStatusResponse {
   auditLogCount: number;
 }
 
-// Fetch all database records from Firestore or persistent store
+// Fetch all family data from the server JSON store (canonical). Optional Firestore mirror is write-only.
 export async function fetchInitialDatabase(): Promise<DatabaseAllResponse | null> {
-  // 1. Attempt Firestore live collection fetch
   try {
-    const occSnap = await getDocs(collection(db, 'occasions'));
-    const memSnap = await getDocs(collection(db, 'members'));
-    const linSnap = await getDocs(collection(db, 'lineage'));
-    const famSnap = await getDocs(collection(db, 'families'));
-
-    if (!occSnap.empty || !memSnap.empty) {
-      const fsOccasions = occSnap.docs.map((d) => d.data() as FamilyOccasion);
-      const fsMembers = memSnap.docs.map((d) => d.data() as Member);
-      const fsLineage = linSnap.docs.map((d) => d.data() as LineageMember);
-      const fsFamily = !famSnap.empty ? (famSnap.docs[0].data() as Family) : null;
-
-      // Fetch base REST bundle for default fallback parts (e.g. people/currentUser)
-      const baseRestRes = await fetch('/api/db/all').then((r) => r.ok ? r.json() : null).catch(() => null);
-
-      if (fsOccasions.length > 0 || fsMembers.length > 0) {
-        return {
-          family: fsFamily || baseRestRes?.family,
-          occasions: fsOccasions.length > 0 ? fsOccasions : baseRestRes?.occasions || [],
-          members: fsMembers.length > 0 ? fsMembers : baseRestRes?.members || [],
-          people: baseRestRes?.people || [],
-          lineageMembers: fsLineage.length > 0 ? fsLineage : baseRestRes?.lineageMembers || [],
-          users: baseRestRes?.users || [],
-          currentUser: baseRestRes?.currentUser || null,
-          meta: {
-            driver: 'Firebase Firestore + JSON Backup',
-            version: 1,
-            createdAt: new Date().toISOString(),
-            lastSavedAt: new Date().toISOString(),
-            persistenceFile: 'Cloud Firestore (/occasions, /members, /lineage, /families)',
-            recordsCount: {
-              occasions: fsOccasions.length,
-              members: fsMembers.length,
-              people: baseRestRes?.people?.length || 0,
-              lineageMembers: fsLineage.length,
-              users: baseRestRes?.users?.length || 0,
-            },
-          },
-        };
-      }
-    }
-  } catch (err) {
-    handleFirestoreError(err, OperationType.LIST, 'occasions');
-  }
-
-  // 2. Fallback to server REST store
-  try {
-    const res = await fetch('/api/db/all');
+    const res = await fetch(apiUrl('/api/db/all'));
     if (!res.ok) {
       console.warn(`Server REST store unreachable: ${res.statusText}`);
       return null;
     }
-    return await res.json();
+    const bundle = (await res.json()) as DatabaseAllResponse;
+    return scopeBundleToFamily(bundle);
   } catch (err) {
     console.error('Error fetching persistent database bundle from server:', err);
     return null;
@@ -114,7 +71,7 @@ export async function fetchInitialDatabase(): Promise<DatabaseAllResponse | null
 // Get live persistence engine status & file path
 export async function fetchDbStatus(): Promise<DbStatusResponse | null> {
   try {
-    const res = await fetch('/api/db/status');
+    const res = await fetch(apiUrl('/api/db/status'));
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
@@ -126,7 +83,7 @@ export async function fetchDbStatus(): Promise<DbStatusResponse | null> {
 // Reset database file to default seed
 export async function resetDatabaseToDefaults(): Promise<boolean> {
   try {
-    const res = await fetch('/api/db/reset', { method: 'POST' });
+    const res = await fetch(apiUrl('/api/db/reset'), { method: 'POST', headers: await apiMutationHeaders() });
     return res.ok;
   } catch (err) {
     console.error('Failed to reset database:', err);
@@ -137,19 +94,14 @@ export async function resetDatabaseToDefaults(): Promise<boolean> {
 // Family persistence
 export async function apiUpdateFamily(family: Family): Promise<Family | null> {
   try {
-    await setDoc(doc(db, 'families', family.id || 'current_family'), family, { merge: true });
-  } catch (e) {
-    handleFirestoreError(e, OperationType.WRITE, `families/${family.id}`);
-  }
-
-  try {
-    const res = await fetch('/api/family', {
+    const res = await fetch(apiUrl('/api/family'), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await apiMutationHeaders(),
       body: JSON.stringify(family),
     });
     if (!res.ok) throw new Error('Failed to update family');
     const data = await res.json();
+    await mirrorSet('families', family.id || 'current_family', data.family);
     return data.family;
   } catch (err) {
     console.error('apiUpdateFamily error:', err);
@@ -160,19 +112,16 @@ export async function apiUpdateFamily(family: Family): Promise<Family | null> {
 // Occasion persistence
 export async function apiCreateOccasion(occ: FamilyOccasion): Promise<FamilyOccasion | null> {
   try {
-    await setDoc(doc(db, 'occasions', occ.id), occ);
-  } catch (e) {
-    handleFirestoreError(e, OperationType.WRITE, `occasions/${occ.id}`);
-  }
-
-  try {
-    const res = await fetch('/api/occasions', {
+    const res = await fetch(apiUrl('/api/occasions'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await apiMutationHeaders(),
       body: JSON.stringify(occ),
     });
     if (!res.ok) throw new Error('Failed to create occasion');
     const data = await res.json();
+    if (data.occasion) {
+      await mirrorSet('occasions', occ.id, data.occasion, false);
+    }
     return data.occasion;
   } catch (err) {
     console.error('apiCreateOccasion error:', err);
@@ -182,19 +131,16 @@ export async function apiCreateOccasion(occ: FamilyOccasion): Promise<FamilyOcca
 
 export async function apiUpdateOccasion(id: string, updates: Partial<FamilyOccasion>): Promise<FamilyOccasion | null> {
   try {
-    await setDoc(doc(db, 'occasions', id), updates, { merge: true });
-  } catch (e) {
-    handleFirestoreError(e, OperationType.UPDATE, `occasions/${id}`);
-  }
-
-  try {
-    const res = await fetch(`/api/occasions/${id}`, {
+    const res = await fetch(apiUrl(`/api/occasions/${id}`), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await apiMutationHeaders(),
       body: JSON.stringify(updates),
     });
     if (!res.ok) throw new Error('Failed to update occasion');
     const data = await res.json();
+    if (data.occasion) {
+      await mirrorSet('occasions', id, data.occasion);
+    }
     return data.occasion;
   } catch (err) {
     console.error('apiUpdateOccasion error:', err);
@@ -204,13 +150,13 @@ export async function apiUpdateOccasion(id: string, updates: Partial<FamilyOccas
 
 export async function apiDeleteOccasion(id: string): Promise<boolean> {
   try {
-    await deleteDoc(doc(db, 'occasions', id));
-  } catch (e) {
-    handleFirestoreError(e, OperationType.DELETE, `occasions/${id}`);
-  }
-
-  try {
-    const res = await fetch(`/api/occasions/${id}`, { method: 'DELETE' });
+    const res = await fetch(apiUrl(`/api/occasions/${id}`), {
+      method: 'DELETE',
+      headers: await apiMutationHeaders(),
+    });
+    if (res.ok) {
+      await mirrorDelete('occasions', id);
+    }
     return res.ok;
   } catch (err) {
     console.error('apiDeleteOccasion error:', err);
@@ -220,11 +166,14 @@ export async function apiDeleteOccasion(id: string): Promise<boolean> {
 
 export async function apiToggleConfirm(id: string): Promise<FamilyOccasion | null> {
   try {
-    const res = await fetch(`/api/occasions/${id}/toggle-confirm`, { method: 'PATCH' });
+    const res = await fetch(apiUrl(`/api/occasions/${id}/toggle-confirm`), {
+      method: 'PATCH',
+      headers: await apiMutationHeaders(),
+    });
     if (!res.ok) throw new Error('Failed to toggle confirm');
     const data = await res.json();
     if (data.occasion) {
-      setDoc(doc(db, 'occasions', id), data.occasion, { merge: true }).catch(() => {});
+      await mirrorSet('occasions', id, data.occasion);
     }
     return data.occasion;
   } catch (err) {
@@ -239,15 +188,15 @@ export async function apiTogglePerformed(
   performedBy?: string
 ): Promise<FamilyOccasion | null> {
   try {
-    const res = await fetch(`/api/occasions/${id}/performed`, {
+    const res = await fetch(apiUrl(`/api/occasions/${id}/performed`), {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await apiMutationHeaders(),
       body: JSON.stringify({ notes, performedBy }),
     });
     if (!res.ok) throw new Error('Failed to toggle performed');
     const data = await res.json();
     if (data.occasion) {
-      setDoc(doc(db, 'occasions', id), data.occasion, { merge: true }).catch(() => {});
+      await mirrorSet('occasions', id, data.occasion);
     }
     return data.occasion;
   } catch (err) {
@@ -262,15 +211,15 @@ export async function apiAddMemoryPhoto(
   photo: { id: string; url: string; caption?: string; year?: number; uploadedAt: string }
 ): Promise<FamilyOccasion | null> {
   try {
-    const res = await fetch(`/api/occasions/${occasionId}/photos`, {
+    const res = await fetch(apiUrl(`/api/occasions/${occasionId}/photos`), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await apiMutationHeaders(),
       body: JSON.stringify(photo),
     });
     if (!res.ok) throw new Error('Failed to add memory photo');
     const data = await res.json();
     if (data.occasion) {
-      setDoc(doc(db, 'occasions', occasionId), data.occasion, { merge: true }).catch(() => {});
+      await mirrorSet('occasions', occasionId, data.occasion);
     }
     return data.occasion;
   } catch (err) {
@@ -281,11 +230,14 @@ export async function apiAddMemoryPhoto(
 
 export async function apiDeleteMemoryPhoto(occasionId: string, photoId: string): Promise<FamilyOccasion | null> {
   try {
-    const res = await fetch(`/api/occasions/${occasionId}/photos/${photoId}`, { method: 'DELETE' });
+    const res = await fetch(apiUrl(`/api/occasions/${occasionId}/photos/${photoId}`), {
+      method: 'DELETE',
+      headers: await apiMutationHeaders(),
+    });
     if (!res.ok) throw new Error('Failed to delete memory photo');
     const data = await res.json();
     if (data.occasion) {
-      setDoc(doc(db, 'occasions', occasionId), data.occasion, { merge: true }).catch(() => {});
+      await mirrorSet('occasions', occasionId, data.occasion);
     }
     return data.occasion;
   } catch (err) {
@@ -297,19 +249,16 @@ export async function apiDeleteMemoryPhoto(occasionId: string, photoId: string):
 // Members
 export async function apiCreateMember(member: Member): Promise<Member | null> {
   try {
-    await setDoc(doc(db, 'members', member.id), member);
-  } catch (e) {
-    handleFirestoreError(e, OperationType.WRITE, `members/${member.id}`);
-  }
-
-  try {
-    const res = await fetch('/api/members', {
+    const res = await fetch(apiUrl('/api/members'), {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await apiMutationHeaders(),
       body: JSON.stringify(member),
     });
     if (!res.ok) throw new Error('Failed to create member');
     const data = await res.json();
+    if (data.member) {
+      await mirrorSet('members', member.id, data.member, false);
+    }
     return data.member;
   } catch (err) {
     console.error('apiCreateMember error:', err);
@@ -319,19 +268,16 @@ export async function apiCreateMember(member: Member): Promise<Member | null> {
 
 export async function apiUpdateMember(member: Member): Promise<Member | null> {
   try {
-    await setDoc(doc(db, 'members', member.id), member, { merge: true });
-  } catch (e) {
-    handleFirestoreError(e, OperationType.UPDATE, `members/${member.id}`);
-  }
-
-  try {
-    const res = await fetch(`/api/members/${member.id}`, {
+    const res = await fetch(apiUrl(`/api/members/${member.id}`), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await apiMutationHeaders(),
       body: JSON.stringify(member),
     });
     if (!res.ok) throw new Error('Failed to update member');
     const data = await res.json();
+    if (data.member) {
+      await mirrorSet('members', member.id, data.member);
+    }
     return data.member;
   } catch (err) {
     console.error('apiUpdateMember error:', err);
@@ -341,13 +287,13 @@ export async function apiUpdateMember(member: Member): Promise<Member | null> {
 
 export async function apiDeleteMember(id: string): Promise<boolean> {
   try {
-    await deleteDoc(doc(db, 'members', id));
-  } catch (e) {
-    handleFirestoreError(e, OperationType.DELETE, `members/${id}`);
-  }
-
-  try {
-    const res = await fetch(`/api/members/${id}`, { method: 'DELETE' });
+    const res = await fetch(apiUrl(`/api/members/${id}`), {
+      method: 'DELETE',
+      headers: await apiMutationHeaders(),
+    });
+    if (res.ok) {
+      await mirrorDelete('members', id);
+    }
     return res.ok;
   } catch (err) {
     console.error('apiDeleteMember error:', err);
@@ -356,24 +302,105 @@ export async function apiDeleteMember(id: string): Promise<boolean> {
 }
 
 // Lineage
+export interface InviteValidationResponse {
+  valid: boolean;
+  family?: Pick<Family, 'id' | 'name' | 'homeLocation' | 'convention' | 'inviteCode'>;
+  message?: string;
+}
+
+export async function apiValidateInviteCode(code: string): Promise<InviteValidationResponse> {
+  const normalized = encodeURIComponent(code.trim());
+  try {
+    const res = await fetch(apiUrl(`/api/invites/${normalized}`));
+    if (!res.ok) {
+      return { valid: false, message: 'Invite code not found.' };
+    }
+    return (await res.json()) as InviteValidationResponse;
+  } catch {
+    return { valid: false, message: 'Could not verify invite code.' };
+  }
+}
+
+export async function apiRegisterPushDevice(payload: {
+  token: string;
+  platform: 'android' | 'web' | 'ios';
+  uid?: string;
+  memberId?: string;
+  familyId?: string;
+}): Promise<boolean> {
+  try {
+    const res = await fetch(apiUrl('/api/push/register'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function apiUpdateLineageMember(member: LineageMember): Promise<LineageMember | null> {
   try {
-    await setDoc(doc(db, 'lineage', member.id), member, { merge: true });
-  } catch (e) {
-    handleFirestoreError(e, OperationType.UPDATE, `lineage/${member.id}`);
-  }
-
-  try {
-    const res = await fetch(`/api/lineage/${member.id}`, {
+    const res = await fetch(apiUrl(`/api/lineage/${member.id}`), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await apiMutationHeaders(),
       body: JSON.stringify(member),
     });
     if (!res.ok) throw new Error('Failed to update lineage member');
     const data = await res.json();
+    if (data.member) {
+      await mirrorSet('lineage', member.id, data.member);
+    }
     return data.member;
   } catch (err) {
     console.error('apiUpdateLineageMember error:', err);
     return null;
+  }
+}
+
+// People (ancestors / named persons)
+export async function apiCreatePerson(person: Person): Promise<Person | null> {
+  try {
+    const res = await fetch(apiUrl('/api/people'), {
+      method: 'POST',
+      headers: await apiMutationHeaders(),
+      body: JSON.stringify(person),
+    });
+    if (!res.ok) throw new Error('Failed to create person');
+    const data = await res.json();
+    return data.person as Person;
+  } catch (err) {
+    console.error('apiCreatePerson error:', err);
+    return null;
+  }
+}
+
+export async function apiUpdatePerson(person: Person): Promise<Person | null> {
+  try {
+    const res = await fetch(apiUrl(`/api/people/${person.id}`), {
+      method: 'PUT',
+      headers: await apiMutationHeaders(),
+      body: JSON.stringify(person),
+    });
+    if (!res.ok) throw new Error('Failed to update person');
+    const data = await res.json();
+    return data.person as Person;
+  } catch (err) {
+    console.error('apiUpdatePerson error:', err);
+    return null;
+  }
+}
+
+export async function apiDeletePerson(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(apiUrl(`/api/people/${id}`), {
+      method: 'DELETE',
+      headers: await apiMutationHeaders(),
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('apiDeletePerson error:', err);
+    return false;
   }
 }
