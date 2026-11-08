@@ -2,9 +2,45 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ---------------------------------------------------------------------------
+   KulLoop design tokens - showcase-restyle-pilot (styling only)
+   Source of truth: the approved "KulLoop Restyle Sample".
+   Tailwind v4 reads these @theme variables, so every stone/amber utility
+   class in the components retints from this one layer.
+   - Light page background  #FAF7F0  (stone-50)
+   - Light ink              #1C1917  (stone-900 - already the sample value)
+   - Card surface           #FFFFFF  (white - unchanged)
+   - Fixed dark register    #14100C  (stone-950) with raised tone #20180E
+     (stone-800). The register backs the landing shell, header, footer and
+     dark feature bands, and stays dark in BOTH modes by design.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-stone-50: #FAF7F0;
+  --color-stone-100: #F6F1E7;
+  --color-stone-200: #EAE3D3;
+  --color-stone-800: #20180E;
+  --color-stone-950: #14100C;
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+
+  --shadow-2xs: 0 1px 2px 0 rgb(20 16 12 / 0.05);
+  --shadow-xs: 0 1px 2px 0 rgb(20 16 12 / 0.06);
+  --shadow-sm: 0 1px 3px 0 rgb(20 16 12 / 0.08), 0 1px 2px -1px rgb(20 16 12 / 0.08);
+  --shadow-md: 0 4px 8px -1px rgb(20 16 12 / 0.08), 0 2px 4px -2px rgb(20 16 12 / 0.08);
+  --shadow-lg: 0 10px 18px -3px rgb(20 16 12 / 0.09), 0 4px 6px -4px rgb(20 16 12 / 0.09);
+  --shadow-xl: 0 20px 28px -5px rgb(20 16 12 / 0.11), 0 8px 10px -6px rgb(20 16 12 / 0.11);
+  --shadow-2xl: 0 25px 50px -12px rgb(20 16 12 / 0.22);
+
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+}
+
 @layer base {
   body {
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background-color: var(--kl-bg);
+    color: var(--kl-ink);
   }
 }
 
@@ -18,6 +54,29 @@
 
 :root {
   color-scheme: light;
+
+  /* Semantic KulLoop tokens (approved sample values). --kl-register* are the
+     fixed dark bands and are identical in both modes - the landing keeps its
+     dark register in light mode too (explicit design decision). */
+  --kl-bg: #FAF7F0;
+  --kl-surface: #FFFFFF;
+  --kl-ink: #1C1917;
+  --kl-register: #14100C;
+  --kl-register-raised: #20180E;
+}
+
+/* Dark theme tokens for the @custom-variant dark mechanism above.
+   NOTE: no component applies a .dark class yet - wiring a toggle plus dark:
+   variants is feature work beyond this styling-only pass. These values are
+   the sample's dark system, defined so that work starts from the tokens. */
+.dark {
+  color-scheme: dark;
+
+  --kl-bg: #0D0B08;
+  --kl-surface: #1D1915;
+  --kl-ink: #F5EFE3;
+  --kl-register: #14100C;
+  --kl-register-raised: #20180E;
 }
 
 html {
