@@ -42,6 +42,69 @@
     background-color: var(--kl-bg);
     color: var(--kl-ink);
   }
+
+  /* In dark mode, map utility classes automatically to dark tokens */
+  .dark {
+    color-scheme: dark;
+
+    --kl-bg: #0D0B08;
+    --kl-surface: #1D1915;
+    --kl-ink: #F5EFE3;
+    --kl-register: #14100C;
+    --kl-register-raised: #20180E;
+  }
+
+  .dark .bg-white {
+    background-color: #1D1915 !important;
+  }
+
+  .dark .bg-stone-50 {
+    background-color: #14100C !important;
+  }
+
+  .dark .bg-stone-100 {
+    background-color: #26201A !important;
+  }
+
+  .dark .border-stone-200,
+  .dark .border-stone-200\/90,
+  .dark .border-stone-200\/80,
+  .dark .border-stone-200\/70,
+  .dark .border-stone-100 {
+    border-color: #2F2720 !important;
+  }
+
+  .dark .border-stone-300 {
+    border-color: #44392E !important;
+  }
+
+  .dark .text-stone-900 {
+    color: #F5EFE3 !important;
+  }
+
+  .dark .text-stone-800 {
+    color: #E6DCCD !important;
+  }
+
+  .dark .text-stone-700 {
+    color: #D5CAB9 !important;
+  }
+
+  .dark .text-stone-600 {
+    color: #B2A695 !important;
+  }
+
+  .dark .text-stone-500 {
+    color: #9C8F7E !important;
+  }
+
+  .dark input,
+  .dark select,
+  .dark textarea {
+    background-color: #1D1915 !important;
+    color: #F5EFE3 !important;
+    border-color: #3D3227 !important;
+  }
 }
 
 .font-devanagari {

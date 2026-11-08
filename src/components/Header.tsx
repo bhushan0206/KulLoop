@@ -20,6 +20,8 @@ import {
   LayoutGrid
 } from 'lucide-react';
 import { UserProfile } from '../services/firebase';
+import { ThemeToggle } from './ThemeToggle';
+import { ThemeMode } from '../utils/theme';
 
 interface HeaderProps {
   activeTab: 'overview' | 'occasions' | 'whatsapp' | 'members' | 'tree' | 'calendar' | 'pricing';
@@ -39,6 +41,8 @@ interface HeaderProps {
   canShareInvite?: boolean;
   simpleLayout?: boolean;
   onToggleSimpleLayout?: () => void;
+  theme?: ThemeMode;
+  onToggleTheme?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -59,6 +63,8 @@ export const Header: React.FC<HeaderProps> = ({
   canShareInvite = true,
   simpleLayout,
   onToggleSimpleLayout,
+  theme,
+  onToggleTheme,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -214,6 +220,11 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="hidden md:inline">Heritage AI</span>
             </button>
 
+            {/* Theme Toggle Button */}
+            {onToggleTheme && theme && (
+              <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+            )}
+
             {/* Profile Avatar & Sign In/Out Button */}
             <button
               onClick={onOpenProfileModal}
@@ -336,7 +347,7 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
 
-            {/* Drawer Footer with Account info */}
+            {/* Drawer Footer with Account info and Theme Toggle */}
             <div className="pt-4 border-t border-stone-800 flex items-center justify-between">
               <button
                 onClick={() => {
@@ -357,6 +368,9 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                 </div>
               </button>
+              {onToggleTheme && theme && (
+                <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+              )}
             </div>
           </div>
           {/* Backdrop dismiss */}

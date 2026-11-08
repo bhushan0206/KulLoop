@@ -20,6 +20,8 @@ import { apiValidateInviteCode } from '../services/api';
 import { Family, LanguageCode } from '../types';
 import { normalizeInviteCode } from '../utils/inviteCode';
 import { LandingWelcome } from './LandingWelcome';
+import { ThemeToggle } from './ThemeToggle';
+import { ThemeMode } from '../utils/theme';
 
 interface OnboardingFlowProps {
   onComplete: (
@@ -30,12 +32,16 @@ interface OnboardingFlowProps {
   onExploreDemo: () => void;
   /** Returning member — Google sign-in then load their saved family loop (optional profile after OAuth redirect) */
   onReturningSignIn: (existingProfile?: UserProfile) => Promise<void>;
+  theme?: ThemeMode;
+  onToggleTheme?: () => void;
 }
 
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   onComplete,
   onExploreDemo,
   onReturningSignIn,
+  theme,
+  onToggleTheme,
 }) => {
   // Ordered Funnel:
   // 0. Marketing landing (About / Vision / How it works)
@@ -197,6 +203,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
         </a>
 
         <div className="flex items-center gap-2">
+          {onToggleTheme && theme && (
+            <ThemeToggle theme={theme} onToggle={onToggleTheme} />
+          )}
           {step !== 'welcome' && (
             <button
               type="button"

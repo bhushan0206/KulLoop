@@ -61,6 +61,7 @@ import { Check, ShieldCheck, Sparkles, User, Users, RefreshCw, Loader2 } from 'l
 import { generateInviteCode } from './utils/inviteCode';
 import { readElderMode, writeElderMode } from './utils/elderMode';
 import { readSimpleLayout, writeSimpleLayout, isReducedChrome } from './utils/calmExperience';
+import { readTheme, writeTheme, applyTheme, ThemeMode, getEffectiveTheme } from './utils/theme';
 import { getFamilyAccess } from './utils/familyPermissions';
 import { FamilyAccessBanner } from './components/FamilyAccessBanner';
 import { initPushNotificationBridge } from './services/pushNotifications';
@@ -123,6 +124,18 @@ export default function App() {
   const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
   const [elderMode, setElderMode] = useState<boolean>(() => readElderMode());
   const [simpleLayout, setSimpleLayout] = useState<boolean>(() => readSimpleLayout());
+  const [theme, setTheme] = useState<ThemeMode>(() => readTheme());
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    const effective = getEffectiveTheme(theme);
+    const next: ThemeMode = effective === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    writeTheme(next);
+  };
 
   const isDemoMode = localStorage.getItem('kulloop_is_demo') === 'true';
   const hadFirebaseSessionRef = useRef(false);
@@ -701,13 +714,15 @@ export default function App() {
         onComplete={handleCompleteOnboarding}
         onExploreDemo={handleExploreDemo}
         onReturningSignIn={handleReturningSignIn}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
     );
   }
 
   return (
     <div
-      className={`min-h-screen bg-stone-50 text-stone-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-900 ${
+      className={`min-h-screen bg-stone-50 dark:bg-[#0D0B08] text-stone-900 dark:text-stone-100 flex flex-col font-sans selection:bg-amber-100 dark:selection:bg-amber-950 selection:text-amber-900 dark:selection:text-amber-200 ${
         elderMode ? 'elder-mode' : ''
       }`}
     >
@@ -752,6 +767,8 @@ export default function App() {
         }}
         canCreateOccasions={familyAccess.canCreateOccasions}
         canShareInvite={familyAccess.canShareInvite}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Toast Notification */}
@@ -777,33 +794,33 @@ export default function App() {
         <FamilyAccessBanner access={familyAccess} />
 
         {!reducedChrome && (
-        <div className="bg-white rounded-2xl border border-stone-200/90 p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white dark:bg-[#1D1915] rounded-2xl border border-stone-200/90 dark:border-stone-800 p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="relative w-12 h-12 rounded-full bg-amber-100 border border-amber-300 overflow-hidden flex items-center justify-center shrink-0">
+            <div className="relative w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-600/40 overflow-hidden flex items-center justify-center shrink-0">
               {currentUser.photoURL ? (
                 <img src={currentUser.photoURL} alt={currentUser.displayName} className="w-full h-full object-cover" />
               ) : (
-                <span className="font-bold text-amber-900">{currentUser.displayName.charAt(0)}</span>
+                <span className="font-bold text-amber-900 dark:text-amber-200">{currentUser.displayName.charAt(0)}</span>
               )}
             </div>
 
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-bold text-stone-900 text-sm">{currentUser.displayName}</span>
-                <span className="text-xs text-stone-400 font-mono">@{currentUser.username}</span>
-                <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                <span className="font-bold text-stone-900 dark:text-stone-100 text-sm">{currentUser.displayName}</span>
+                <span className="text-xs text-stone-400 dark:text-stone-500 font-mono">@{currentUser.username}</span>
+                <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-700/40">
                   Configurator
                 </span>
               </div>
-              <div className="text-xs text-stone-500 mt-0.5 flex flex-wrap items-center gap-1.5">
+              <div className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 flex flex-wrap items-center gap-1.5">
                 <span>Passions:</span>
                 {currentUser.interests?.slice(0, 3).map((tag) => (
-                  <span key={tag} className="text-[11px] text-amber-900 bg-amber-50 px-2 py-0.2 rounded border border-amber-200/80">
+                  <span key={tag} className="text-[11px] text-amber-900 dark:text-amber-200 bg-amber-50 dark:bg-amber-950/50 px-2 py-0.2 rounded border border-amber-200/80 dark:border-amber-700/40">
                     {tag}
                   </span>
                 ))}
                 {(currentUser.interests?.length || 0) > 3 && (
-                  <span className="text-[10px] text-stone-400">+{currentUser.interests.length - 3} more</span>
+                  <span className="text-[10px] text-stone-400 dark:text-stone-500">+{currentUser.interests.length - 3} more</span>
                 )}
               </div>
             </div>
@@ -812,17 +829,17 @@ export default function App() {
           <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
             <button
               onClick={handleSwitchToOnboarding}
-              className="px-3 py-1.5 text-xs font-medium text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+              className="px-3 py-1.5 text-xs font-medium text-stone-600 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
               title="Configure a new family or switch account"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-stone-500" />
+              <RefreshCw className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400" />
               <span>Switch / New Setup</span>
             </button>
             <button
               onClick={() => setIsProfileModalOpen(true)}
-              className="px-3.5 py-1.5 text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-medium text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
             >
-              <User className="w-3.5 h-3.5 text-stone-500" />
+              <User className="w-3.5 h-3.5 text-stone-500 dark:text-stone-400" />
               <span>Edit Profile & Passions</span>
             </button>
             <button
@@ -1051,6 +1068,8 @@ export default function App() {
         }}
         onOpenPrivacy={() => setIsPrivacyPolicyOpen(true)}
         simpleLayout={simpleLayout}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       <MobileBottomNav
