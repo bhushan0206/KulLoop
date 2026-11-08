@@ -11,7 +11,7 @@ import {
   LineageMember,
 } from '../src/types';
 import { UserProfile } from '../src/services/firebase';
-import type { PushDeviceRecord } from './pushMessaging';
+import type { PushDeviceRecord } from './pushMessaging.js';
 
 export interface DatabaseSchema {
   meta: {

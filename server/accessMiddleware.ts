@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { AccessIdentity, FamilyPermission, resolveServerAccess } from './familyAccess';
+import { AccessIdentity, FamilyPermission, resolveServerAccess } from './familyAccess.js';
 import { Member } from '../src/types';
-import { verifyFirebaseIdToken, isFirebaseAdminReady } from './firebaseAdmin';
-import { getBundle } from './kulloopStore';
+import { verifyFirebaseIdToken, isFirebaseAdminReady } from './firebaseAdmin.js';
+import { getBundle } from './kulloopStore.js';
 
 const SELF_EDIT_KEYS = new Set([
   'reminderPreferences',

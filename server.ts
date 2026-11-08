@@ -21,12 +21,12 @@ import {
   fetchUser,
   fetchUsers,
   isFirestoreCanonical,
-} from './server/kulloopStore';
-import { resolveFamilyId } from './server/firestoreStore';
-import { runReminderWorker, startReminderCron } from './server/reminderWorker';
-import { sendEmail } from './server/mailer';
-import { sendFcmToToken } from './server/pushMessaging';
-import { gate, gateMemberUpdate } from './server/accessMiddleware';
+} from './server/kulloopStore.js';
+import { resolveFamilyId } from './server/firestoreStore.js';
+import { runReminderWorker, startReminderCron } from './server/reminderWorker.js';
+import { sendEmail } from './server/mailer.js';
+import { sendFcmToToken } from './server/pushMessaging.js';
+import { gate, gateMemberUpdate } from './server/accessMiddleware.js';
 
 // ============================================================================
 // Persistent Database (Firestore canonical) & Export Endpoints

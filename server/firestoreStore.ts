@@ -7,14 +7,14 @@
  *   inviteCodes/{code} → { familyId }
  *   users/{uid}
  */
-import { tryInitFirebaseAdmin, getFirebaseAdminApp, getFirebaseAdminModule } from './firebaseAdmin';
+import { tryInitFirebaseAdmin, getFirebaseAdminApp, getFirebaseAdminModule } from './firebaseAdmin.js';
 import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
-import type { DatabaseSchema } from './storage';
+import type { DatabaseSchema } from './storage.js';
 import type { Family, FamilyOccasion, Member, Person, LineageMember } from '../src/types';
 import type { UserProfile } from '../src/services/firebase';
-import type { PushDeviceRecord } from './pushMessaging';
+import type { PushDeviceRecord } from './pushMessaging.js';
 
 function databaseIdFromEnv(): string | undefined {
   const id =

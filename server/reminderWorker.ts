@@ -1,8 +1,8 @@
-import { getAllBundlesForCron, mutateBundle, isFirestoreCanonical } from './kulloopStore';
-import { sendEmail } from './mailer';
-import { sendFcmToToken } from './pushMessaging';
+import { getAllBundlesForCron, mutateBundle, isFirestoreCanonical } from './kulloopStore.js';
+import { sendEmail } from './mailer.js';
+import { sendFcmToToken } from './pushMessaging.js';
 import { FamilyOccasion, Member, RitualReminderCategory } from '../src/types';
-import type { DatabaseSchema } from './storage';
+import type { DatabaseSchema } from './storage.js';
 
 /** WhatsApp Cloud / Business API is intentionally off — click-to-chat only in the product UI. */
 const ENABLE_WHATSAPP_BUSINESS_API = process.env.ENABLE_WHATSAPP === 'true';

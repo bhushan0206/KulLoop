@@ -8,7 +8,7 @@ import {
   DatabaseSchema,
   buildEmptyDatabase,
   memoryStore,
-} from './storage';
+} from './storage.js';
 import {
   hasFirestoreCredentials,
   loadFamilyBundle,
@@ -18,8 +18,8 @@ import {
   upsertUserProfile,
   getUserProfile,
   listUserProfiles,
-} from './firestoreStore';
-import { tryInitFirebaseAdmin } from './firebaseAdmin';
+} from './firestoreStore.js';
+import { tryInitFirebaseAdmin } from './firebaseAdmin.js';
 import type { UserProfile } from '../src/services/firebase';
 
 export function isFirestoreCanonical(): boolean {

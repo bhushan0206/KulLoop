@@ -1,4 +1,4 @@
-import { getFirebaseAdminApp, tryInitFirebaseAdmin, getFirebaseAdminModule } from './firebaseAdmin';
+import { getFirebaseAdminApp, tryInitFirebaseAdmin, getFirebaseAdminModule } from './firebaseAdmin.js';
 
 export interface PushDeviceRecord {
   id: string;
