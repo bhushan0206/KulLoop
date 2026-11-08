@@ -177,13 +177,13 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col justify-between font-sans selection:bg-amber-400 selection:text-stone-950 relative overflow-hidden">
+    <div className="min-h-screen bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 flex flex-col justify-between font-sans selection:bg-amber-400 selection:text-stone-950 relative overflow-hidden transition-colors">
       {/* Ambient background glows */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Top Simple Nav */}
-      <header className="border-b border-stone-800/80 px-6 py-4 flex items-center justify-between max-w-6xl mx-auto w-full z-10">
+      <header className="border-b border-stone-200 dark:border-stone-800/80 bg-white/70 dark:bg-transparent backdrop-blur-sm px-6 py-4 flex items-center justify-between max-w-6xl mx-auto w-full z-10">
         <a
           href="/"
           onClick={(e) => {
